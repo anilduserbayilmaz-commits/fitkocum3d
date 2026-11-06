@@ -23,14 +23,39 @@
 .foodResult strong{font-size:22px;color:#d5ffb4}.foodPill{display:inline-block;padding:5px 9px;font-size:11px;font-weight:850;border:1px solid #52775d;border-radius:50px;color:#c6f6ae;margin-bottom:6px}
 .foodWarn{padding:11px 13px;border:1px solid #4a5156;border-radius:12px;background:#272e35;color:#d2dce0;font-size:11px;line-height:1.6;margin:12px 0}
 .foodLog{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #34434b;padding:11px 0;font-size:12px}.foodLog small{color:#9eaeb6}.foodLog strong{color:#c9f4ac;white-space:nowrap}
+
+#dayTabs{display:flex;flex-wrap:wrap;gap:7px}
+#dayTabs .day{flex:1 1 110px;min-width:90px}
+.custom-exercise{background:#15232d;border:1px solid #344956;border-radius:12px;padding:12px;margin:9px 0}
+.custom-exercise-top{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+.custom-actions{display:flex;gap:5px}.custom-actions button{background:#2a3944;color:#e1edf0;border:1px solid #49606b;padding:7px 10px;border-radius:8px}
+.custom-actions button:disabled{opacity:.35}
+.custom-goals{display:flex;gap:10px;margin-top:12px}
+.custom-goals label{font-size:11px;color:#abc4cf;display:flex;flex:1;gap:6px;align-items:center}
+.custom-goals input{width:100%;max-width:130px;background:#0c1721;border:1px solid #475b68;border-radius:9px;color:#e9f3f8;padding:9px;font-size:12px}
 </style></head><body>
 <div class="shell">
 <header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
-<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Anatomik 3D modellerle hareketi gör, setini tamamla, ilerlemeni takip et.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>60</strong><span>3D hareket</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 3 gün</span></div><div class="days"><button class="day active" data-day="A">A · Pzt</button><button class="day" data-day="B">B · Çrş</button><button class="day" data-day="C">C · Cum</button></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
+<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Anatomik 3D modellerle hareketi gör, setini tamamla, ilerlemeni takip et.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>60</strong><span>3D hareket</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 3 gün</span></div><div class="days" id="dayTabs"></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
 <div style="font-size:12px;font-weight:850;color:#c8f6a6;margin-bottom:9px">ANTRENMAN GÖSTERİMİ</div>
-<div class="viewcontrols" style="margin:0"><button class="viewbtn active" id="choose3d" style="grid-column:span 2">◈ 3D ANİMASYONLU PROGRAM</button><button class="viewbtn" id="chooseClassic">Önceki plan</button></div>
+<div class="viewcontrols" style="margin:0"><button class="viewbtn active" id="choose3d" style="grid-column:span 2">◈ 3D ANİMASYONLU PROGRAM</button><button class="viewbtn" id="chooseClassic">Önceki plan</button><button class="viewbtn" id="chooseCustom" style="grid-column:span 3">✎ KENDİ PROGRAMIM</button></div>
 <p id="modeInfo" style="font-size:11px;line-height:1.55;color:#aebfc5;margin:10px 0 0"></p>
 </div>
+<section id="customEditor" class="panel" hidden style="margin:0 0 16px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h3 style="margin:0">✎ Kendi Programım</h3><button id="customAddDay" class="chip" type="button">+ Gün ekle</button></div>
+<p>Günleri ve hareketleri kendine göre düzenle. Değişiklikler otomatik telefonuna kaydedilir, eski set kayıtlarına dokunulmaz.</p>
+<label class="foodField" for="customDayTitle">Günün adı</label><input id="customDayTitle" class="foodText" maxlength="48" placeholder="Örn. Göğüs & Sırt">
+<div id="customMoves" style="margin:14px 0"></div>
+<label class="foodField" for="customSearch">Hareket seç</label>
+<input id="customSearch" class="foodText" type="search" placeholder="Hareket ara: bench, sırt, bacak…" autocomplete="off">
+<select id="customMoveSelect" class="foodText" style="margin-top:8px"></select>
+<div class="foodBtns" style="margin-top:12px">
+<button id="customAddMove" class="foodBtn" type="button">+ Hareket ekle</button>
+<button id="customRemoveDay" class="foodBtn" type="button">− Günü kaldır</button>
+</div>
+<div class="foodWarn">Bir hareketteki ağırlık ve tekrar kayıtları kaldırma veya sıralama işleminden etkilenmez. Uygulama kaldırılırsa telefonun yerel verileri silinebilir; önemli kayıtlarını dışa aktar.</div>
+<div id="customStatus" class="feedback" role="status"></div>
+</section>
 <div id="moveList"></div>
 <details id="exerciseLibrary" class="panel" style="margin-top:22px">
 <summary style="cursor:pointer;font-size:15px;font-weight:850;color:#c8f6a6">◈ Tüm 60 hareketi aç · Anatomik 3D + Mobilite</summary>
@@ -257,23 +282,127 @@ const DAYS={
 };
 const SETS_3D={lib_squat:'3 × 12–15',lib_push_up:'3 × 8–15',lib_bent_over_row:'3 × 8–12',lib_dumbbell_shoulder_press:'3 × 8–12',lib_bicep_curl:'2 × 10–15',lib_plank:'3 × 30–45 sn',lib_romanian_deadlift:'3 × 8–12',lib_lunge:'3 × 8–12 / bacak',lib_overhead_press:'3 × 8–12',lib_lateral_raise:'2 × 12–15',lib_glute_bridge:'3 × 10–15',lib_crunch:'3 × 12–20',lib_sumo_squat:'3 × 10–15',lib_calf_raise:'3 × 12–20',lib_hammer_curl:'2 × 10–15',lib_overhead_tricep_extension:'2 × 10–15'};
 for(const [id,sets] of Object.entries(SETS_3D))MOVES[id].sets=sets;
-let programMode='3d';try{if(localStorage.getItem('fitkocum_program_mode')==='classic')programMode='classic'}catch{}
-function currentDays(){return programMode==='3d'?DAYS:CLASSIC_DAYS}
+let programMode='3d';try{const m=localStorage.getItem('fitkocum_program_mode');if(['3d','classic','custom'].includes(m))programMode=m}catch{}
+const CUSTOM_KEY='fitkocum_custom_program_v1';
+const customStarter=()=>Object.fromEntries(Object.entries(DAYS).map(([k,v])=>[k,{title:v.title.replace(' (3D)',''),ids:[...v.ids],goals:{}}]));
+const validCustom=(data)=>{
+ if(!data||typeof data!=='object'||Array.isArray(data))return null;
+ const result={},keys=Object.keys(data).filter(k=>/^[A-F]$/.test(k)).sort();
+ if(!keys.length||keys.length>6)return null;
+ for(const k of keys){
+   const v=data[k];if(!v||!Array.isArray(v.ids))return null;
+   const ids=[...new Set(v.ids.filter(id=>typeof id==='string'&&Object.prototype.hasOwnProperty.call(MOVES,id)))].slice(0,16);
+   const goals={};for(const id of ids){
+     const raw=v.goals?.[id];
+     if(raw&&Number.isInteger(Number(raw.sets))&&Number(raw.sets)>=1&&Number(raw.sets)<=10&&typeof raw.reps==='string')goals[id]={sets:Number(raw.sets),reps:raw.reps.slice(0,22)};
+   }
+   result[k]={title:String(v.title||k+' Günü').slice(0,48),ids,goals};
+ }
+ return result;
+};
+let customDays=customStarter();
+try{const loaded=validCustom(JSON.parse(localStorage.getItem(CUSTOM_KEY)||'null'));if(loaded)customDays=loaded}catch{}
+function currentDays(){return programMode==='3d'?DAYS:programMode==='classic'?CLASSIC_DAYS:customDays}
+function moveGoal(id){const x=programMode==='custom'?customDays[day]?.goals?.[id]:null;return x?x.sets+' × '+x.reps:MOVES[id].sets}
+function saveCustom(){try{localStorage.setItem(CUSTOM_KEY,JSON.stringify(customDays));$('customStatus').textContent='✓ Telefona kaydedildi.'}catch{$('customStatus').textContent='Kayıt alanına ulaşılamadı.'}}
+function escapeText(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
 
 let records=[];try{let r=JSON.parse(localStorage.getItem('fitkocum3d_records')||'[]');records=Array.isArray(r)?r.filter(x=>x&&MOVES[x.id]&&Number.isFinite(Number(x.reps))):[]}catch{}let day='A';try{let d=localStorage.getItem('fitkocum3d_day');if(currentDays()[d])day=d}catch{}let selected=null,scene=null;const localDay=iso=>{let d=new Date(iso);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
-function update(){$('choose3d').classList.toggle('active',programMode==='3d');
-$('chooseClassic').classList.toggle('active',programMode==='classic');
-$('modeInfo').textContent=programMode==='3d'?'Bu programda, yalnızca birebir animasyonu bulunan hareketler kullanılır. Önceki plandaki bench press, lat pulldown gibi makineli hareketler yerine benzer kas gruplarını çalıştıran 3D destekli alternatifler vardır.':'Önceki program korunur; 3D modeli olmayan egzersizler şematik gösterilir. Önceki set kayıtların silinmez.';const dates=new Set(records.map(r=>localDay(r.date)));$('sessions').textContent=dates.size;$('sets').textContent=records.length;$('hSets').textContent=records.length;$('hDays').textContent=dates.size;$('hVolume').textContent=Math.round(records.reduce((sum,r)=>sum+(+r.weight)*(+r.reps),0)).toLocaleString('tr-TR');$('dayCaption').textContent=currentDays()[day].title+' · 6 hareket · kontrollü tempo';document.querySelectorAll('[data-day]').forEach(el=>el.classList.toggle('active',el.dataset.day===day));$('moveList').innerHTML=currentDays()[day].ids.map(id=>{const m=MOVES[id],n=records.filter(r=>r.id===id&&localDay(r.date)===localDay(new Date())).length;return `<article class="move"><div class="move-art" aria-hidden="true">${id.startsWith("lib_")?`<img src="thumbs/${id.slice(4)}.png" style="width:76px;height:76px;object-fit:cover;border-radius:13px" alt="">`:`<span>${m.icon}</span>`}</div><div class="move-content"><h3>${m.name}</h3><p>${m.group} · ${m.sets}</p><div class="move-actions"><button class="watch" data-id="${id}">${id.startsWith("lib_")?"◈ ANATOMİK 3D":"▶ ŞEMATİK 3D"}</button>${n?`<span class="logged">✓ Bugün ${n} set</span>`:''}</div></div></article>`}).join('');document.querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));$('logs').innerHTML=records.length?[...records].reverse().slice(0,100).map(r=>`<div class="history-item"><strong>${MOVES[r.id].name}</strong><small>${(+r.weight).toLocaleString('tr-TR')} kg × ${r.reps} tekrar · ${new Date(r.date).toLocaleString('tr-TR')}</small></div>`).join(''):'<div class="empty">Henüz kayıt yok. Bir hareketin 3D gösterimini açıp ilk setini kaydet.</div>'}
+function renderDayTabs(){
+ const ds=currentDays();if(!ds[day])day=Object.keys(ds)[0];
+ $('dayTabs').innerHTML=Object.keys(ds).map(k=>'<button class="day'+(k===day?' active':'')+'" data-day="'+k+'">'+escapeText(k)+' · '+escapeText(ds[k].title.slice(0,11))+'</button>').join('');
+ $('dayTabs').querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{day=b.dataset.day;try{localStorage.setItem('fitkocum3d_day',day)}catch{}update()});
+}
+function update(){
+ renderDayTabs();
+ $('choose3d').classList.toggle('active',programMode==='3d');
+ $('chooseClassic').classList.toggle('active',programMode==='classic');
+ $('chooseCustom').classList.toggle('active',programMode==='custom');
+ $('customEditor').hidden=programMode!=='custom';
+ $('modeInfo').textContent=programMode==='3d'?'Hazır 3D antrenman planı.':programMode==='classic'?'Önceki programın; kayıtların korunur.':'Programındaki günleri, hareketleri ve set hedeflerini kendin düzenle.';
+ if(programMode==='custom')renderCustomEditor();const dates=new Set(records.map(r=>localDay(r.date)));$('sessions').textContent=dates.size;$('sets').textContent=records.length;$('hSets').textContent=records.length;$('hDays').textContent=dates.size;$('hVolume').textContent=Math.round(records.reduce((sum,r)=>sum+(+r.weight)*(+r.reps),0)).toLocaleString('tr-TR');$('dayCaption').textContent=currentDays()[day].title+' · '+currentDays()[day].ids.length+' hareket';document.querySelectorAll('[data-day]').forEach(el=>el.classList.toggle('active',el.dataset.day===day));$('moveList').innerHTML=currentDays()[day].ids.map(id=>{const m=MOVES[id],n=records.filter(r=>r.id===id&&localDay(r.date)===localDay(new Date())).length;return `<article class="move"><div class="move-art" aria-hidden="true">${id.startsWith("lib_")?`<img src="thumbs/${id.slice(4)}.png" style="width:76px;height:76px;object-fit:cover;border-radius:13px" alt="">`:`<span>${m.icon}</span>`}</div><div class="move-content"><h3>${m.name}</h3><p>${m.group} · ${moveGoal(id)}</p><div class="move-actions"><button class="watch" data-id="${id}">${id.startsWith("lib_")?"◈ ANATOMİK 3D":"▶ ŞEMATİK 3D"}</button>${n?`<span class="logged">✓ Bugün ${n} set</span>`:''}</div></div></article>`}).join('');document.querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));$('logs').innerHTML=records.length?[...records].reverse().slice(0,100).map(r=>`<div class="history-item"><strong>${MOVES[r.id].name}</strong><small>${(+r.weight).toLocaleString('tr-TR')} kg × ${r.reps} tekrar · ${new Date(r.date).toLocaleString('tr-TR')}</small></div>`).join(''):'<div class="empty">Henüz kayıt yok. Bir hareketin 3D gösterimini açıp ilk setini kaydet.</div>'}
+
+const editorList=()=>Object.entries(MOVES).filter(([id,m])=>id.startsWith('lib_')||id.startsWith('mobility_')||['bench','pulldown','row','legpress','triceps'].includes(id));
+function renderCustomEditor(){
+ const v=customDays[day];if(!v)return;
+ const field=$('customDayTitle');if(document.activeElement!==field)field.value=v.title;
+ $('customRemoveDay').disabled=Object.keys(customDays).length<=1;
+ $('customAddDay').disabled=Object.keys(customDays).length>=6;
+ $('customMoves').innerHTML=v.ids.length?v.ids.map((id,i)=>{
+   const m=MOVES[id],g=v.goals[id]||{sets:3,reps:'8–12'};
+   return '<div class="custom-exercise" data-edit-id="'+escapeText(id)+'"><div class="custom-exercise-top"><b>'+escapeText(m.name)+'</b><div class="custom-actions">'+
+   '<button data-action="up" aria-label="Yukarı taşı" '+(i===0?'disabled':'')+'>↑</button>'+
+   '<button data-action="down" aria-label="Aşağı taşı" '+(i===v.ids.length-1?'disabled':'')+'>↓</button>'+
+   '<button data-action="remove" aria-label="Hareketi kaldır">✕</button></div></div>'+
+   '<div class="custom-goals"><label>Set <input data-goal="sets" type="number" min="1" max="10" value="'+g.sets+'"></label>'+
+   '<label>Tekrar/hedef <input data-goal="reps" maxlength="22" value="'+escapeText(g.reps)+'"></label></div></div>';
+ }).join(''):'<div class="empty">Bu güne henüz hareket eklenmedi.</div>';
+ $('customMoves').querySelectorAll('[data-edit-id]').forEach(row=>{
+   const id=row.dataset.editId;
+   row.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{
+     const i=v.ids.indexOf(id),action=b.dataset.action;
+     if(i<0)return;
+     if(action==='remove'){v.ids.splice(i,1);delete v.goals[id]}
+     else {const j=i+(action==='up'?-1:1);if(j<0||j>=v.ids.length)return;[v.ids[i],v.ids[j]]=[v.ids[j],v.ids[i]]}
+     saveCustom();update();
+   });
+   row.querySelector('[data-goal="sets"]').onchange=e=>{
+     const n=Math.max(1,Math.min(10,Number.parseInt(e.target.value)||3));
+     v.goals[id]={sets:n,reps:v.goals[id]?.reps||'8–12'};saveCustom();update();
+   };
+   row.querySelector('[data-goal="reps"]').onchange=e=>{
+     const reps=e.target.value.trim().slice(0,22)||'8–12';
+     v.goals[id]={sets:v.goals[id]?.sets||3,reps};saveCustom();update();
+   };
+ });
+ refreshCustomChoices();
+}
+function refreshCustomChoices(){
+ const q=$('customSearch').value.trim().toLocaleLowerCase('tr-TR'),ds=customDays[day]?.ids||[];
+ const choices=editorList().filter(([id,m])=>!ds.includes(id)&&(m.name+' '+m.group+' '+id).toLocaleLowerCase('tr-TR').includes(q));
+ const prior=$('customMoveSelect').value;
+ $('customMoveSelect').innerHTML=choices.length?choices.slice(0,120).map(([id,m])=>'<option value="'+id+'">'+escapeText(m.name)+' ('+escapeText(m.group)+')</option>').join(''):'<option value="">Hareket bulunamadı</option>';
+ if(choices.some(([id])=>id===prior))$('customMoveSelect').value=prior;
+}
+$('customSearch').oninput=refreshCustomChoices;
+$('customDayTitle').onchange=e=>{
+ if(programMode!=='custom')return;
+ customDays[day].title=e.target.value.trim().slice(0,48)||day+' Günü';
+ saveCustom();update();
+};
+$('customAddMove').onclick=()=>{
+ if(programMode!=='custom')return;
+ const id=$('customMoveSelect').value,v=customDays[day];
+ if(!MOVES[id]||v.ids.includes(id)||v.ids.length>=16){$('customStatus').textContent='En fazla 16 farklı hareket ekleyebilirsin.';return}
+ v.ids.push(id);v.goals[id]={sets:3,reps:'8–12'};
+ $('customSearch').value='';
+ saveCustom();update();
+};
+$('customAddDay').onclick=()=>{
+ if(Object.keys(customDays).length>=6)return;
+ const key='ABCDEF'.split('').find(k=>!customDays[k]);
+ if(!key)return;
+ customDays[key]={title:key+' Günü',ids:[],goals:{}};
+ day=key;saveCustom();update();
+};
+$('customRemoveDay').onclick=()=>{
+ const keys=Object.keys(customDays);
+ if(keys.length<=1)return;
+ delete customDays[day];day=Object.keys(customDays).sort()[0];saveCustom();update();
+};
+
 function tab(t){document.querySelectorAll('.screen').forEach(s=>s.hidden=s.id!==t);document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.tab===t));window.scrollTo({top:0,behavior:'instant'});update()}
 $('choose3d').onclick=()=>setProgramMode('3d');
 $('chooseClassic').onclick=()=>setProgramMode('classic');
+$('chooseCustom').onclick=()=>setProgramMode('custom');
 function setProgramMode(mode){
  programMode=mode;
  try{localStorage.setItem('fitkocum_program_mode',mode)}catch{}
  update();
 }
 
-document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));$('heroGo').onclick=()=>{document.querySelector('.days').scrollIntoView({behavior:'smooth',block:'start'})};document.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{day=b.dataset.day;try{localStorage.setItem('fitkocum3d_day',day)}catch{}update()});
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>tab(b.dataset.tab));$('heroGo').onclick=()=>{document.querySelector('.days').scrollIntoView({behavior:'smooth',block:'start'})};
 
 document.querySelectorAll('[data-camera]').forEach(btn=>btn.onclick=()=>{
  if(!scene||scene.fail)return;
@@ -293,7 +422,7 @@ function setGuide(id){
  $('poseRange').value='0';$('poseStage').textContent='Oynatılıyor';
  document.querySelectorAll('[data-camera]').forEach(b=>b.classList.toggle('active',b.dataset.camera==='angle'));
 }
-function openMove(id){selected=id;let m=MOVES[id];setGuide(id);$('title').textContent=m.name;$('sub').textContent=m.group+' · '+m.sets;$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Kişisel hareket aralığını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const bodyweight=new Set(['lib_squat','lib_push_up','lib_plank','lib_lunge','lib_sumo_squat','lib_crunch','lib_glute_bridge']);if(id.startsWith('mobility_')) bodyweight.add(id);$('weight').value=bodyweight.has(id)?'0':'';$('reps').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){scene.setExercise(m.type);$('sceneError').hidden=true}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
+function openMove(id){selected=id;let m=MOVES[id];setGuide(id);$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Kişisel hareket aralığını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const bodyweight=new Set(['lib_squat','lib_push_up','lib_plank','lib_lunge','lib_sumo_squat','lib_crunch','lib_glute_bridge']);if(id.startsWith('mobility_')) bodyweight.add(id);$('weight').value=bodyweight.has(id)?'0':'';$('reps').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){scene.setExercise(m.type);$('sceneError').hidden=true}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
 function close(){if(scene)scene.setPlaying(false);$('overlay').hidden=true;document.body.style.overflow='';selected=null} $('close').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('pause').onclick=()=>{if(!scene)return;scene.setPlaying(!scene.playing);$('pause').textContent=scene.playing?'⏸ Duraklat':'▶ Oynat'};
 $('save').onclick=()=>{if(!selected)return;let w=Number($('weight').value),r=Number($('reps').value);if(!$('weight').value.trim()||!Number.isFinite(w)||w<0||w>500||!Number.isInteger(r)||r<1||r>100){$('feedback').textContent='Geçerli bir ağırlık ve tekrar sayısı gir.';return}let item={id:selected,weight:w,reps:r,date:new Date().toISOString()};let next=[...records,item];try{localStorage.setItem('fitkocum3d_records',JSON.stringify(next))}catch(e){$('feedback').textContent='Telefonda kayıt alanına erişilemedi.';return}records=next;update();$('feedback').textContent='✓ Set kaydedildi. Tebrikler!'};
 let timerPreset=90,timerLeft=90,timerEnd=0,timerHandle=null;function clock(){let s=Math.max(0,Math.ceil(timerLeft));$('clock').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;let active=Boolean(timerHandle);$('timerToggle').textContent=active?'⏸ Duraklat':timerLeft<=0?'▶ Yeniden başlat':'▶ Başlat'}function stopTimer(){if(timerHandle){clearInterval(timerHandle);timerHandle=null}}function selectRest(sec){stopTimer();timerPreset=sec;timerLeft=sec;clock()}document.querySelectorAll('[data-rest]').forEach(b=>b.onclick=()=>selectRest(+b.dataset.rest));$('timerReset').onclick=()=>selectRest(timerPreset);$('timerToggle').onclick=()=>{if(timerHandle){timerLeft=Math.max(0,(timerEnd-Date.now())/1000);stopTimer();clock();return}if(timerLeft<=0)timerLeft=timerPreset;timerEnd=Date.now()+timerLeft*1000;timerHandle=setInterval(()=>{timerLeft=Math.max(0,(timerEnd-Date.now())/1000);if(timerLeft<=0){stopTimer();try{navigator.vibrate([140,90,140])}catch{}}clock()},200);clock()};
