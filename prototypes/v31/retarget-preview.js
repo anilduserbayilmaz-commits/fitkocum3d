@@ -36,8 +36,12 @@ async function run(){
   }
  }
  const clip=source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
+ const runtimeBoneNames=new Set(sourceSkin.skeleton.bones.map(b=>b.name));
+ const resolvedMap=Object.fromEntries(Object.entries(MAP).map(([k,v])=>[k,runtimeBoneNames.has(v)?v:v.replace(/[.\-]/g,'_')]));
+ console.log('RETARGET_MATCHES',JSON.stringify({target:realSkin.skeleton.bones.map(b=>b.name),source:[...runtimeBoneNames].slice(0,85),resolvedMap,
+   matches:Object.values(resolvedMap).filter(v=>runtimeBoneNames.has(v)).length}));
  const targetClip=retargetClip(realSkin,sourceSkin,clip,{
-   names:MAP,
+   names:resolvedMap,
    hip:'spine05',
    fps:30,
    preserveBoneMatrix:true,
