@@ -122,7 +122,7 @@ const server = http.createServer((req,res)=>{
    assert.equal(state.old,'none');
    assert.equal(state.real,'block');
    await page.locator('.scene').screenshot({path:'/tmp/fitkocum-mobility-'+id+'.png'});
-   const before=scene===undefined?0:await page.evaluate(()=>scene.real.mixer.time);
+   const before=await page.evaluate(()=>scene.real.mixer.time);
    await page.waitForTimeout(600);
    assert.ok((await page.evaluate(()=>scene.real.mixer.time))>before,'Mobility animation must advance');
    console.log('MOBILITY '+id+': '+JSON.stringify(state));
