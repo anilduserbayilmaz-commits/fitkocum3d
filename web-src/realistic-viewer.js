@@ -4,6 +4,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {Technique3D} from './technique-viewer.js';
 import {RigFormGuide, GUIDED_ANATOMY_IDS} from './rig-form-guide.js';
 import {PremiumStudio} from './premium-studio.js';
+import {AnimatedMuscleHighlights} from './muscle-highlights.js';
 
 const PACK = new Set([
   'bent_over_row','bicep_curl','calf_raise','crunch','deadlift',
@@ -36,6 +37,8 @@ class RealisticViewer {
     this.actions=[];
     this.clipDuration=2.5;
     this.rigGuide=null;
+    this.muscleOverlay=null;
+    this.muscleMode='primary';
     this.quality='balanced';
     this.studioVisible=true;
     try{this.init()}catch(e){console.error('[FitKoçum 3D+]',e);this.fail=true}
@@ -118,10 +121,12 @@ class RealisticViewer {
       if(this.modelRoot)this.modelRoot.visible=false;
       if(this.equipment)this.equipment.visible=false;
       if(this.rigGuide)this.rigGuide.group.visible=false;
+      if(this.muscleOverlay)this.muscleOverlay.group.visible=false;
       this.technique.root.visible=true;
       this.active=true;this.playing=true;this.progress=0;this.currentKind='technique';this.clipDuration=3.2;
       this.modelName='technique:'+id;
       this.technique.base(id);
+      this.technique.setMuscleMode(this.muscleMode);
       this.showStatus('');
       this.setCamera('angle');
       return;
@@ -131,6 +136,7 @@ class RealisticViewer {
     if(this.equipment)this.equipment.visible=true;
     const isMobility=name.startsWith('mobility:');
     if(this.rigGuide)this.rigGuide.group.visible=!isMobility;
+    if(this.muscleOverlay)this.muscleOverlay.setMode(isMobility?'off':this.muscleMode);
     const clipName=isMobility?name.substring('mobility:'.length):null;
     const assetName=isMobility?'mobility':name;
     if(!isMobility&&!PACK.has(name)){this.showStatus('Bu hareketin 3D modeli yok.',true);return}
@@ -157,6 +163,7 @@ class RealisticViewer {
       const gltf=await new Promise((res,rej)=>this.loader.parse(bytes.buffer,'',res,rej));
       if(this.token!==stamp)return;
       if(this.rigGuide){this.rigGuide.dispose();this.rigGuide=null}
+      if(this.muscleOverlay){this.muscleOverlay.dispose();this.muscleOverlay=null}
       if(this.modelRoot){
         this.scene.remove(this.modelRoot);
         this.modelRoot.traverse(o=>{
@@ -207,6 +214,9 @@ class RealisticViewer {
           this.actions.push(action);
         }
         this.mixer.setTime(0);
+        this.muscleOverlay=new AnimatedMuscleHighlights(this.scene,model,assetName);
+        this.muscleOverlay.setMode(this.muscleMode);
+        this.muscleOverlay.update();
         if(GUIDED_ANATOMY_IDS.includes(assetName)){
            this.rigGuide=new RigFormGuide(this.scene,model,assetName);
            if(this.rigGuide.isAvailable)this.rigGuide.apply(0);
@@ -339,6 +349,12 @@ class RealisticViewer {
     this.scene.background.set(this.studioVisible?'#101b25':'#14202a');
   }
   setPlaying(v){this.playing=Boolean(v)}
+  setMuscleMode(value){
+    this.muscleMode=['off','primary','all'].includes(value)?value:'primary';
+    if(this.muscleOverlay)this.muscleOverlay.setMode(this.currentKind==='anatomical'?this.muscleMode:'off');
+    if(this.technique)this.technique.setMuscleMode(this.muscleMode);
+    this.muscleOverlay?.update();
+  }
   setPlaybackSpeed(value){const n=Number(value);this.playbackSpeed=[.5,1,1.5].includes(n)?n:1;}
   setTechniqueMode(mode){
     if(this.currentKind==='technique'&&this.technique){
@@ -351,6 +367,7 @@ class RealisticViewer {
       // applying any intentional illustrative error offsets.
       this.rigGuide.setMode(mode);
       this.rigGuide.apply(this.progress,false);
+      this.muscleOverlay?.update();
       this.updateWeights();
     }
   }
@@ -374,6 +391,7 @@ class RealisticViewer {
     else if(this.mixer){
       this.mixer.setTime(this.progress*this.clipDuration);
       if(this.currentKind==='anatomical'&&this.rigGuide)this.rigGuide.apply(this.progress);
+      if(this.currentKind==='anatomical')this.muscleOverlay?.update();
       this.updateWeights();
     }
   }
@@ -398,6 +416,7 @@ class RealisticViewer {
       this.mixer.update(dt*this.playbackSpeed);
       this.progress=(this.mixer.time%this.clipDuration)/this.clipDuration;
       if(this.currentKind==='anatomical'&&this.rigGuide)this.rigGuide.apply(this.progress);
+      if(this.currentKind==='anatomical')this.muscleOverlay?.update();
       const scrub=document.getElementById('poseRange');
       if(scrub && document.getElementById('overlay')?.hidden===false){
         scrub.value=String(Math.round(this.progress*100));
@@ -417,6 +436,7 @@ class RealisticViewer {
     cancelAnimationFrame(this.requestId);
     this.technique?.destroy();
     this.rigGuide?.dispose();
+    this.muscleOverlay?.dispose();
     this.disposeEquipment();
     this.studio?.dispose();
     this.controls?.dispose();
@@ -459,6 +479,7 @@ class Hybrid3D{
   setCamera(mode){this.mode!=='old'?this.real.setCamera(mode):this.original.setCamera(mode)}
   setPlaybackSpeed(value){this.real.setPlaybackSpeed(value)}
   setQuality(level){this.real.setQuality(level)}
+  setMuscleMode(mode){this.real.setMuscleMode(mode)}
   setStudioVisible(value){this.real.setStudioVisible(value)}
   setTechniqueMode(mode){if(this.mode==='technique'||this.mode==='real')this.real.setTechniqueMode(mode)}
   setManualProgress(v){this.mode!=='old'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
