@@ -13,15 +13,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Download verified v1.8 APK
+      - name: Download verified v1.9 APK
         run: |
           mkdir -p /tmp/fitkocum
-          gh run download 42273080883 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
+          gh run download 42274565289 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
           test -s /tmp/fitkocum/app-debug.apk
-          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v1.8.apk
-          unzip -t FitKocum3D-Plus-v1.8.apk | tail -1
-          sha256sum FitKocum3D-Plus-v1.8.apk
+          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v1.9.apk
+          unzip -t FitKocum3D-Plus-v1.9.apk | tail -1
+          sha256sum FitKocum3D-Plus-v1.9.apk
       - name: Publish direct install file
         run: |
-          gh release create v1.8.0 FitKocum3D-Plus-v1.8.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v1.8' --notes 'FitKoçum 3D+ v1.8: Smart Workout Coach. Previous weights and reps, conservative progression recommendations based on complete sessions and RIR, set difficulty logging (RIR), automatic adjustable rest timer. Keeps 65 offline 3D movements, custom program editor and existing local logs. Browser integration tests for coach and 3D passed. Debug APK for private testing; not Play Store release build.'
-          gh release view v1.8.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
+          gh release create v1.9.0 FitKocum3D-Plus-v1.9.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v1.9' --notes 'FitKoçum 3D+ v1.9: five equipment exercises have a correct-technique vs common-mistake 3D comparison, green/red joint and movement-path cues, and three selectable exercise phases. Technical demonstrations are stylized instructional animations, not motion-captured or personalized form measurements. Existing 65 movements, smart workout coach, meal diary and local workout records are preserved. GitHub Chromium integration and Android APK build passed.'
+          gh release view v1.9.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
