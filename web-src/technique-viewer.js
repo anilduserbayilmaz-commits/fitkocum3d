@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 // Custom original 3D technical animations. Technique diagrams, NOT motion-captured anatomy.
 export class Technique3D {
@@ -6,8 +7,10 @@ export class Technique3D {
     this.scene=scene;this.root=new THREE.Group();scene.add(this.root);
     this.meshes=new Map();this.kind='bench';this.duration=3.2;
     this.formMode='correct';
-    this.sphere=new THREE.SphereGeometry(1,18,14);
-    this.cylinder=new THREE.CylinderGeometry(1,1,1,14);
+    this.sphere=new THREE.SphereGeometry(1,26,20);
+    this.cylinder=new THREE.CylinderGeometry(1,1,1,24);
+    this.taper=new THREE.CylinderGeometry(.78,1,1,24);
+    this.rounded=new RoundedBoxGeometry(1,1,1,4,.075);
     const mat=(color,metalness=0,roughness=.65)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
     this.skin=mat(0xe0cebb,.04,.76);this.shirt=mat(0xa6c1ce,.06,.58);
     this.pants=mat(0x45576b,.04,.67);this.orange=mat(0xfc9750,.1,.44);
@@ -32,9 +35,18 @@ export class Technique3D {
     o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),vec.normalize());
     o.scale.set(r,len,r);
   }
+  anatomicalLimb(id,a,b,r,material){
+    const o=this.get(id,this.taper,material);
+    const from=new THREE.Vector3(...a),to=new THREE.Vector3(...b);
+    const vec=to.clone().sub(from);
+    const len=vec.length();
+    o.position.copy(from.add(to).multiplyScalar(.5));
+    o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),vec.normalize());
+    o.scale.set(r,len,r);
+  }
   box(id,p,scale,mat,rx=0){
     let o=this.meshes.get(id);
-    if(!o){o=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),mat);o.castShadow=true;o.receiveShadow=true;this.root.add(o);this.meshes.set(id,o);}
+    if(!o){o=new THREE.Mesh(this.rounded,mat);o.castShadow=true;o.receiveShadow=true;this.root.add(o);this.meshes.set(id,o);}
     o.material=mat;o.visible=true;o.position.set(...p);o.scale.set(...scale);o.rotation.set(rx,0,0);
   }
   lerp(a,b,t){return a.map((n,i)=>n+(b[i]-n)*t)}
@@ -43,12 +55,14 @@ export class Technique3D {
   }
   figure(p){
     const shoulderMid=this.lerp(p.sl,p.sr,.5);
-    const upper=(id,a,b,mat)=>this.bar(id,a,b,.09,mat);
+    const upper=(id,a,b,mat)=>this.anatomicalLimb(id,a,b,.12,mat);
     this.ball('head',p.head,[.15,.18,.15],this.skin);
     this.ball('hair',[p.head[0],p.head[1]+.09,p.head[2]-.055],[.15,.075,.14],this.black);
     this.bar('neck',p.head,p.neck,.10,this.skin);
     this.bar('shoulderBridge',p.sl,p.sr,.16,this.shirt);
-    this.bar('torso',shoulderMid,p.hips,.29,this.shirt);
+    this.anatomicalLimb('torso',shoulderMid,p.hips,.30,this.shirt);
+    this.ball('ribcage',this.lerp(shoulderMid,p.hips,.24),[.31,.18,.20],this.shirt);
+    this.ball('abdomen',this.lerp(shoulderMid,p.hips,.72),[.225,.18,.17],this.shirt);
     this.ball('pelvis',p.hips,[.29,.23,.23],this.pants);
     for(const [prefix,sh,el,wr,hip,knee,ankle] of [
       ['L',p.sl,p.el,p.wl,p.hl,p.kl,p.al],['R',p.sr,p.er,p.wr,p.hr,p.kr,p.ar]
@@ -56,11 +70,11 @@ export class Technique3D {
       this.ball('deltoid'+prefix,sh,[.15,.17,.15],p.focus==='shoulder'?this.orange:this.shirt);
       upper('upperarm'+prefix,sh,el,p.focus==='triceps'?this.orange:this.skin);
       this.ball('elbow'+prefix,el,[.085,.085,.085],this.skin);
-      this.bar('forearm'+prefix,el,wr,.072,this.skin);
+      this.anatomicalLimb('forearm'+prefix,el,wr,.085,this.skin);
       this.ball('hand'+prefix,wr,[.074,.08,.075],this.skin);
-      this.bar('thigh'+prefix,hip,knee,.145,p.focus==='legs'?this.orange:this.pants);
+      this.anatomicalLimb('thigh'+prefix,hip,knee,.158,p.focus==='legs'?this.orange:this.pants);
       this.ball('knee'+prefix,knee,[.105,.11,.105],this.pants);
-      this.bar('shin'+prefix,knee,ankle,.10,this.pants);
+      this.anatomicalLimb('shin'+prefix,knee,ankle,.115,this.pants);
       this.ball('foot'+prefix,[ankle[0],ankle[1]-.02,ankle[2]+.08],[.13,.085,.20],this.black);
     }
     if(p.focus==='chest'){
@@ -171,8 +185,7 @@ export class Technique3D {
   }
   destroy(){
     this.scene.remove(this.root);
-    for(const m of this.meshes.values())if(m.geometry!==this.sphere&&m.geometry!==this.cylinder)m.geometry.dispose();
-    this.sphere.dispose();this.cylinder.dispose();
+    this.sphere.dispose();this.cylinder.dispose();this.taper.dispose();this.rounded.dispose();
     for(const key of ['skin','shirt','pants','orange','metal','black','pad','green','red'])this[key].dispose();
   }
 }
