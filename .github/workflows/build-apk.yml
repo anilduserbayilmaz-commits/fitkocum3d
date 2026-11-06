@@ -31,6 +31,22 @@ jobs:
           if [ ! -f "$HOME/.android/debug.keystore" ]; then
             keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 7300 -dname "CN=Android Debug,O=FitKocum,C=TR"
           fi
+      - name: Gerçekçi anatomik GLB egzersiz modellerini ekle
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/assets/models app/src/main/assets/thumbs
+          curl -fsSL --retry 3 --max-time 180 'https://raw.githubusercontent.com/AssiamahS/opengym3d/main/dist/opengym3d-exercise-pack-v1.zip' -o /tmp/opengym3d.zip
+          unzip -joq /tmp/opengym3d.zip 'pack/models/*.glb' -d app/src/main/assets/models
+          unzip -joq /tmp/opengym3d.zip 'pack/thumbs/*.png' -d app/src/main/assets/thumbs
+          unzip -p /tmp/opengym3d.zip pack/LICENSE > app/src/main/assets/OPEN_GYM_LICENSE.txt
+          test "$(find app/src/main/assets/models -name '*.glb' | wc -l)" -eq 24
+          echo "24 gerçek 3D model eklendi"
+          du -sh app/src/main/assets/models
+      - name: Three.js 3D motorunu paketle
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts three@0.180.0 esbuild@0.25.12
+          ./node_modules/.bin/esbuild web-src/realistic-viewer.js --bundle --minify --format=iife --target=es2020 --outfile=app/src/main/assets/realistic-viewer.js
+          test -s app/src/main/assets/realistic-viewer.js
       - name: APK oluştur
         run: gradle --no-daemon --stacktrace assembleDebug
       - name: APK dosyasını sakla
