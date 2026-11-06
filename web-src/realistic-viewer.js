@@ -247,6 +247,11 @@ class RealisticViewer {
     }
   }
   setPlaying(v){this.playing=Boolean(v)}
+  setTechniqueMode(mode){
+    if(this.currentKind!=='technique'||!this.technique)return;
+    this.technique.setFormMode(mode);
+    this.technique.frame(this.progress);
+  }
   setCamera(mode){
     if(!this.camera)return;
     const theta=mode==='front'?0:mode==='side'?Math.PI/2:Math.PI/4;
@@ -272,6 +277,11 @@ class RealisticViewer {
       this.technique?.frame(this.progress);
       const scrub=document.getElementById('poseRange');
       if(scrub&&document.getElementById('overlay')?.hidden===false&&this.playing){scrub.value=String(Math.round(this.progress*100));document.getElementById('poseStage').textContent='Oynatılıyor'}
+      const info=document.getElementById('techniquePhase');
+      if(info&&document.getElementById('overlay')?.hidden===false){
+         const p=this.progress;
+         info.textContent=p<.16||p>.84?'Başlangıç':p<.50?'Hareketi tamamlama':'Kontrollü dönüş';
+      }
     } else if(this.playing && this.mixer){
       this.mixer.update(dt);
       this.progress=(this.mixer.time%this.clipDuration)/this.clipDuration;
@@ -331,6 +341,7 @@ class Hybrid3D{
     if(badge)badge.textContent=this.mode==='real'?'● ANATOMİK 3D':this.mode==='technique'?'● 3D HAREKET TEKNİĞİ':this.mode==='mobility'?'● HAREKETLİ 3D MANEKEN':'● ŞEMATİK 3D MODEL';
   }
   setCamera(mode){this.mode!=='old'?this.real.setCamera(mode):this.original.setCamera(mode)}
+  setTechniqueMode(mode){if(this.mode==='technique')this.real.setTechniqueMode(mode)}
   setManualProgress(v){this.mode!=='old'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
   setPlaying(v){
     this.playing=Boolean(v);
