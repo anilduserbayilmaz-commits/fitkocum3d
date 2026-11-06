@@ -33,6 +33,7 @@ const server = http.createServer((req,res)=>{
  },models);
  await page.goto('http://127.0.0.1:'+port+'/index.html');
  assert.equal(await page.locator('#choose3d').count(),1);
+ assert.equal(await page.locator('#chooseCustom').count(),1);
  assert.equal(await page.locator('[data-tab="library"]').count(),0,'No separate 3D tab');
  assert.equal(await page.locator('#moveList .move').count(),6);
  for(const day of ['A','B','C']){
@@ -52,6 +53,28 @@ const server = http.createServer((req,res)=>{
  await page.locator('#chooseClassic').click();
  assert.equal((await page.locator('#moveList .watch').first().getAttribute('data-id')),'squat');
  await page.locator('#choose3d').click();
+
+ // Custom program builder must persist added days, set goals and ordering.
+ await page.locator('#chooseCustom').click();
+ await page.locator('#customAddDay').click();
+ assert.equal(await page.locator('#dayTabs .day').count(),4);
+ await page.locator('#customDayTitle').fill('Yeni program günüm');
+ await page.locator('#customDayTitle').dispatchEvent('change');
+ await page.locator('#customSearch').fill('leg press');
+ await page.locator('#customMoveSelect').selectOption('legpress');
+ await page.locator('#customAddMove').click();
+ assert.equal(await page.locator('#moveList .watch').first().getAttribute('data-id'),'legpress');
+ await page.locator('[data-goal="sets"]').first().fill('4');
+ await page.locator('[data-goal="sets"]').first().dispatchEvent('change');
+ await page.locator('[data-goal="reps"]').first().fill('10–12');
+ await page.locator('[data-goal="reps"]').first().dispatchEvent('change');
+ assert.match(await page.locator('#moveList').innerText(),/4 × 10–12/);
+ await page.reload();
+ assert.equal(await page.locator('#dayTabs .day').count(),4);
+ assert.equal(await page.locator('#moveList .watch').first().getAttribute('data-id'),'legpress');
+ assert.match(await page.locator('#dayCaption').innerText(),/Yeni program günüm/);
+ await page.locator('#choose3d').click();
+ await page.locator('[data-day="A"]').click();
  await page.locator('#exerciseLibrary').evaluate(el=>el.open=true);
 
  const screenshots=[];
@@ -96,8 +119,8 @@ const server = http.createServer((req,res)=>{
 
  // 24 anatomical + 36 distinct 3D mannequin exercises, with correct category filters.
  assert.equal(await page.locator('#moveFilters [data-move-filter]').count(),5);
- assert.equal(await page.locator('#realMoveList article').count(),60,'Total library count');
- for(const [category,count] of [['strength',24],['warmup',14],['mobility',14],['accessory',8]]){
+ assert.equal(await page.locator('#realMoveList article').count(),65,'Total library count');
+ for(const [category,count] of [['strength',24],['technique',5],['warmup',14],['mobility',14],['accessory',8]]){
    await page.locator('[data-move-filter="'+category+'"]').click();
    assert.equal(await page.locator('#realMoveList article').count(),count,category+' model count');
  }
@@ -128,7 +151,32 @@ const server = http.createServer((req,res)=>{
    console.log('MOBILITY '+id+': '+JSON.stringify(state));
    await page.locator('#close').click();
  }
+ // Five separate equipment models have their own moving human figure, machine geometry and exercise path.
+ await page.locator('[data-move-filter="technique"]').click();
+ for(const id of ['bench','pulldown','legpress','row','triceps']){
+   await page.locator('#realMoveList [data-id="'+id+'"]').click();
+   await page.waitForFunction(expected=>typeof scene!=='undefined'&&scene.mode==='technique'&&scene.real.modelName==='technique:'+expected,id,{timeout:15000});
+   const a=await page.evaluate(()=>({
+      mode:scene.mode,kind:scene.real.technique?.kind,
+      meshCount:scene.real.technique?.meshes?.size||0,
+      visible:scene.real.canvas.style.display,
+      original:document.getElementById('modelCanvas').style.display,
+      phase:scene.real.progress
+   }));
+   assert.equal(a.mode,'technique');assert.equal(a.kind,id);assert.ok(a.meshCount>18,id+' mesh count');
+   assert.equal(a.visible,'block');assert.equal(a.original,'none');
+   const frame1=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-technique-'+id+'.png'});
+   await page.waitForTimeout(750);
+   const frame2=await page.locator('.scene').screenshot();
+   assert.notEqual(Buffer.compare(frame1,frame2),0,'Model must visually animate: '+id);
+   const r=await page.evaluate(()=>scene.real.progress);
+   assert.notEqual(r,a.phase,'Progress must change: '+id);
+   await page.locator('#poseRange').fill('45');
+   assert.equal(await page.locator('#pause').innerText(),'▶ Oynat');
+   console.log('TECHNIQUE '+id+' '+JSON.stringify(a));
+   await page.locator('#close').click();
+ }
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: 24 anatomical + 36 mobility 3D exercises, filters, program and animation playback');
+ console.log('PASS: 24 anatomical, 5 equipment, 36 mobility = 65 3D, plus persistent custom program editing');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
