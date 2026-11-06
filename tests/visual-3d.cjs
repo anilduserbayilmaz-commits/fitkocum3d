@@ -310,7 +310,7 @@ const server = http.createServer((req,res)=>{
    await page.locator('#close').click();
  }
 
- // v2.2 muscle overlays must follow animated skeletons and remain optional.
+ // v2.2 uses the original SkinnedMesh vertex colors, not floating spheres.
  await page.locator('[data-move-filter="all"]').click();
  for(const id of ['squat','deadlift','plank']){
    await page.locator('#realMoveList [data-id="lib_'+id+'"]').click();
@@ -318,49 +318,51 @@ const server = http.createServer((req,res)=>{
      typeof scene!=='undefined'&&scene.mode==='real'&&scene.real.modelName===expected&&
      scene.real.muscleOverlay?.available,id,{timeout:25000});
    assert.equal(await page.locator('#musclePanel').isVisible(),true);
-   const overlay=await page.evaluate(()=>({
-     id:scene.real.muscleOverlay.id,
-     count:scene.real.muscleOverlay.muscles.length,
-     visible:scene.real.muscleOverlay.group.visible,
-     mode:scene.real.muscleOverlay.mode,
-     primaries:scene.real.muscleOverlay.muscles.filter(x=>x.role==='primary'&&x.mesh.visible).length,
-     secondaries:scene.real.muscleOverlay.muscles.filter(x=>x.role==='secondary'&&x.mesh.visible).length
-   }));
-   if(id==='squat'){
-     const meshes=await page.evaluate(()=>{
-       const arr=[];scene.real.modelRoot.traverse(o=>{
-         if(o.isMesh||o.isSkinnedMesh){
-           const mats=Array.isArray(o.material)?o.material:[o.material];
-           arr.push({name:o.name,type:o.type,material:mats.map(m=>({
-             name:m?.name,color:m?.color?.getHexString(),vertexColors:m?.vertexColors,skin:m?.skinning,
-             roughness:m?.roughness,transparent:m?.transparent
-           }))});
-         }
-       });
-       return arr.slice(0,35);
-     });
-     console.log('GLB_MESH_SURFACES '+JSON.stringify(meshes));
-   }
+   const overlay=await page.evaluate(()=>{
+     const o=scene.real.muscleOverlay;
+     return {
+       id:o.id,count:o.muscles.length,
+       surfaceCount:o.targets.length,mode:o.mode,
+       primaryVertices:o.countAffected('primary'),
+       secondaryVertices:o.countAffected('secondary'),
+       originalSkin:scene.real.modelRoot.children[0]?.children.filter(x=>x.isSkinnedMesh).length||0,
+       sourceSurface:!!o.targets[0]?.geo.getAttribute('color')
+     };
+   });
    assert.equal(overlay.id,id);
    assert.equal(overlay.mode,'primary');
-   assert.ok(overlay.count>=1,'Real rig has bone-bound muscle markers '+id);
-   assert.ok(overlay.primaries>=1,'Primary muscles visible '+id);
-   assert.equal(overlay.secondaries,0,'Secondary hidden by default '+id);
+   assert.ok(overlay.surfaceCount>=1,'GLB skin must have an editable vertex-color surface '+id);
+   assert.ok(overlay.primaryVertices>=50,'Primary vertex influence available '+id);
+   assert.ok(overlay.secondaryVertices>=50,'Secondary vertex influence available '+id);
+   const primaryColors=await page.evaluate(()=>Array.from(scene.real.muscleOverlay.targets[0].out));
+   const checkColors=()=>page.evaluate(()=>{
+     const t=scene.real.muscleOverlay.targets[0];
+     return {changed:Array.from(t.out).filter((v,i)=>Math.abs(v-t.original[i])>.003).length,
+             mode:scene.real.muscleOverlay.mode,visible:scene.real.muscleOverlay.group.visible};
+   });
+   const primary=await checkColors();
+   assert.ok(primary.changed>=50,'Primary shading must modify actual anatomy vertices '+id);
    await page.locator('[data-muscle-mode="all"]').click();
-   const secondary=await page.evaluate(()=>scene.real.muscleOverlay.muscles.filter(x=>x.role==='secondary'&&x.mesh.visible).length);
-   assert.ok(secondary>=1,'Secondary muscle group must appear '+id);
+   const all=await checkColors();
+   assert.equal(all.mode,'all');
+   assert.ok(all.changed>=primary.changed,'All muscles should color at least the primary surface');
+   const allColors=await page.evaluate(()=>Array.from(scene.real.muscleOverlay.targets[0].out));
+   assert.notDeepEqual(primaryColors,allColors,'Secondary tint must change vertex colors '+id);
    await page.locator('.scene').screenshot({path:'/tmp/fitkocum-muscles-'+id+'-all.png'});
    await page.locator('[data-muscle-mode="off"]').click();
-   assert.equal(await page.evaluate(()=>scene.real.muscleOverlay.group.visible),false,'Off must hide real muscle geometry');
+   const off=await checkColors();
+   assert.equal(off.changed,0,'Off restores original GLB vertex colors');
+   assert.equal(off.visible,false);
    await page.locator('.scene').screenshot({path:'/tmp/fitkocum-muscles-'+id+'-off.png'});
    await page.locator('[data-muscle-mode="primary"]').click();
-   assert.equal(await page.evaluate(()=>scene.real.muscleOverlay.group.visible),true);
+   assert.equal((await checkColors()).mode,'primary');
+   // Animation still deforms the colored ORIGINAL body mesh.
    await page.locator('[data-technique-phase="0.5"]').click();
-   const before=await page.evaluate(()=>scene.real.muscleOverlay.muscles[0].mesh.position.toArray());
+   const phaseA=await page.locator('.scene').screenshot();
    await page.locator('[data-technique-phase="0.75"]').click();
-   const after=await page.evaluate(()=>scene.real.muscleOverlay.muscles[0].mesh.position.toArray());
-   if(id!=='plank')assert.notDeepEqual(before,after,'Markers must follow different phases of '+id);
-   console.log('MUSCLE '+id+' '+JSON.stringify(overlay)+' secondary='+secondary);
+   const phaseB=await page.locator('.scene').screenshot();
+   if(id!=='plank')assert.notEqual(Buffer.compare(phaseA,phaseB),0,'Skinned colored body animates '+id);
+   console.log('NATIVE_MUSCLE '+id+' '+JSON.stringify(overlay));
    await page.locator('#close').click();
  }
  await page.locator('#realMoveList [data-id="bench"]').click();
@@ -378,6 +380,6 @@ const server = http.createServer((req,res)=>{
  assert.equal(await page.locator('[data-muscle-mode="all"]').getAttribute('aria-pressed'),'true','Muscle preference persists');
  await page.locator('#close').click();
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: muscle-region overlays primary/secondary, motion tracking, settings, premium gym, anatomy guides, 65 3D');
+ console.log('PASS: native anatomical skinned mesh coloring primary/secondary, animation, settings, premium gym and 65 3D');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
