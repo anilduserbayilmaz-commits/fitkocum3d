@@ -1,5 +1,5 @@
 const { chromium } = require('playwright-core');
-setTimeout(()=>{ console.error('FAIL: 3D browser test timed out'); process.exit(1); },90000).unref();
+setTimeout(()=>{ console.error('FAIL: 3D browser test timed out'); process.exit(1); },150000).unref();
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -22,6 +22,7 @@ const server = http.createServer((req,res)=>{
  for(const id of ['plank','squat','deadlift','romanian_deadlift','sumo_squat']){
   models[id]=fs.readFileSync(path.join(ROOT,'models',id+'.glb')).toString('base64');
  }
+ models.mobility=fs.readFileSync(path.join(ROOT,'models','mobility.glb')).toString('base64');
  const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--disable-gpu-sandbox']});
  const page=await browser.newPage({viewport:{width:393,height:851},deviceScaleFactor:1});
  const consoleErrors=[];
@@ -92,7 +93,42 @@ const server = http.createServer((req,res)=>{
   assert.ok(after>before,'Animation must advance');
   await page.locator('#close').click();
  }
+
+ // 24 anatomical + 36 distinct 3D mannequin exercises, with correct category filters.
+ assert.equal(await page.locator('#moveFilters [data-move-filter]').count(),5);
+ assert.equal(await page.locator('#realMoveList article').count(),60,'Total library count');
+ for(const [category,count] of [['strength',24],['warmup',14],['mobility',14],['accessory',8]]){
+   await page.locator('[data-move-filter="'+category+'"]').click();
+   assert.equal(await page.locator('#realMoveList article').count(),count,category+' model count');
+ }
+ await page.locator('[data-move-filter="all"]').click();
+ for(const id of ['arm-circles-small','standing-hip-circles','standing-cross-crunch']){
+   await page.locator('#realMoveList [data-id="mobility_'+id+'"]').click();
+   await page.waitForFunction(
+     (expected)=>typeof scene!=='undefined'&&scene.mode==='mobility'&&scene.real.modelName==='mobility'&&scene.real.actions?.[0]?.getClip()?.name===expected,
+     id,{timeout:35000}
+   );
+   await page.waitForTimeout(300);
+   const state=await page.evaluate(()=>({
+      mode:scene.mode,
+      clip:scene.real.actions[0].getClip().name,
+      progress:scene.real.mixer.time,
+      loaded:scene.real.modelName,
+      old:document.getElementById('modelCanvas').style.display,
+      real:document.getElementById('gymRealCanvas').style.display
+   }));
+   assert.equal(state.mode,'mobility');
+   assert.equal(state.clip,id);
+   assert.equal(state.old,'none');
+   assert.equal(state.real,'block');
+   await page.locator('.scene').screenshot({path:'/tmp/fitkocum-mobility-'+id+'.png'});
+   const before=scene===undefined?0:await page.evaluate(()=>scene.real.mixer.time);
+   await page.waitForTimeout(600);
+   assert.ok((await page.evaluate(()=>scene.real.mixer.time))>before,'Mobility animation must advance');
+   console.log('MOBILITY '+id+': '+JSON.stringify(state));
+   await page.locator('#close').click();
+ }
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: all 3 realistic 3D animations visible and advancing');
+ console.log('PASS: 24 anatomical + 36 mobility 3D exercises, filters, program and animation playback');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
