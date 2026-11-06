@@ -13,15 +13,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Download verified v2.0 APK
+      - name: Download verified v2.1 APK
         run: |
           mkdir -p /tmp/fitkocum
-          gh run download 42278660014 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
+          gh run download 42281397953 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
           test -s /tmp/fitkocum/app-debug.apk
-          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v2.0.apk
-          unzip -t FitKocum3D-Plus-v2.0.apk | tail -1
-          sha256sum FitKocum3D-Plus-v2.0.apk
+          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v2.1.apk
+          unzip -t FitKocum3D-Plus-v2.1.apk | tail -1
+          sha256sum FitKocum3D-Plus-v2.1.apk
       - name: Publish direct install file
         run: |
-          gh release create v2.0.0 FitKocum3D-Plus-v2.0.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v2.0' --notes 'FitKoçum 3D+ v2.0.0: guided 3D anatomy comparisons on 12 strength movements (squat, sumo squat, deadlift, RDL, bent-over row, shoulder presses, lateral raise, biceps curl, push-up, plank, lunge) plus the existing five equipment 3D comparisons. Animated skeleton joint/path cues, correct-vs-exaggerated-error examples and 0.5x/1x/1.5x playback. Not camera-based form assessment, not individually measured angles. Keeps 65 exercises, custom workout builder, smart coach, meal diary and local records. Chromium 3D regression tests and Android APK build passed; physical Pixel 9 test pending.'
-          gh release view v2.0.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
+          gh release create v2.1.0 FitKocum3D-Plus-v2.1.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v2.1' --notes 'FitKoçum 3D+ v2.1: premium offline 3D gym studio with rubber flooring, gym wall lighting and plate racks; refined shadows and GLB materials; detailed moving Olympic-style barbell and hex dumbbells; smoother five machine demonstrations; studio/focus view and eco/balanced/high graphics settings saved on device; improved full-equipment camera framing. Original 65 3D exercises, correct-versus-common-error demos, smart coach and local workout history retained. Chrome WebGL animation and appearance integration tests passed; Android APK built and signed for private testing. Stylized training visualizations, not photorealistic motion capture. Pixel 9 device test pending.'
+          gh release view v2.1.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
