@@ -31,7 +31,7 @@ async function run(){
  // puffed-up clothing meshes. Generate fitted body-surface sports kit instead.
  const sportswear=createFittedTrainingKit(realSkin);
  real.scene.add(sportswear.group);
- const dressed=sportswear.group.children.length;
+ const dressed=Object.values(sportswear.counts).filter(v=>v>20).length;
  const clip=source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
  const runtimeBoneNames=new Set(sourceSkin.skeleton.bones.map(b=>b.name));
  const canonical=name=>name.toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -76,7 +76,20 @@ async function run(){
  floor.rotation.x=-Math.PI/2;floor.position.y=-.015;scene.add(floor);
  const mixer=new THREE.AnimationMixer(realSkin);
  const action=mixer.clipAction(targetClip);action.play();
- function pose(time){mixer.setTime(time);scene.updateMatrixWorld(true);gear.update();renderer.render(scene,camera)}
+ function pose(time){
+   mixer.setTime(time);
+   scene.updateMatrixWorld(true);
+   // In the source rig, pelvis keys can translate vertically; correct
+   // the floor contact to prevent the trainer's legs disappearing underground.
+   const lf=realBones.get('foot_l'),rf=realBones.get('foot_r');
+   const a=new THREE.Vector3(),b=new THREE.Vector3();
+   lf.getWorldPosition(a);rf.getWorldPosition(b);
+   const floor=Math.min(a.y,b.y);
+   if(Number.isFinite(floor))wrapper.position.y+=.075-floor;
+   scene.updateMatrixWorld(true);
+   gear.update();
+   renderer.render(scene,camera);
+ }
  pose(0);
  const targetTracks=targetClip.tracks.map(t=>t.name);
  const times=[0,targetClip.duration*.25,targetClip.duration*.5,targetClip.duration*.75];
@@ -96,7 +109,7 @@ async function run(){
   status:'ok',exercise,character:'CC0 MakeHuman textured with fitted gym outfit',originalClip:clip.name,
   sourceTracks:clip.tracks.length,retargetedTracks:targetTracks.length,
   targetTracks:targetTracks.slice(0,40),
-  duration:targetClip.duration,dressed,equipment:gear.kind,equipmentMeshes:gear.meshes.length,fitCounts:sportswear.counts,
+  duration:targetClip.duration,dressed,appearance:sportswear.method,equipment:gear.kind,equipmentMeshes:gear.meshes.length,fitCounts:sportswear.counts,
   skeletonMapped:Object.keys(MAP).length,
   frames,
   size:size.toArray(),images:real.parser.json.images?.length||0
