@@ -42,6 +42,12 @@ jobs:
           test "$(find app/src/main/assets/models -name '*.glb' | wc -l)" -eq 24
           echo "24 gerçek 3D model eklendi"
           du -sh app/src/main/assets/models
+      - name: İlave 36 mobilite ve ısınma hareketini ekle
+        run: |
+          curl -fsSL --retry 3 --max-time 150 'https://raw.githubusercontent.com/shlomorsh/desk-break/main/library/exercises.glb' -o app/src/main/assets/models/mobility.glb
+          curl -fsSL --retry 3 --max-time 30 'https://raw.githubusercontent.com/shlomorsh/desk-break/main/LICENSE' -o app/src/main/assets/DESK_BREAK_LICENSE.txt
+          test -s app/src/main/assets/models/mobility.glb
+          du -h app/src/main/assets/models/mobility.glb
       - name: Three.js 3D motorunu paketle
         run: |
           npm install --no-save --no-package-lock --ignore-scripts three@0.180.0 esbuild@0.25.12
