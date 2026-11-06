@@ -37,6 +37,7 @@ export class RigFormGuide {
     this.bones=this.rule.edits.map(([name,axis,amount])=>({
       bone:this.find(name),axis,amount
     })).filter(x=>x.bone);
+    this.originalQuaternions=new Map();
     this.landmarks=this.rule.joint.map(name=>this.find(name)).filter(Boolean);
     this.group=new THREE.Group();
     scene.add(this.group);
@@ -64,12 +65,18 @@ export class RigFormGuide {
   }
   find(name){return this.nodes.get(name.toLowerCase().replace(/[^a-z0-9]/g,''))||null;}
   setMode(mode){this.mode=mode==='mistake'?'mistake':'correct';}
-  apply(phase){
+  apply(phase,recapture=true){
     if(!this.isAvailable)return;
+    // A fresh mixer tick supplies the correct original pose. On a paused
+    // toggle, restore that saved pose first, *not* mixer.setTime(sameTime),
+    // which can subtly change the evaluation state of multiple GLB clips.
+    for(const x of this.bones){
+      if(recapture || !this.originalQuaternions.has(x.bone))
+        this.originalQuaternions.set(x.bone,x.bone.quaternion.clone());
+      else x.bone.quaternion.copy(this.originalQuaternions.get(x.bone));
+    }
     if(this.mode==='mistake'){
       const strength=.60+.40*Math.sin(Math.PI*Math.max(0,Math.min(1,phase)));
-      // AnimationMixer resets the animated quaternion before every update.
-      // These are deliberate small local-space pose offsets, not angle measurements.
       for(const x of this.bones)x.bone.rotation[x.axis]+=x.amount*strength;
     }
     this.render(phase);
