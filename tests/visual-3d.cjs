@@ -233,6 +233,7 @@ const server = http.createServer((req,res)=>{
    console.log('TECHNIQUE '+id+' '+JSON.stringify(a));
    await page.locator('#close').click();
  }
+ await page.locator('[data-move-filter="all"]').click();
  await page.locator('#realMoveList [data-id="lib_squat"]').click();
  assert.equal(await page.locator('#techniqueCompare').isVisible(),false,'Correct/mistake controls must not appear for unvalidated anatomical models');
  await page.locator('#close').click();
