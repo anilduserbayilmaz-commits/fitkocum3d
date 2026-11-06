@@ -4,7 +4,8 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {Technique3D} from './technique-viewer.js';
 import {RigFormGuide, GUIDED_ANATOMY_IDS} from './rig-form-guide.js';
 import {PremiumStudio} from './premium-studio.js';
-import {AnimatedMuscleHighlights} from './muscle-highlights.js';
+import {AnimatedMuscleHighlights,EXERCISE_MUSCLES,MUSCLE_NAMES} from './muscle-highlights.js';
+window.FitMuscleCatalog={profiles:EXERCISE_MUSCLES,names:MUSCLE_NAMES};
 
 const PACK = new Set([
   'bent_over_row','bicep_curl','calf_raise','crunch','deadlift',
