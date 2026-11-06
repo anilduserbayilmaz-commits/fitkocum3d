@@ -23,7 +23,7 @@ const server=http.createServer((req,res)=>{
  const page=await browser.newPage({viewport:{width:750,height:1050},deviceScaleFactor:1});
  const errors=[];
  page.on('pageerror',err=>errors.push(err.stack||String(err)));
- page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+ page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.text().startsWith('RETARGET_MATCHES')||m.text().startsWith('RETARGET_ASSET_LOAD'))console.log(m.text())});
  await page.goto('http://127.0.0.1:8871/');
  await page.waitForFunction(()=>Boolean(window.__v31),null,{timeout:25000}).catch(async e=>{throw Error('Prototype did not initialize: '+JSON.stringify(errors)+'; '+await page.locator('#error').textContent()+'; '+String(e))});
  const result=await page.evaluate(()=>window.__v31);
