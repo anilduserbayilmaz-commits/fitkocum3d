@@ -118,7 +118,7 @@ const server = http.createServer((req,res)=>{
  }
 
  // 24 anatomical + 36 distinct 3D mannequin exercises, with correct category filters.
- assert.equal(await page.locator('#moveFilters [data-move-filter]').count(),5);
+ assert.equal(await page.locator('#moveFilters [data-move-filter]').count(),6);
  assert.equal(await page.locator('#realMoveList article').count(),65,'Total library count');
  for(const [category,count] of [['strength',24],['technique',5],['warmup',14],['mobility',14],['accessory',8]]){
    await page.locator('[data-move-filter="'+category+'"]').click();
