@@ -33,7 +33,7 @@ const server = http.createServer((req,res)=>{
  const screenshots=[];
  for(const id of ['plank','squat','deadlift']){
   await page.locator('[data-id="lib_'+id+'"]').click();
-  await page.waitForFunction((expect)=>window.scene?.real?.modelName===expect,{timeout:20000},id);
+  await page.waitForFunction((expected)=>typeof scene!=='undefined'&&scene?.real?.modelName===expected,id,{timeout:20000});
   await page.waitForTimeout(500);
   const state=await page.evaluate(()=>({
      mode:scene.mode,
