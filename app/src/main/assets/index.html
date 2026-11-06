@@ -146,6 +146,11 @@
 <button class="viewbtn" data-camera="side">◧ Yandan</button>
 <button class="viewbtn active" data-camera="angle">◈ 45°</button>
 </div>
+<div class="viewcontrols" aria-label="3D animasyon hızı" style="margin:4px 0 12px">
+<button type="button" class="viewbtn" data-play-speed="0.5">◁ 0,5× Yavaş</button>
+<button type="button" class="viewbtn active" data-play-speed="1">1× Normal</button>
+<button type="button" class="viewbtn" data-play-speed="1.5">▷ 1,5× Hızlı</button>
+</div>
 <section id="techniqueCompare" class="technique-compare" hidden aria-label="3D doğru teknik ve hata karşılaştırması">
 <h3>Tekniği 3D karşılaştır</h3>
 <p>Yeşil işaretler örnek hareketi, kırmızılar abartılmış yaygın hata örneğini gösterir. Hata modu bir çalışma talimatı veya kişisel açı ölçümü değildir.</p>
@@ -519,11 +524,19 @@ document.querySelectorAll('[data-technique-phase]').forEach(b=>b.onclick=()=>{
  $('pause').textContent='▶ Oynat';
 });
 
+
+document.querySelectorAll('[data-play-speed]').forEach(button=>button.onclick=()=>{
+ const value=Number(button.dataset.playSpeed);
+ if(scene?.setPlaybackSpeed)scene.setPlaybackSpeed(value);
+ document.querySelectorAll('[data-play-speed]').forEach(b=>b.classList.toggle('active',b===button));
+});
 function setGuide(id){
  const a=FORMGUIDES[id]||FORMGUIDES.squat;
  ['formSetup','formAngle','formPath','formMistake'].forEach((x,i)=>$(x).textContent=a[i]);
  $('poseRange').value='0';$('poseStage').textContent='Oynatılıyor';
  document.querySelectorAll('[data-camera]').forEach(b=>b.classList.toggle('active',b.dataset.camera==='angle'));
+ document.querySelectorAll('[data-play-speed]').forEach(b=>b.classList.toggle('active',b.dataset.playSpeed==='1'));
+ if(scene?.setPlaybackSpeed)scene.setPlaybackSpeed(1);
 }
 
 const BODYWEIGHT_IDS=new Set(['lib_squat','lib_push_up','lib_plank','lib_lunge','lib_sumo_squat','lib_crunch','lib_glute_bridge','lib_calf_raise','lib_wall_sit','lib_superman','lib_high_knees','lib_jumping_jack','lib_reverse_lunge','lib_glute_bridge','lib_good_morning']);
