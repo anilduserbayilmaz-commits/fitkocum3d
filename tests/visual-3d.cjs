@@ -1,4 +1,5 @@
 const { chromium } = require('playwright-core');
+setTimeout(()=>{ console.error('FAIL: 3D browser test timed out'); process.exit(1); },90000).unref();
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -65,4 +66,4 @@ const server = http.createServer((req,res)=>{
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
  console.log('PASS: all 3 realistic 3D animations visible and advancing');
  await browser.close();
-})().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>server.close());
+})().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
