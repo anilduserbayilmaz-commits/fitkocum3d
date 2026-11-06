@@ -357,9 +357,14 @@ class RealisticViewer {
   setCamera(mode){
     if(!this.camera)return;
     const theta=mode==='front'?0:mode==='side'?Math.PI/2:Math.PI/4;
-    const distance=3.55;
-    this.controls.target.set(0,1.15,0);
-    this.camera.position.set(Math.sin(theta)*distance,2.15,Math.cos(theta)*distance);
+    // Fit complete bench/leg press equipment into the small phone viewer,
+    // while keeping the anatomical body large enough to inspect.
+    const isMachine=this.currentKind==='technique';
+    const wide=isMachine&&['bench','legpress'].includes(this.technique?.kind);
+    const distance=wide?4.35:isMachine?3.95:3.55;
+    const targetHeight=wide?1.08:1.15;
+    this.controls.target.set(0,targetHeight,0);
+    this.camera.position.set(Math.sin(theta)*distance,wide?2.34:2.15,Math.cos(theta)*distance);
     this.controls.update();
   }
   setManualProgress(p){
