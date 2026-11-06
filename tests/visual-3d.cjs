@@ -32,6 +32,43 @@ const server = http.createServer((req,res)=>{
   window.FitAndroid={loadModelBase64:id=>p[id]||'',shareData:()=>{},analyzeMeal:()=>{}};
  },models);
  await page.goto('http://127.0.0.1:'+port+'/index.html');
+ // Smart-coach tests: v1.7 records remain readable, advice requires previous complete easy session.
+ const yesterday=new Date(Date.now()-86400000);
+ const fixture=[0,1,2].map(i=>({id:'bench',weight:50,reps:12,rir:2,date:new Date(yesterday.getTime()+i*60000).toISOString()}));
+ await page.evaluate(entries=>{
+   localStorage.setItem('fitkocum3d_records',JSON.stringify(entries));
+   localStorage.setItem('fitkocum_program_mode','3d');
+   localStorage.setItem('fitkocum_autorest','true');
+ },fixture);
+ await page.reload();
+ await page.locator('#moveList .watch[data-id="bench"]').click();
+ await page.waitForFunction(()=>document.getElementById('coachAdvice').textContent.includes('52,5 kg'));
+ assert.equal(await page.locator('#weight').inputValue(),'52.5','Conservative 2.5 kg suggestion after 3 well-controlled sets');
+ assert.match(await page.locator('#coachHistory').innerText(),/50 kg × 12 tekrar/);
+ await page.locator('#rir').selectOption('1');
+ await page.locator('#reps').fill('10');
+ await page.locator('#save').click();
+ const result=await page.evaluate(()=>{
+   const rows=JSON.parse(localStorage.getItem('fitkocum3d_records'));
+   return {count:rows.length,last:rows.at(-1),timer:typeof timerHandle!=='undefined'&&Boolean(timerHandle),text:document.getElementById('feedback').textContent};
+ });
+ assert.equal(result.count,4);
+ assert.equal(result.last.rir,1);
+ assert.equal(result.last.weight,52.5);
+ assert.equal(result.last.reps,10);
+ assert.equal(result.timer,true,'Auto rest must start');
+ assert.match(result.text,/Set kaydedildi/);
+ await page.locator('#quickRestToggle').click();
+ assert.equal(await page.evaluate(()=>Boolean(timerHandle)),false);
+ await page.locator('#autoRest').uncheck();
+ await page.locator('#rir').selectOption('');
+ await page.locator('#save').click();
+ assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('fitkocum3d_records')).at(-1).rir),null,'Unknown RIR stays null');
+ assert.equal(await page.evaluate(()=>Boolean(timerHandle)),false,'Auto rest disabled');
+ await page.locator('#close').click();
+ await page.evaluate(()=>{localStorage.removeItem('fitkocum3d_records');localStorage.removeItem('fitkocum_autorest')});
+ await page.reload();
+
  assert.equal(await page.locator('#choose3d').count(),1);
  assert.equal(await page.locator('#chooseCustom').count(),1);
  assert.equal(await page.locator('[data-tab="library"]').count(),0,'No separate 3D tab');
@@ -180,6 +217,6 @@ const server = http.createServer((req,res)=>{
    await page.locator('#close').click();
  }
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: 24 anatomical, 5 equipment, 36 mobility = 65 3D, plus persistent custom program editing');
+ console.log('PASS: smart workout coach, RIR records, safe progression, auto rest, 65 3D and custom editing');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
