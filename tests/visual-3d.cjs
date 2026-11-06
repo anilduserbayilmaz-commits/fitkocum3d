@@ -19,7 +19,7 @@ const server = http.createServer((req,res)=>{
 (async()=>{
  await new Promise(ok=>server.listen(port,'127.0.0.1',ok));
  const models={};
- for(const id of ['plank','squat','deadlift']){
+ for(const id of ['plank','squat','deadlift','romanian_deadlift','sumo_squat']){
   models[id]=fs.readFileSync(path.join(ROOT,'models',id+'.glb')).toString('base64');
  }
  const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--disable-gpu-sandbox']});
@@ -31,9 +31,23 @@ const server = http.createServer((req,res)=>{
   window.FitAndroid={loadModelBase64:id=>p[id]||'',shareData:()=>{},analyzeMeal:()=>{}};
  },models);
  await page.goto('http://127.0.0.1:'+port+'/index.html');
- await page.locator('[data-tab="library"]').click();
+ assert.equal(await page.locator('#choose3d').count(),1);
+ assert.equal(await page.locator('[data-tab="library"]').count(),0,'No separate 3D tab');
+ assert.equal(await page.locator('#moveList .move').count(),6);
+ for(const day of ['A','B','C']){
+   await page.locator('[data-day="'+day+'"]').click();
+   const ids=await page.locator('#moveList .watch').evaluateAll(nodes=>nodes.map(n=>n.dataset.id));
+   assert.equal(ids.length,6,day+' must show six program moves');
+   assert.ok(ids.every(id=>id.startsWith('lib_')),day+' must exclusively use real 3D models');
+   console.log('PROGRAM '+day+': '+ids.join(','));
+ }
+ await page.locator('#chooseClassic').click();
+ assert.equal((await page.locator('#moveList .watch').first().getAttribute('data-id')),'lunge');
+ await page.locator('#choose3d').click();
+ await page.locator('#exerciseLibrary').evaluate(el=>el.open=true);
+
  const screenshots=[];
- for(const id of ['plank','squat','deadlift']){
+ for(const id of ['plank','squat','deadlift','romanian_deadlift','sumo_squat']){
   await page.locator('[data-id="lib_'+id+'"]').click();
   await page.waitForFunction((expected)=>typeof scene!=='undefined'&&scene?.real?.modelName===expected,id,{timeout:20000});
   await page.waitForTimeout(500);
