@@ -499,14 +499,31 @@ function renderCustomEditor(){
      else {const j=i+(action==='up'?-1:1);if(j<0||j>=v.ids.length)return;[v.ids[i],v.ids[j]]=[v.ids[j],v.ids[i]]}
      saveCustom();scheduleCustomUpdate();
    });
+   const refreshGoal=()=>{
+     // Update only the rendered program summary. Do not destroy focused
+     // input fields: mobile keyboards otherwise emit delayed "change"
+     // events from detached elements and overwrite the latest value.
+     $('moveList').querySelectorAll('.watch[data-id]').forEach(button=>{
+       if(button.dataset.id!==id)return;
+       const label=button.closest('.move')?.querySelector('.move-content p');
+       if(label)label.textContent=MOVES[id].group+' · '+moveGoal(id);
+     });
+   };
    row.querySelector('[data-goal="sets"]').onchange=e=>{
      const n=Math.max(1,Math.min(10,Number.parseInt(e.target.value)||3));
-     v.goals[id]={sets:n,reps:v.goals[id]?.reps||'8–12'};saveCustom();scheduleCustomUpdate();
+     e.target.value=String(n);
+     v.goals[id]={sets:n,reps:v.goals[id]?.reps||'8–12'};
+     saveCustom();refreshGoal();
    };
-   row.querySelector('[data-goal="reps"]').onchange=e=>{
-     const reps=e.target.value.trim().slice(0,22)||'8–12';
-     v.goals[id]={sets:v.goals[id]?.sets||3,reps};saveCustom();scheduleCustomUpdate();
+   const repsField=row.querySelector('[data-goal="reps"]');
+   const setReps=e=>{
+     const reps=e.target.value.trim().slice(0,22);
+     if(!reps)return;
+     v.goals[id]={sets:v.goals[id]?.sets||3,reps};
+     saveCustom();refreshGoal();
    };
+   repsField.oninput=setReps;
+   repsField.onchange=setReps;
  });
  refreshCustomChoices();
 }
