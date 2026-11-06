@@ -13,15 +13,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Download verified v2.2 APK
+      - name: Download verified v3.0 APK
         run: |
           mkdir -p /tmp/fitkocum
-          gh run download 42284620971 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
+          gh run download 42290968763 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
           test -s /tmp/fitkocum/app-debug.apk
-          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v2.2.apk
-          unzip -t FitKocum3D-Plus-v2.2.apk | tail -1
-          sha256sum FitKocum3D-Plus-v2.2.apk
+          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v3.0.apk
+          unzip -t FitKocum3D-Plus-v3.0.apk | tail -1
+          sha256sum FitKocum3D-Plus-v3.0.apk
       - name: Publish direct install file
         run: |
-          gh release create v2.2.0 FitKocum3D-Plus-v2.2.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v2.2' --notes 'FitKoçum 3D+ v2.2 Android APK. New native, skeletal-animation-following 3D muscle region tinting: primary muscles in orange, secondary/supporting muscles in turquoise, with Off/Primary/All options and Turkish muscle names. Supports the 24 rigged anatomical movements and five equipment technique demonstrations. Existing 36 mobility animations intentionally show no inaccurate muscle diagram. Colors are educational approximate regions, not precise biomechanical or EMG measurements. Premium offline gym, correct-vs-common-error guides, 65 exercise library, personalized training, smart coach and meal records retained. Chromium WebGL regression, editable native vertex-color tests, data persistence and Android APK build passed. Physical Pixel 9 device test pending.'
-          gh release view v2.2.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
+          gh release create v3.0.0 FitKocum3D-Plus-v3.0.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v3.0' --notes 'FitKoçum 3D+ v3.0: 390 individually named 3D exercises (24 anatomical strength animations, five equipment technique scenes and 361 exercise-specific mobility, yoga, cardio, chair, balance and stretching clips). 325 new clips originate from the MIT-licensed Desk Break collection, license and credit included. Game-style 3D athlete with improved body proportions, skin, face, hair, gym clothes and sneakers bound to the exercise skeleton, plus Arena/Pulse/Carbon outfits and original mannequin fallback. Search, 16 categories, favorites and progressive load-more in exercise Atlas; chair and yoga mat stage props. Existing workout planner, custom set and rep editing, recorded sets, smart progression, food log, offline playback preserved. All 361 movement IDs were cross-checked against 435 stored clips and the WebGL regression suite passed. Android APK successfully built. Character is stylized, not photorealistic or motion-captured; 300+ strength lifts are not claimed. Device testing on Pixel 9 still pending.'
+          gh release view v3.0.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
