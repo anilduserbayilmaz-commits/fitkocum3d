@@ -148,7 +148,9 @@ class RealisticViewer {
   }
   createWeights(name,model){
     if(this.equipment){this.scene.remove(this.equipment);this.equipment=null}
-    this.wrists=[model.getObjectByName('wrist_L')||model.getObjectByName('wrist.L'),model.getObjectByName('wrist_R')||model.getObjectByName('wrist.R')];
+    const wristBones=[];
+    model.traverse(node=>{if(/wrist/i.test(node.name||'')) wristBones.push(node)});
+    this.wrists=[wristBones[0]||null,wristBones[1]||null];
     if(!this.wrists[0]||!this.wrists[1])return;
     const bars=new Set(['deadlift','romanian_deadlift','bent_over_row','overhead_press']);
     const dumbbells=new Set(['bicep_curl','hammer_curl','dumbbell_shoulder_press','front_raise','lateral_raise','overhead_tricep_extension']);
