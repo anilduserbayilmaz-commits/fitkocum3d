@@ -7,6 +7,8 @@ on:
       - 'web-src/realistic-viewer.js'
       - 'web-src/rig-form-guide.js'
       - 'web-src/premium-studio.js'
+      - 'web-src/game-athlete.js'
+      - 'app/src/main/assets/exercises-extra.js'
       - 'web-src/muscle-highlights.js'
       - 'web-src/technique-viewer.js'
       - 'tests/visual-3d.cjs'
@@ -18,7 +20,7 @@ permissions: {contents: read}
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - name: Download anatomical models and viewer
