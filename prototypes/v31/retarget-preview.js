@@ -91,6 +91,7 @@ async function run(){
  const frames=[];
  for(const t of times){pose(t);frames.push({time:t,limbs:limbPose()})}
  pose(targetClip.duration*.5);
+ window.__v31Pose=(phase)=>pose(targetClip.duration*Math.max(0,Math.min(1,phase)));
  const result={
   status:'ok',exercise,character:'CC0 MakeHuman textured with fitted gym outfit',originalClip:clip.name,
   sourceTracks:clip.tracks.length,retargetedTracks:targetTracks.length,
