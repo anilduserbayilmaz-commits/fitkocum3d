@@ -822,29 +822,67 @@ $('importWorkoutBtn').onclick=()=>{
  records=merged;update();$('importWorkoutStatus').textContent='✓ '+(merged.length-before)+' yeni set aktarıldı.';
 };
 
-let moveFilter='all',moveQuery='';
+let moveFilter='all',moveQuery='',visibleLimit=24;
 const libraryStrength=LIBRARY3D.map(m=>({...m,category:'strength',kind:'anatomical'}));
-function renderLibrary(){
- const all=[...libraryStrength,...TECHNIQUE3D,...MOBILITY3D];
- const clean=s=>String(s).toLocaleLowerCase('tr-TR');
- const matches=all.filter(m=>(moveFilter==='all'||m.category===moveFilter)&&clean(m.name+' '+m.group+' '+m.id).includes(clean(moveQuery)));
- $('moveCount').textContent=matches.length+' / 65 hareket';
- $('realMoveList').innerHTML=matches.length?matches.map(m=>{
-  const isAnatomical=m.kind==='anatomical',isTechnique=m.kind==='technique';
-  const id=isTechnique?m.id:(isAnatomical?'lib_':'mobility_')+m.id;
-  const art=isAnatomical?'<img loading="lazy" src="thumbs/'+m.id+'.png" style="height:76px;width:76px;object-fit:cover;border-radius:11px" alt="">':'<span style="font-size:32px">'+(isTechnique?'🏋️':'🪵')+'</span>';
-  const label=isAnatomical?'Anatomik 3D':isTechnique?'Ekipmanlı 3D teknik modeli':'Manken 3D';
-  return '<article class="move"><div class="move-art" aria-hidden="true">'+art+'</div><div class="move-content"><h3>'+m.name+'</h3><p>'+m.group+' · '+label+'</p><button class="watch" data-id="'+id+'">◈ 3D İNCELE</button></div></article>';
- }).join(''):'<div class="empty">Bu arama için hareket bulunamadı.</div>';
- $('realMoveList').querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));
+const fullLibrary=[...libraryStrength,...TECHNIQUE3D,...ALL_MOBILITY3D];
+const categoryLabels=[
+ ['all','Tümü'],['favorites','★ Favoriler'],
+ ['strength','Anatomik Kuvvet'],['technique','Makineler'],
+ ['warmup','Isınma'],['mobility','Mobilite'],['accessory','Ek Çalışmalar'],
+ ['upper','Boyun & Omuz'],['back','Omurga'],['hips','Kalça & Bacak'],
+ ['cardio','Hafif Kardiyo'],['balance','Denge'],['chair','Sandalye'],
+ ['floor-seated','Yerde Oturarak'],['floor-lying','Yerde Uzanarak'],['yoga','Yoga']
+];
+const libraryCounts=Object.fromEntries(categoryLabels.map(([id])=>[id,id==='all'?fullLibrary.length:fullLibrary.filter(m=>m.category===id).length]));
+const libraryKey=m=>m.kind==='anatomical'?'lib_'+m.id:m.kind==='technique'?m.id:'mobility_'+m.id;
+let favoriteMoves=new Set();
+try{
+ const storedFavorites=JSON.parse(localStorage.getItem('fitkocum_favorite_moves')||'[]');
+ if(Array.isArray(storedFavorites))favoriteMoves=new Set(storedFavorites.filter(x=>MOVES[x]));
+}catch{}
+function saveFavorites(){
+ try{localStorage.setItem('fitkocum_favorite_moves',JSON.stringify([...favoriteMoves]))}catch{}
 }
-$('moveSearch').addEventListener('input',e=>{moveQuery=e.target.value.trim();renderLibrary();});
-document.querySelectorAll('[data-move-filter]').forEach(button=>button.onclick=()=>{
- moveFilter=button.dataset.moveFilter;
- document.querySelectorAll('[data-move-filter]').forEach(b=>b.classList.toggle('active',b===button));
- renderLibrary();
-});
+function renderFilterButtons(){
+ $('moveFilters').innerHTML=categoryLabels.map(([id,label])=>'<button class="viewbtn'+(moveFilter===id?' active':'')+'" data-move-filter="'+id+'" style="white-space:nowrap">'+label+' ('+(id==='favorites'?favoriteMoves.size:libraryCounts[id])+')</button>').join('');
+ $('moveFilters').querySelectorAll('[data-move-filter]').forEach(button=>button.onclick=()=>{
+   moveFilter=button.dataset.moveFilter;visibleLimit=24;renderLibrary();
+ });
+}
+function renderLibrary(){
+ const clean=s=>String(s).toLocaleLowerCase('tr-TR');
+ const q=clean(moveQuery).trim();
+ const matches=fullLibrary.filter(m=>{
+   const id=libraryKey(m);
+   const categoryOK=moveFilter==='all'||moveFilter==='favorites'&&favoriteMoves.has(id)||m.category===moveFilter;
+   return categoryOK && (!q||clean(m.name+' '+m.group+' '+m.id+' '+m.category).includes(q));
+ });
+ const shown=matches.slice(0,visibleLimit);
+ $('moveCount').textContent=matches.length+' / '+TOTAL_3D_MOVES+' animasyon · '+Math.min(visibleLimit,matches.length)+' gösteriliyor';
+ $('realMoveList').innerHTML=shown.length?shown.map(m=>{
+   const isAnatomical=m.kind==='anatomical',isTechnique=m.kind==='technique';
+   const id=libraryKey(m);
+   const art=isAnatomical?'<img loading="lazy" src="thumbs/'+m.id+'.png" style="height:76px;width:76px;object-fit:cover;border-radius:12px" alt="">'
+     :'<span class="library-emoji">'+(isTechnique?'🏋️':m.icon||'◈')+'</span>';
+   const label=isAnatomical?'Anatomik 3D':isTechnique?'Ekipmanlı 3D':'3D Atlet · '+m.group;
+   return '<article class="move catalog-move"><div class="move-art" aria-hidden="true">'+art+'</div>'
+     +'<div class="move-content"><h3>'+escapeText(m.name)+'</h3><p>'+escapeText(label)+'</p>'
+     +'<div class="library-actions"><button class="watch" data-id="'+escapeText(id)+'">◈ 3D AÇ</button>'
+     +'<button class="favorite-move'+(favoriteMoves.has(id)?' selected':'')+'" data-favorite="'+escapeText(id)+'" aria-label="Favorilere '+(favoriteMoves.has(id)?'eklenmiş':'ekle')+'">'+(favoriteMoves.has(id)?'★':'☆')+'</button></div></div></article>';
+ }).join(''):'<div class="empty">Aradığın hareket bulunamadı. Başka bir isim veya kategori dene.</div>';
+ $('loadMoreMoves').hidden=matches.length<=visibleLimit;
+ $('loadMoreMoves').style.display=matches.length<=visibleLimit?'none':'block';
+ $('loadMoreMoves').textContent='＋ '+Math.min(24,matches.length-visibleLimit)+' hareket daha göster';
+ $('realMoveList').querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));
+ $('realMoveList').querySelectorAll('[data-favorite]').forEach(b=>b.onclick=()=>{
+   const id=b.dataset.favorite;
+   if(favoriteMoves.has(id))favoriteMoves.delete(id);else favoriteMoves.add(id);
+   saveFavorites();renderLibrary();
+ });
+ renderFilterButtons();
+}
+$('loadMoreMoves').onclick=()=>{visibleLimit+=24;renderLibrary()};
+$('moveSearch').addEventListener('input',e=>{moveQuery=e.target.value.trim();visibleLimit=24;renderLibrary();});
 renderLibrary();
-
 update();clock();
 </script></body></html>
