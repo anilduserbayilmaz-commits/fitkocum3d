@@ -25,14 +25,15 @@ async function run(){
  const realBones=new Map(realSkin.skeleton.bones.map(b=>[b.name,b]));
  let dressed=0;
  for(const asset of [shorts,shirt,shoes]){
-  asset.scene.traverse(o=>{
-    if(!o.isSkinnedMesh)return;
+  const garmentMeshes=[];
+  asset.scene.traverse(o=>{if(o.isSkinnedMesh)garmentMeshes.push(o)});
+  for(const o of garmentMeshes){
     const bones=o.skeleton.bones.map(b=>realBones.get(b.name));
     if(bones.some(b=>!b))throw Error('Clothing rig cannot match base body');
     o.bind(new THREE.Skeleton(bones,o.skeleton.boneInverses.map(m=>m.clone())),o.bindMatrix.clone());
     real.scene.add(o);
     dressed++;
-  });
+  }
  }
  const clip=source.animations.find(c=>c.name==='Human')||source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
  const targetClip=retargetClip(realSkin,sourceSkin,clip,{
