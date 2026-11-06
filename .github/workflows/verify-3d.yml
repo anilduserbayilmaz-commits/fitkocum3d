@@ -7,6 +7,7 @@ on:
       - 'web-src/realistic-viewer.js'
       - 'web-src/rig-form-guide.js'
       - 'web-src/premium-studio.js'
+      - 'web-src/muscle-highlights.js'
       - 'web-src/technique-viewer.js'
       - 'tests/visual-3d.cjs'
       - '.github/workflows/verify-3d.yml'
