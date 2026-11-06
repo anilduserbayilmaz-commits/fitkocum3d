@@ -26,7 +26,7 @@ const server = http.createServer((req,res)=>{
  const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--disable-gpu-sandbox']});
  const page=await browser.newPage({viewport:{width:393,height:851},deviceScaleFactor:1});
  const consoleErrors=[];
- page.on('pageerror',e=>consoleErrors.push(String(e)));
+ page.on('pageerror',e=>consoleErrors.push(e.stack||String(e)));
  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});
  await page.addInitScript(p=>{
   window.FitAndroid={loadModelBase64:id=>p[id]||'',shareData:()=>{},analyzeMeal:()=>{}};
