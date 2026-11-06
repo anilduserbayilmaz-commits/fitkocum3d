@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {Technique3D} from './technique-viewer.js';
+import {RigFormGuide, GUIDED_ANATOMY_IDS} from './rig-form-guide.js';
 
 const PACK = new Set([
   'bent_over_row','bicep_curl','calf_raise','crunch','deadlift',
@@ -32,6 +33,7 @@ class RealisticViewer {
     this.mixer=null;
     this.actions=[];
     this.clipDuration=2.5;
+    this.rigGuide=null;
     try{this.init()}catch(e){console.error('[FitKoçum 3D+]',e);this.fail=true}
   }
   init(){
@@ -109,6 +111,7 @@ class RealisticViewer {
       if(!this.technique)this.technique=new Technique3D(this.scene);
       if(this.modelRoot)this.modelRoot.visible=false;
       if(this.equipment)this.equipment.visible=false;
+      if(this.rigGuide)this.rigGuide.group.visible=false;
       this.technique.root.visible=true;
       this.active=true;this.playing=true;this.progress=0;this.currentKind='technique';this.clipDuration=3.2;
       this.modelName='technique:'+id;
@@ -120,6 +123,7 @@ class RealisticViewer {
     if(this.technique)this.technique.root.visible=false;
     if(this.modelRoot)this.modelRoot.visible=true;
     if(this.equipment)this.equipment.visible=true;
+    if(this.rigGuide)this.rigGuide.group.visible=!isMobility;
     const isMobility=name.startsWith('mobility:');
     const clipName=isMobility?name.substring('mobility:'.length):null;
     const assetName=isMobility?'mobility':name;
@@ -129,7 +133,11 @@ class RealisticViewer {
     if(this.modelName===assetName&&this.modelRoot){
       if(isMobility){
         try{this.selectMobilityClip(clipName)}catch(e){this.showStatus(String(e.message),true)}
-      }else{this.mixer?.setTime(0);this.showStatus('')}
+      }else{
+        this.mixer?.setTime(0);
+        if(this.rigGuide){this.rigGuide.setMode('correct');this.rigGuide.apply(0)}
+        this.showStatus('');
+      }
       return;
     }
     this.showStatus(isMobility?'Mobilite animasyonu yükleniyor…':'Anatomik 3D model yükleniyor…');
@@ -142,6 +150,7 @@ class RealisticViewer {
       const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
       const gltf=await new Promise((res,rej)=>this.loader.parse(bytes.buffer,'',res,rej));
       if(this.token!==stamp)return;
+      if(this.rigGuide){this.rigGuide.dispose();this.rigGuide=null}
       if(this.modelRoot){
         this.scene.remove(this.modelRoot);
         this.modelRoot.traverse(o=>{
@@ -181,6 +190,10 @@ class RealisticViewer {
           this.actions.push(action);
         }
         this.mixer.setTime(0);
+        if(GUIDED_ANATOMY_IDS.includes(assetName)){
+           this.rigGuide=new RigFormGuide(this.scene,model,assetName);
+           if(this.rigGuide.isAvailable)this.rigGuide.apply(0);
+        }
         this.showStatus(clips.length?'':'Modelde animasyon bulunamadı.',!clips.length);
       }
     }catch(e){
@@ -248,9 +261,19 @@ class RealisticViewer {
   }
   setPlaying(v){this.playing=Boolean(v)}
   setTechniqueMode(mode){
-    if(this.currentKind!=='technique'||!this.technique)return;
-    this.technique.setFormMode(mode);
-    this.technique.frame(this.progress);
+    if(this.currentKind==='technique'&&this.technique){
+      this.technique.setFormMode(mode);
+      this.technique.frame(this.progress);
+      return;
+    }
+    if(this.currentKind==='anatomical'&&this.rigGuide){
+      // Restore tracked rig bones from the original 3D animation before
+      // applying any intentional illustrative error offsets.
+      this.rigGuide.setMode(mode);
+      if(this.mixer)this.mixer.setTime(this.mixer.time);
+      this.rigGuide.apply(this.progress);
+      this.updateWeights();
+    }
   }
   setCamera(mode){
     if(!this.camera)return;
@@ -263,7 +286,12 @@ class RealisticViewer {
   setManualProgress(p){
     this.playing=false;
     this.progress=Math.max(0,Math.min(1,Number(p)||0));
-    if(this.currentKind==='technique'){this.technique?.frame(this.progress)}else if(this.mixer)this.mixer.setTime(this.progress*this.clipDuration);
+    if(this.currentKind==='technique')this.technique?.frame(this.progress);
+    else if(this.mixer){
+      this.mixer.setTime(this.progress*this.clipDuration);
+      if(this.currentKind==='anatomical'&&this.rigGuide)this.rigGuide.apply(this.progress);
+      this.updateWeights();
+    }
   }
   animate(now){
     this.requestId=requestAnimationFrame(this.animate);
@@ -285,6 +313,7 @@ class RealisticViewer {
     } else if(this.playing && this.mixer){
       this.mixer.update(dt);
       this.progress=(this.mixer.time%this.clipDuration)/this.clipDuration;
+      if(this.currentKind==='anatomical'&&this.rigGuide)this.rigGuide.apply(this.progress);
       const scrub=document.getElementById('poseRange');
       if(scrub && document.getElementById('overlay')?.hidden===false){
         scrub.value=String(Math.round(this.progress*100));
@@ -303,6 +332,7 @@ class RealisticViewer {
   stop(){
     cancelAnimationFrame(this.requestId);
     this.technique?.destroy();
+    this.rigGuide?.dispose();
     this.controls?.dispose();
     this.renderer?.dispose();
     this.active=false;
@@ -341,7 +371,7 @@ class Hybrid3D{
     if(badge)badge.textContent=this.mode==='real'?'● ANATOMİK 3D':this.mode==='technique'?'● 3D HAREKET TEKNİĞİ':this.mode==='mobility'?'● HAREKETLİ 3D MANEKEN':'● ŞEMATİK 3D MODEL';
   }
   setCamera(mode){this.mode!=='old'?this.real.setCamera(mode):this.original.setCamera(mode)}
-  setTechniqueMode(mode){if(this.mode==='technique')this.real.setTechniqueMode(mode)}
+  setTechniqueMode(mode){if(this.mode==='technique'||this.mode==='real')this.real.setTechniqueMode(mode)}
   setManualProgress(v){this.mode!=='old'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
   setPlaying(v){
     this.playing=Boolean(v);
