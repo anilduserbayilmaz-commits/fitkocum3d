@@ -254,6 +254,76 @@ const server = http.createServer((req,res)=>{
    console.log('MOBILITY '+id+': '+JSON.stringify(state));
    await page.locator('#close').click();
  }
+
+ // 361 unique movement IDs must have real, separately named clips in the
+ // bundled 435-clip MIT GLB, not one shared generic demonstration.
+ const clipAudit=await page.evaluate(()=>{
+   const names=new Set(scene.real.availableClips.map(c=>c.name));
+   const missing=ALL_MOBILITY3D.filter(m=>!names.has(m.id)).map(m=>m.id);
+   return {all:ALL_MOBILITY3D.length,extra:EXTRA_MOBILITY3D.length,
+     available:names.size,missing,
+     metadata:Object.keys(window.FitMotionMeta||{}).length};
+ });
+ assert.equal(clipAudit.all,361);
+ assert.equal(clipAudit.extra,325);
+ assert.equal(clipAudit.metadata,361);
+ assert.deepEqual(clipAudit.missing,[],'Every advertised exercise must have its own actual animation');
+ console.log('CLIP_AUDIT '+JSON.stringify(clipAudit));
+ // Game avatar: original 15-bone motion stays intact; shader, facial detail,
+ // clothes and footwear are attached to the same moving bones.
+ for(const [id,category] of [
+   ['chair-march','chair'],
+   ['pelvic-tilt-lying','floor-lying'],
+   ['floor-butterfly-stretch','floor-seated'],
+   ['warrior-2','yoga'],
+   ['balance-single-leg-stand','balance'],
+   ['neck-rotation','upper'],
+   ['high-knee-march','cardio']
+ ]){
+   await clickLibrary('mobility_'+id);
+   await page.waitForFunction(expected=>typeof scene!=='undefined'&&scene.mode==='mobility'
+     &&scene.real.actions?.[0]?.getClip()?.name===expected
+     &&scene.real.gameAthlete?.originals?.length>0,id,{timeout:20000});
+   assert.equal(await page.locator('#athleteStudioPanel').isVisible(),true);
+   const state=await page.evaluate(()=>({
+     kind:scene.real.currentKind,
+     name:scene.real.actions[0].getClip().name,
+     look:scene.real.gameAthlete.look,
+     active:scene.real.gameAthlete.enabled,
+     originalParts:scene.real.gameAthlete.originals.length,
+     details:scene.real.gameAthlete.attachments.length,
+     vertexColor:scene.real.gameAthlete.originals[0].obj.material[0]?.vertexColors
+       ??scene.real.gameAthlete.originals[0].obj.material.vertexColors,
+     chair:scene.real.studio.mobilityChair.visible,
+     mat:scene.real.studio.yogaMat.visible
+   }));
+   assert.equal(state.kind,'mobility');
+   assert.equal(state.name,id);
+   assert.equal(state.active,true);
+   assert.ok(state.originalParts>=1,'Game avatar must recolor the original rigged mesh');
+   assert.ok(state.details>=15,'Game avatar must provide face/hair/shoes geometry');
+   assert.equal(state.vertexColor,true);
+   if(category==='chair')assert.equal(state.chair,true);
+   if(['floor-seated','floor-lying','yoga'].includes(category))assert.equal(state.mat,true);
+   if(id==='chair-march'){
+     await page.waitForTimeout(160);
+     const athleteShot=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-game-athlete.png'});
+     await page.locator('[data-athlete-mode="original"]').click();
+     assert.equal(await page.evaluate(()=>scene.real.gameAthlete.enabled),false);
+     const classicShot=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-original-mannequin.png'});
+     assert.notEqual(Buffer.compare(athleteShot,classicShot),0,'Avatar style must visually change 3D render');
+     await page.locator('[data-athlete-mode="athlete"]').click();
+     await page.locator('[data-athlete-look="pulse"]').click();
+     assert.equal(await page.evaluate(()=>scene.real.gameAthlete.look),'pulse');
+     await page.locator('.scene').screenshot({path:'/tmp/fitkocum-game-athlete-pulse.png'});
+   }
+   const before=await page.evaluate(()=>scene.real.mixer.time);
+   await page.waitForTimeout(450);
+   assert.ok((await page.evaluate(()=>scene.real.mixer.time))>before,'Game avatar motion must advance '+id);
+   console.log('GAME_AVATAR '+id+' '+JSON.stringify(state));
+   await page.locator('#close').click();
+ }
+ await page.locator('#moveSearch').fill('');
  // Five separate equipment models have their own moving human figure, machine geometry and exercise path.
  await page.locator('#moveSearch').fill('');
  await page.locator('[data-move-filter="technique"]').click();
