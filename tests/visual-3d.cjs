@@ -326,6 +326,21 @@ const server = http.createServer((req,res)=>{
      primaries:scene.real.muscleOverlay.muscles.filter(x=>x.role==='primary'&&x.mesh.visible).length,
      secondaries:scene.real.muscleOverlay.muscles.filter(x=>x.role==='secondary'&&x.mesh.visible).length
    }));
+   if(id==='squat'){
+     const meshes=await page.evaluate(()=>{
+       const arr=[];scene.real.modelRoot.traverse(o=>{
+         if(o.isMesh||o.isSkinnedMesh){
+           const mats=Array.isArray(o.material)?o.material:[o.material];
+           arr.push({name:o.name,type:o.type,material:mats.map(m=>({
+             name:m?.name,color:m?.color?.getHexString(),vertexColors:m?.vertexColors,skin:m?.skinning,
+             roughness:m?.roughness,transparent:m?.transparent
+           }))});
+         }
+       });
+       return arr.slice(0,35);
+     });
+     console.log('GLB_MESH_SURFACES '+JSON.stringify(meshes));
+   }
    assert.equal(overlay.id,id);
    assert.equal(overlay.mode,'primary');
    assert.ok(overlay.count>=1,'Real rig has bone-bound muscle markers '+id);
