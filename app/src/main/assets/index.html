@@ -91,6 +91,16 @@
 .favorite-move{background:#29363a;border:1px solid #466665;border-radius:10px;padding:6px 12px;color:#91bbb5;font-size:20px;min-height:37px}
 .favorite-move.selected{color:#ffe092;background:#574b31;border-color:#bea36b}
 .catalog-move .watch{background:#335246;color:#e0f7db;font-size:11px;min-width:106px;text-align:center;border-radius:9px;padding:9px 13px}
+
+.athlete-panel{border:1px solid #508e84;background:linear-gradient(135deg,#172b33,#1c3c3a);border-radius:17px;padding:14px;margin:9px 0 15px}
+.athlete-title{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:900;color:#d7faf1;letter-spacing:.4px}
+.athlete-title span:last-child{color:#8fe7c1;font-size:9px}
+.athlete-description,.athlete-disclaimer{color:#b9d4d0;font-size:11px;line-height:1.55;margin:9px 0 12px}
+.athlete-disclaimer{color:#9fbcb6;margin:10px 0 0;font-size:10px}
+.athlete-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.athlete-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.athlete-grid button{padding:10px 4px;border-radius:10px;font-size:11px;line-height:1.35}
+.athlete-grid button.active{background:#32665c!important;border-color:#81dbbd!important;color:#e5fff4!important}
 </style></head><body>
 <div class="shell">
 <header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
@@ -186,6 +196,20 @@
   </div>
   <p class="render-panel-note">Yüksek kalite daha fazla pil tüketebilir. 3D model aynı kalır; ışık, gölge ve çözünürlük değişir.</p>
 </div>
+<section id="athleteStudioPanel" class="athlete-panel" hidden aria-label="3D sanal sporcu görünümü">
+  <div class="athlete-title"><span>◈ OYUN STİLİ 3D SPORCU</span><span>ÇEVRİMDIŞI</span></div>
+  <p class="athlete-description">Yeni 361 esneme, denge ve mobilite animasyonu için yüz, saç, spor kıyafeti ve ayakkabıları olan oyun tarzı sporcu. İstersen eski mankene dönebilirsin.</p>
+  <div class="athlete-grid" role="group" aria-label="3D karakter seç">
+    <button class="viewbtn active" type="button" data-athlete-mode="athlete">◈ 3D Sporcu</button>
+    <button class="viewbtn" type="button" data-athlete-mode="original">○ Orijinal Manken</button>
+  </div>
+  <div class="athlete-grid three" role="group" aria-label="Sporcu kıyafet rengi" style="margin-top:8px">
+    <button class="viewbtn active" type="button" data-athlete-look="arena">◉ Arena</button>
+    <button class="viewbtn" type="button" data-athlete-look="pulse">◉ Pulse</button>
+    <button class="viewbtn" type="button" data-athlete-look="carbon">◉ Carbon</button>
+  </div>
+  <p class="athlete-disclaimer">3D sporcu, orijinal hareket iskeletine bağlanan stilize bir oyun karakteridir; fotogerçekçi insan taraması veya profesyonel hareket yakalama değildir.</p>
+</section>
 <section id="musclePanel" class="muscle-panel" hidden aria-label="Çalışan kasların 3D vurgusu">
   <div class="muscle-panel-title">◉ HAREKETTE ÇALIŞAN KASLAR <span>3D BÖLGE GÖSTERİMİ</span></div>
   <div class="muscle-mode-grid" role="group" aria-label="Kas vurgulama modu">
@@ -374,6 +398,7 @@ const EXTRA_MOBILITY3D=Array.isArray(window.FitExtraExercises)?window.FitExtraEx
 for(const m of EXTRA_MOBILITY3D)if(!Object.prototype.hasOwnProperty.call(MOVES,'mobility_'+m.id))
   MOVES['mobility_'+m.id]={name:m.name,group:m.group,sets:m.sets,type:'mobility:'+m.id,icon:m.icon,steps:m.steps,kind:'mobility'};
 const ALL_MOBILITY3D=[...MOBILITY3D,...EXTRA_MOBILITY3D];
+window.FitMotionMeta=Object.fromEntries(ALL_MOBILITY3D.map(m=>[m.id,{category:m.category,view:m.view||'full',name:m.name}]));
 const TOTAL_3D_MOVES=LIBRARY3D.length+TECHNIQUE3D.length+ALL_MOBILITY3D.length;
 
 
@@ -640,6 +665,31 @@ document.querySelectorAll('[data-muscle-mode]').forEach(button=>button.onclick=(
  applyMuscleMode();
 });
 
+
+let athleteMode='athlete',athleteLook='arena';
+try{
+ const am=localStorage.getItem('fitkocum_athlete_mode');
+ const al=localStorage.getItem('fitkocum_athlete_look');
+ if(['athlete','original'].includes(am))athleteMode=am;
+ if(['arena','pulse','carbon'].includes(al))athleteLook=al;
+}catch{}
+function applyAthleteSettings(){
+ if(scene?.setAvatarMode)scene.setAvatarMode(athleteMode);
+ if(scene?.setAvatarLook)scene.setAvatarLook(athleteLook);
+ document.querySelectorAll('[data-athlete-mode]').forEach(b=>b.classList.toggle('active',b.dataset.athleteMode===athleteMode));
+ document.querySelectorAll('[data-athlete-look]').forEach(b=>b.classList.toggle('active',b.dataset.athleteLook===athleteLook));
+}
+document.querySelectorAll('[data-athlete-mode]').forEach(button=>button.onclick=()=>{
+ athleteMode=button.dataset.athleteMode;
+ try{localStorage.setItem('fitkocum_athlete_mode',athleteMode)}catch{}
+ applyAthleteSettings();
+});
+document.querySelectorAll('[data-athlete-look]').forEach(button=>button.onclick=()=>{
+ athleteLook=button.dataset.athleteLook;
+ try{localStorage.setItem('fitkocum_athlete_look',athleteLook)}catch{}
+ applyAthleteSettings();
+});
+
 function setGuide(id){
  const a=FORMGUIDES[id]||FORMGUIDES.squat;
  ['formSetup','formAngle','formPath','formMistake'].forEach((x,i)=>$(x).textContent=a[i]);
@@ -707,8 +757,8 @@ function refreshCoach(id){
  return summary;
 }
 
-function openMove(id){selected=id;let m=MOVES[id];setGuide(id);renderMusclePanel(id);
-$('techniqueCompare').hidden=!Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id);techniqueForm='correct';$('techniquePhase').textContent='Başlangıç';$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Bazı hareketlerde gösterilen hatalı eklem pozları eğitsel canlandırmadır, tek başına form değerlendirmesi değildir.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Yeni hareketlerde 3D sporcu animasyonu gösterilir. Adımları İngilizce olabilir; ağrısız, kontrollü hareket et.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const summary=refreshCoach(id);$('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';$('reps').value=summary.last?.reps??'';$('rir').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){applyVisualSettings();applyMuscleMode();scene.setExercise(m.type);$('sceneError').hidden=true;if(Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id))setTechniqueForm('correct')}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
+function openMove(id){selected=id;let m=MOVES[id];setGuide(id);renderMusclePanel(id);$('athleteStudioPanel').hidden=!id.startsWith('mobility_');
+$('techniqueCompare').hidden=!Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id);techniqueForm='correct';$('techniquePhase').textContent='Başlangıç';$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Bazı hareketlerde gösterilen hatalı eklem pozları eğitsel canlandırmadır, tek başına form değerlendirmesi değildir.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Yeni hareketlerde 3D sporcu animasyonu gösterilir. Adımları İngilizce olabilir; ağrısız, kontrollü hareket et.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const summary=refreshCoach(id);$('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';$('reps').value=summary.last?.reps??'';$('rir').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){applyVisualSettings();applyAthleteSettings();applyMuscleMode();scene.setExercise(m.type);$('sceneError').hidden=true;if(Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id))setTechniqueForm('correct')}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
 function close(){if(scene)scene.setPlaying(false);$('overlay').hidden=true;document.body.style.overflow='';selected=null} $('close').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('pause').onclick=()=>{if(!scene)return;scene.setPlaying(!scene.playing);$('pause').textContent=scene.playing?'⏸ Duraklat':'▶ Oynat'};
 $('save').onclick=()=>{if(!selected)return;let w=Number($('weight').value),r=Number($('reps').value);const rirValue=$('rir').value;const rir=rirValue===''?null:Number(rirValue);if(!$('weight').value.trim()||!Number.isFinite(w)||w<0||w>500||!Number.isInteger(r)||r<1||r>100){$('feedback').textContent='Geçerli bir ağırlık ve tekrar sayısı gir.';return}let item={id:selected,weight:w,reps:r,rir,date:new Date().toISOString()};let next=[...records,item];try{localStorage.setItem('fitkocum3d_records',JSON.stringify(next))}catch(e){$('feedback').textContent='Telefonda kayıt alanına erişilemedi.';return}records=next;update();refreshCoach(selected);$('feedback').textContent='✓ Set kaydedildi. Bir sonraki set için hazır ol.';if($('autoRest').checked)startRestTimer();};
 let timerPreset=90,timerLeft=90,timerEnd=0,timerHandle=null;
