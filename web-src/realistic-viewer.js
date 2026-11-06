@@ -25,6 +25,7 @@ class RealisticViewer {
     this.fail=false;
     this.progress=0;
     this.playing=true;
+    this.playbackSpeed=1;
     this.lastTime=0;
     this.token=0;
     this.active=false;
@@ -260,6 +261,7 @@ class RealisticViewer {
     }
   }
   setPlaying(v){this.playing=Boolean(v)}
+  setPlaybackSpeed(value){const n=Number(value);this.playbackSpeed=[.5,1,1.5].includes(n)?n:1;}
   setTechniqueMode(mode){
     if(this.currentKind==='technique'&&this.technique){
       this.technique.setFormMode(mode);
@@ -301,7 +303,7 @@ class RealisticViewer {
     const rect=this.canvas.getBoundingClientRect();
     if(rect.width<2||rect.height<2)return;
     if(this.currentKind==='technique'){
-      if(this.playing)this.progress=(this.progress+dt/this.clipDuration)%1;
+      if(this.playing)this.progress=(this.progress+dt*this.playbackSpeed/this.clipDuration)%1;
       this.technique?.frame(this.progress);
       const scrub=document.getElementById('poseRange');
       if(scrub&&document.getElementById('overlay')?.hidden===false&&this.playing){scrub.value=String(Math.round(this.progress*100));document.getElementById('poseStage').textContent='Oynatılıyor'}
@@ -311,7 +313,7 @@ class RealisticViewer {
          info.textContent=p<.16||p>.84?'Başlangıç':p<.50?'Hareketi tamamlama':'Kontrollü dönüş';
       }
     } else if(this.playing && this.mixer){
-      this.mixer.update(dt);
+      this.mixer.update(dt*this.playbackSpeed);
       this.progress=(this.mixer.time%this.clipDuration)/this.clipDuration;
       if(this.currentKind==='anatomical'&&this.rigGuide)this.rigGuide.apply(this.progress);
       const scrub=document.getElementById('poseRange');
@@ -371,6 +373,7 @@ class Hybrid3D{
     if(badge)badge.textContent=this.mode==='real'?'● ANATOMİK 3D':this.mode==='technique'?'● 3D HAREKET TEKNİĞİ':this.mode==='mobility'?'● HAREKETLİ 3D MANEKEN':'● ŞEMATİK 3D MODEL';
   }
   setCamera(mode){this.mode!=='old'?this.real.setCamera(mode):this.original.setCamera(mode)}
+  setPlaybackSpeed(value){this.real.setPlaybackSpeed(value)}
   setTechniqueMode(mode){if(this.mode==='technique'||this.mode==='real')this.real.setTechniqueMode(mode)}
   setManualProgress(v){this.mode!=='old'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
   setPlaying(v){
