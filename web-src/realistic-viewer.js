@@ -123,8 +123,8 @@ class RealisticViewer {
     if(this.technique)this.technique.root.visible=false;
     if(this.modelRoot)this.modelRoot.visible=true;
     if(this.equipment)this.equipment.visible=true;
-    if(this.rigGuide)this.rigGuide.group.visible=!isMobility;
     const isMobility=name.startsWith('mobility:');
+    if(this.rigGuide)this.rigGuide.group.visible=!isMobility;
     const clipName=isMobility?name.substring('mobility:'.length):null;
     const assetName=isMobility?'mobility':name;
     if(!isMobility&&!PACK.has(name)){this.showStatus('Bu hareketin 3D modeli yok.',true);return}
