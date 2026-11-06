@@ -333,6 +333,7 @@ function update(){
  $('modeInfo').textContent=programMode==='3d'?'Hazır 3D antrenman: anatomik ve ekipmanlı teknik hareketler.':programMode==='classic'?'Önceki programın; kayıtların korunur.':'Programındaki günleri, hareketleri ve set hedeflerini kendin düzenle.';
  if(programMode==='custom')renderCustomEditor();const dates=new Set(records.map(r=>localDay(r.date)));$('sessions').textContent=dates.size;$('sets').textContent=records.length;$('hSets').textContent=records.length;$('hDays').textContent=dates.size;$('hVolume').textContent=Math.round(records.reduce((sum,r)=>sum+(+r.weight)*(+r.reps),0)).toLocaleString('tr-TR');$('dayCaption').textContent=currentDays()[day].title+' · '+currentDays()[day].ids.length+' hareket';document.querySelectorAll('[data-day]').forEach(el=>el.classList.toggle('active',el.dataset.day===day));$('moveList').innerHTML=currentDays()[day].ids.map(id=>{const m=MOVES[id],n=records.filter(r=>r.id===id&&localDay(r.date)===localDay(new Date())).length;return `<article class="move"><div class="move-art" aria-hidden="true">${id.startsWith("lib_")?`<img src="thumbs/${id.slice(4)}.png" style="width:76px;height:76px;object-fit:cover;border-radius:13px" alt="">`:`<span>${m.icon}</span>`}</div><div class="move-content"><h3>${m.name}</h3><p>${m.group} · ${moveGoal(id)}</p><div class="move-actions"><button class="watch" data-id="${id}">${id.startsWith("lib_")?"◈ ANATOMİK 3D":m.type.startsWith("technique:")?"◈ EKİPMANLI 3D":"▶ ŞEMATİK 3D"}</button>${n?`<span class="logged">✓ Bugün ${n} set</span>`:''}</div></div></article>`}).join('');document.querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));$('logs').innerHTML=records.length?[...records].reverse().slice(0,100).map(r=>`<div class="history-item"><strong>${MOVES[r.id].name}</strong><small>${(+r.weight).toLocaleString('tr-TR')} kg × ${r.reps} tekrar · ${new Date(r.date).toLocaleString('tr-TR')}</small></div>`).join(''):'<div class="empty">Henüz kayıt yok. Bir hareketin 3D gösterimini açıp ilk setini kaydet.</div>'}
 
+function scheduleCustomUpdate(){requestAnimationFrame(()=>update())}
 const editorList=()=>Object.entries(MOVES).filter(([id,m])=>id.startsWith('lib_')||id.startsWith('mobility_')||['bench','pulldown','row','legpress','triceps'].includes(id));
 function renderCustomEditor(){
  const v=customDays[day];if(!v)return;
@@ -355,15 +356,15 @@ function renderCustomEditor(){
      if(i<0)return;
      if(action==='remove'){v.ids.splice(i,1);delete v.goals[id]}
      else {const j=i+(action==='up'?-1:1);if(j<0||j>=v.ids.length)return;[v.ids[i],v.ids[j]]=[v.ids[j],v.ids[i]]}
-     saveCustom();update();
+     saveCustom();scheduleCustomUpdate();
    });
    row.querySelector('[data-goal="sets"]').onchange=e=>{
      const n=Math.max(1,Math.min(10,Number.parseInt(e.target.value)||3));
-     v.goals[id]={sets:n,reps:v.goals[id]?.reps||'8–12'};saveCustom();update();
+     v.goals[id]={sets:n,reps:v.goals[id]?.reps||'8–12'};saveCustom();scheduleCustomUpdate();
    };
    row.querySelector('[data-goal="reps"]').onchange=e=>{
      const reps=e.target.value.trim().slice(0,22)||'8–12';
-     v.goals[id]={sets:v.goals[id]?.sets||3,reps};saveCustom();update();
+     v.goals[id]={sets:v.goals[id]?.sets||3,reps};saveCustom();scheduleCustomUpdate();
    };
  });
  refreshCustomChoices();
@@ -379,7 +380,7 @@ $('customSearch').oninput=refreshCustomChoices;
 $('customDayTitle').onchange=e=>{
  if(programMode!=='custom')return;
  customDays[day].title=e.target.value.trim().slice(0,48)||day+' Günü';
- saveCustom();update();
+ saveCustom();scheduleCustomUpdate();
 };
 $('customAddMove').onclick=()=>{
  if(programMode!=='custom')return;
@@ -387,19 +388,19 @@ $('customAddMove').onclick=()=>{
  if(!MOVES[id]||v.ids.includes(id)||v.ids.length>=16){$('customStatus').textContent='En fazla 16 farklı hareket ekleyebilirsin.';return}
  v.ids.push(id);v.goals[id]={sets:3,reps:'8–12'};
  $('customSearch').value='';
- saveCustom();update();
+ saveCustom();scheduleCustomUpdate();
 };
 $('customAddDay').onclick=()=>{
  if(Object.keys(customDays).length>=6)return;
  const key='ABCDEF'.split('').find(k=>!customDays[k]);
  if(!key)return;
  customDays[key]={title:key+' Günü',ids:[],goals:{}};
- day=key;try{localStorage.setItem('fitkocum3d_day',day)}catch{}saveCustom();update();
+ day=key;try{localStorage.setItem('fitkocum3d_day',day)}catch{}saveCustom();scheduleCustomUpdate();
 };
 $('customRemoveDay').onclick=()=>{
  const keys=Object.keys(customDays);
  if(keys.length<=1)return;
- delete customDays[day];day=Object.keys(customDays).sort()[0];try{localStorage.setItem('fitkocum3d_day',day)}catch{}saveCustom();update();
+ delete customDays[day];day=Object.keys(customDays).sort()[0];try{localStorage.setItem('fitkocum3d_day',day)}catch{}saveCustom();scheduleCustomUpdate();
 };
 
 function tab(t){document.querySelectorAll('.screen').forEach(s=>s.hidden=s.id!==t);document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.tab===t));window.scrollTo({top:0,behavior:'instant'});update()}
