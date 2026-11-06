@@ -1,0 +1,17 @@
+name: Inspect MIT exercise pack
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-assets.yml'
+  workflow_dispatch:
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download source exercise pack
+        run: |
+          curl -fL --retry 3 --connect-timeout 15 --max-time 180             'https://raw.githubusercontent.com/AssiamahS/opengym3d/main/dist/opengym3d-exercise-pack-v1.zip'             -o /tmp/exercises.zip
+          ls -lh /tmp/exercises.zip
+          unzip -Z1 /tmp/exercises.zip | head -110
+          echo '--MANIFEST--'
+          unzip -Z1 /tmp/exercises.zip | grep -Ei '\.(json|md)$' | head -40
