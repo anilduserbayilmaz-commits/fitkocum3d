@@ -69,7 +69,31 @@ export class GameAthlete {
      const oldColor=geo.getAttribute('color');
      const out=new Float32Array(pos.count*3);
      const attr=new THREE.BufferAttribute(out,3);
-     this.originals.push({obj,geo,oldColor,oldMaterial:obj.material,out,attr,bones,skinIndex,skinWeight,pos});
+     const resized=new Float32Array(pos.count*3);
+     for(let i=0;i<pos.count;i++){
+       const name=normalized(bones[skinIndex.getX(i)|0]?.name||'');
+       const z=pos.getZ(i);
+       const sign=name.endsWith('l')?1:name.endsWith('r')?-1:0;
+       const cx=name.startsWith('arm')||name.startsWith('elbow')||name.startsWith('hand')?sign*.205:
+         name.startsWith('leg')||name.startsWith('knee')||name.startsWith('foot')?sign*.09:0;
+       let mx=1,my=1;
+       if(name==='spine'){mx=1.18;my=1.30}
+       else if(name==='hips'){mx=1.18;my=1.20}
+       else if(name.startsWith('arm')){mx=1.33;my=1.33}
+       else if(name.startsWith('elbow')){mx=1.28;my=1.28}
+       else if(name.startsWith('leg')){mx=1.43;my=1.43}
+       else if(name.startsWith('knee')){mx=1.29;my=1.29}
+       else if(name.startsWith('neck')&&z>1.55){mx=1.07;my=1.04}
+       const base=i*3;
+       resized[base]=cx+(pos.getX(i)-cx)*mx;
+       resized[base+1]=pos.getY(i)*my;
+       resized[base+2]=z;
+     }
+     const shapeAttr=new THREE.BufferAttribute(resized,3);
+     this.originals.push({obj,geo,oldColor,oldMaterial:obj.material,out,attr,bones,skinIndex,skinWeight,pos,shapeAttr});
+     geo.setAttribute('position',shapeAttr);
+     geo.computeBoundingBox();geo.computeBoundingSphere();
+     obj.frustumCulled=false;
      geo.setAttribute('color',attr);
      obj.material=Array.isArray(obj.material)?obj.material.map(()=>this.surface):this.surface;
      obj.castShadow=true;obj.receiveShadow=true;
@@ -195,6 +219,7 @@ export class GameAthlete {
      t.obj.material=this.enabled
        ?(Array.isArray(t.oldMaterial)?t.oldMaterial.map(()=>this.surface):this.surface)
        :t.oldMaterial;
+     t.geo.setAttribute('position',this.enabled?t.shapeAttr:t.pos);
      if(this.enabled)t.geo.setAttribute('color',t.attr);
      else if(t.oldColor)t.geo.setAttribute('color',t.oldColor);
      else t.geo.deleteAttribute('color');
@@ -206,6 +231,7 @@ export class GameAthlete {
    this.attachments.length=0;
    for(const t of this.originals){
      t.obj.material=t.oldMaterial;
+     t.geo.setAttribute('position',t.pos);
      if(t.oldColor)t.geo.setAttribute('color',t.oldColor);
      else t.geo.deleteAttribute('color');
    }
