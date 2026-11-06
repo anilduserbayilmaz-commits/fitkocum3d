@@ -20,6 +20,8 @@ import androidx.core.content.FileProvider;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
@@ -114,6 +116,22 @@ public class MainActivity extends Activity {
     }
 
     private final class AppBridge {
+        @JavascriptInterface public String loadModelBase64(String modelId) {
+            if (modelId == null || !modelId.matches("[a-z0-9_]{2,50}")) return "";
+            try (InputStream input = getAssets().open("models/" + modelId + ".glb");
+                 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                byte[] chunk = new byte[32768];
+                int read;
+                while ((read = input.read(chunk)) != -1) {
+                    output.write(chunk, 0, read);
+                    if (output.size() > 14_000_000) return "";
+                }
+                return Base64.encodeToString(output.toByteArray(), Base64.NO_WRAP);
+            } catch (Exception error) {
+                android.util.Log.e("FitKocum", "3D model couldn't be loaded", error);
+                return "";
+            }
+        }
         @JavascriptInterface public void shareData(String json) {
             runOnUiThread(() -> {
                 Intent intent = new Intent(Intent.ACTION_SEND);
