@@ -51,126 +51,127 @@ export const MUSCLE_NAMES=Object.freeze({
  calves:'Baldır'
 });
 const normalize=name=>String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-const SIDES=['L','R'];
+// Approximate bone-driven muscle regions. Colors conform to the actual
+// skin vertex positions rather than placing disconnected 3D shapes above them.
+const REGION_BONES=Object.freeze({
+ quads:['upperleg','thigh'],
+ hamstrings:['upperleg','thigh'],
+ adductors:['upperleg','thigh'],
+ glutes:['upperleg','pelvis','hip','spine01'],
+ calves:['lowerleg','calf'],
+ biceps:['upperarm','arm'],
+ triceps:['upperarm','arm'],
+ forearms:['lowerarm','forearm'],
+ delts:['shoulder','clavicle'],
+ chest:['spine04','spine03','chest'],
+ lats:['spine03','spine04','shoulder'],
+ upper_back:['spine04','shoulder','clavicle'],
+ core:['spine02','spine03','abdomen'],
+ erectors:['spine02','spine03'],
+});
+const COLOR_PRIMARY=[1,.36,.17];
+const COLOR_SECONDARY=[.25,.77,.77];
 
-// Simple, continuously re-positioned muscle-region ellipsoids.
-const REGION_DESCRIPTORS={
- quads:['upperleg01','lowerleg01',.145,.80, .015],
- hamstrings:['upperleg01','lowerleg01',.105,.77,-.085],
- adductors:['upperleg01','lowerleg01',.085,.63, -.018],
- calves:['lowerleg01','foot',.105,.75,-.02],
- biceps:['upperarm01','lowerarm01',.085,.75, .055],
- triceps:['upperarm01','lowerarm01',.082,.74,-.065],
- forearms:['lowerarm01','wrist',.07,.74,.015],
- delts:['shoulder01','upperarm01',.14,.65,.055]
-};
-const CENTERS={
- glutes:['upperleg01','spine01',.22,.18,-.06],
- chest:['shoulder01','spine04',.17,.60,.11],
- lats:['shoulder01','spine02',.15,.55,-.11],
- upper_back:['shoulder01','spine04',.17,.55,-.085],
- core:['spine02','spine04',.22,.73,.12],
- erectors:['spine02','spine04',.17,.73,-.12]
-};
 export function getMuscleProfile(id){return EXERCISE_MUSCLES[id]||null}
 
+/**
+ * Recolors the original skinned GLB surface using its skin weights.
+ * The vertex buffer is updated ONLY when the user changes mode/exercise;
+ * skinning then keeps colored muscle regions attached to the animation.
+ */
 export class AnimatedMuscleHighlights{
  constructor(scene,model,id){
    this.scene=scene;this.model=model;this.id=id;
    this.profile=getMuscleProfile(id);
-   this.group=new THREE.Group();this.group.name='AnimatedMuscleRegions';
-   scene.add(this.group);
+   this.group=new THREE.Group();
+   this.group.name='NativeSkinMuscleHighlighter';
+   this.scene.add(this.group);
    this.mode='primary';
-   this.nodes=new Map();
-   model.traverse(n=>{if(n.isBone&&n.name)this.nodes.set(normalize(n.name),n)});
-   this.geometry=new THREE.SphereGeometry(1,20,16);
-   this.materials={
-     primary:new THREE.MeshPhysicalMaterial({
-       color:0xff965d,emissive:0xe14c23,emissiveIntensity:.32,
-       roughness:.46,metalness:0,clearcoat:.35,transparent:true,opacity:.78,
-       depthTest:false,depthWrite:false,side:THREE.DoubleSide
-     }),
-     secondary:new THREE.MeshPhysicalMaterial({
-       color:0x7be2df,emissive:0x1c727d,emissiveIntensity:.30,
-       roughness:.50,metalness:0,clearcoat:.25,transparent:true,opacity:.65,
-       depthTest:false,depthWrite:false,side:THREE.DoubleSide
-     })
-   };
    this.muscles=[];
-   this._a=new THREE.Vector3();this._b=new THREE.Vector3();
-   this._axis=new THREE.Vector3();this._temp=new THREE.Vector3();
-   this._y=new THREE.Vector3(0,1,0);
+   this.targets=[];
    if(this.profile){
-     for(const role of ['primary','secondary']){
-       for(const region of this.profile[role]){
-         const pair=(CENTERS[region]||REGION_DESCRIPTORS[region]);
-         if(!pair)continue;
-         const bilateral=region!=='core'&&region!=='erectors';
-         for(const side of bilateral?SIDES:[null]){
-           const start=this.bone(pair[0],side);
-           const end=this.bone(pair[1],side);
-           if(!start||!end)continue;
-           const mesh=new THREE.Mesh(this.geometry,this.materials[role]);
-           mesh.name='Muscle_'+region+'_'+(side||'center');
-           mesh.userData={region,role};
-           mesh.renderOrder=7;
-           mesh.frustumCulled=false;
-           this.group.add(mesh);
-           this.muscles.push({mesh,role,region,start,end,side,params:pair});
-         }
-       }
-     }
+     for(const role of ['primary','secondary'])
+       for(const region of this.profile[role])
+         this.muscles.push({region,role});
    }
-   this.available=this.muscles.length>0;
+   model.traverse(mesh=>{
+     if(!mesh.isSkinnedMesh||!mesh.skeleton||!this.profile)return;
+     const geo=mesh.geometry;
+     const originalAttr=geo.getAttribute('color');
+     const skinIndex=geo.getAttribute('skinIndex');
+     const skinWeight=geo.getAttribute('skinWeight');
+     if(!originalAttr||originalAttr.itemSize<3||!skinIndex||!skinWeight)return;
+     const count=originalAttr.count,size=originalAttr.itemSize;
+     const original=new Float32Array(count*size);
+     for(let i=0;i<count;i++){
+       original[i*size]=originalAttr.getX(i);
+       original[i*size+1]=originalAttr.getY(i);
+       original[i*size+2]=originalAttr.getZ(i);
+       if(size>3)original[i*size+3]=originalAttr.getW(i);
+     }
+     const primaryNames=new Set(this.profile.primary.flatMap(x=>REGION_BONES[x]||[]));
+     const secondaryNames=new Set(this.profile.secondary.flatMap(x=>REGION_BONES[x]||[]));
+     const skeleton=mesh.skeleton.bones;
+     const matches=(set,name)=>[...set].some(t=>name.includes(t));
+     const primaryBones=skeleton.map(b=>matches(primaryNames,normalize(b.name)));
+     const secondaryBones=skeleton.map(b=>matches(secondaryNames,normalize(b.name)));
+     const primary=new Float32Array(count),secondary=new Float32Array(count);
+     for(let i=0;i<count;i++){
+       const indices=[skinIndex.getX(i),skinIndex.getY(i),skinIndex.getZ(i),skinIndex.getW(i)];
+       const weights=[skinWeight.getX(i),skinWeight.getY(i),skinWeight.getZ(i),skinWeight.getW(i)];
+       let p=0,h=0;
+       for(let j=0;j<4;j++){
+         const k=indices[j]|0,w=weights[j];
+         if(w<=.03)continue;
+         if(primaryBones[k])p+=w;
+         else if(secondaryBones[k])h+=w;
+       }
+       primary[i]=Math.min(1,p);
+       secondary[i]=Math.min(1,h);
+     }
+     const out=original.slice();
+     const attribute=new THREE.BufferAttribute(out,size);
+     geo.setAttribute('color',attribute);
+     this.targets.push({geo,originalAttr,original,out,attribute,count,size,primary,secondary});
+   });
+   this.available=this.targets.length>0&&this.muscles.length>0;
    this.setMode('primary');
  }
- bone(prefix,side){
-   const key=normalize(prefix+(side?'.'+side:''));
-   if(this.nodes.has(key))return this.nodes.get(key);
-   const a=[key,normalize(prefix),normalize(prefix+'01')];
-   for(const s of a)if(this.nodes.has(s))return this.nodes.get(s);
-   const p=normalize(prefix);
-   for(const [k,v] of this.nodes){
-     if(k.startsWith(p)&&(side===null||side===undefined||k.endsWith(side.toLowerCase())))return v;
-   }
-   return null;
- }
- setMode(mode){
-   this.mode=['off','primary','all'].includes(mode)?mode:'primary';
+ setMode(value){
+   this.mode=['off','primary','all'].includes(value)?value:'primary';
    this.group.visible=this.mode!=='off'&&this.available;
-   for(const entry of this.muscles){
-     entry.mesh.visible=this.mode==='all'||this.mode==='primary'&&entry.role==='primary';
+   for(const t of this.targets){
+     const {out,original,count,size,primary,secondary,attribute}=t;
+     for(let i=0;i<count;i++){
+       const base=i*size;
+       const p=this.mode==='off'?0:Math.min(.76,primary[i]*.7);
+       const h=this.mode==='all'?Math.min(.63,secondary[i]*.62):0;
+       const color=h>.035&&h>p
+         ?COLOR_SECONDARY:COLOR_PRIMARY;
+       const alpha=h>p?h:p;
+       for(let c=0;c<3;c++){
+         const src=original[base+c];
+         out[base+c]=Math.max(0,Math.min(1,src*(1-alpha)+color[c]*alpha));
+       }
+       if(size>3)out[base+3]=original[base+3];
+     }
+     attribute.needsUpdate=true;
    }
  }
  update(){
-   if(!this.group.visible)return;
-   this.model.updateMatrixWorld(true);
-   for(const entry of this.muscles){
-     if(!entry.mesh.visible)continue;
-     const {mesh,start,end,params,region,side}=entry;
-     start.getWorldPosition(this._a);
-     end.getWorldPosition(this._b);
-     this._axis.subVectors(this._b,this._a);
-     let length=this._axis.length();
-     if(!Number.isFinite(length)||length<.008){mesh.visible=false;continue}
-     const from=this._a,to=this._b;
-     mesh.position.copy(from).lerp(to,.46);
-     mesh.quaternion.setFromUnitVectors(this._y,this._axis.multiplyScalar(1/length));
-     // The region sits near the animated limb/torso. Offsets are illustrative,
-     // not a biomechanical coordinate system.
-     const radius=params[2];
-     const stretch=params[3];
-     const bias=params[4]||0;
-     const edge=side==='L'?-1:side==='R'?1:0;
-     mesh.position.x+=region==='adductors'?-edge*.035:0;
-     mesh.position.z+=bias;
-     mesh.scale.set(radius,length*stretch*.5,radius*.91);
-   }
+   // Native skeletal animation performs the deformation, including during
+   // scrubbing and while the correct/common-error mode changes the joint pose.
+ }
+ countAffected(role='primary'){
+   const prop=role==='secondary'?'secondary':'primary';
+   return this.targets.reduce((n,t)=>n+t[prop].filter(v=>v>.28).length,0);
  }
  dispose(){
+   for(const t of this.targets){
+     t.geo.setAttribute('color',t.originalAttr);
+     t.attribute.dispose?.();
+   }
+   this.targets.length=0;
    this.scene.remove(this.group);
-   this.geometry.dispose();
-   for(const m of Object.values(this.materials))m.dispose();
-   this.muscles=[];
  }
 }
