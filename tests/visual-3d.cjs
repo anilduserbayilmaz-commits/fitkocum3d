@@ -234,8 +234,8 @@ const server = http.createServer((req,res)=>{
    await page.locator('#close').click();
  }
  await page.locator('[data-move-filter="all"]').click();
- await page.locator('#realMoveList [data-id="lib_squat"]').click();
- assert.equal(await page.locator('#techniqueCompare').isVisible(),false,'Correct/mistake controls must not appear for unvalidated anatomical models');
+ await page.locator('#realMoveList [data-id="mobility_arm-circles-small"]').click();
+ assert.equal(await page.locator('#techniqueCompare').isVisible(),false,'Technique comparison only on validated strength and machine exercises');
  await page.locator('#close').click();
  await page.locator('#realMoveList [data-id="bench"]').click();
  assert.equal(await page.locator('#formCorrect').getAttribute('aria-pressed'),'true','Form mode resets to correct for each new exercise');
