@@ -394,12 +394,12 @@ $('customAddDay').onclick=()=>{
  const key='ABCDEF'.split('').find(k=>!customDays[k]);
  if(!key)return;
  customDays[key]={title:key+' Günü',ids:[],goals:{}};
- day=key;saveCustom();update();
+ day=key;try{localStorage.setItem('fitkocum3d_day',day)}catch{}saveCustom();update();
 };
 $('customRemoveDay').onclick=()=>{
  const keys=Object.keys(customDays);
  if(keys.length<=1)return;
- delete customDays[day];day=Object.keys(customDays).sort()[0];saveCustom();update();
+ delete customDays[day];day=Object.keys(customDays).sort()[0];try{localStorage.setItem('fitkocum3d_day',day)}catch{}saveCustom();update();
 };
 
 function tab(t){document.querySelectorAll('.screen').forEach(s=>s.hidden=s.id!==t);document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.tab===t));window.scrollTo({top:0,behavior:'instant'});update()}
