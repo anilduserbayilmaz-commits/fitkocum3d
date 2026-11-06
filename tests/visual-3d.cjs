@@ -1,0 +1,68 @@
+const { chromium } = require('playwright-core');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const http = require('node:http');
+const path = require('node:path');
+const ROOT = path.resolve(__dirname, '..', 'app', 'src', 'main', 'assets');
+const port = 8671;
+const types = {'.html':'text/html; charset=utf-8','.js':'application/javascript','.png':'image/png','.glb':'model/gltf-binary'};
+const server = http.createServer((req,res)=>{
+  const name=decodeURIComponent(req.url.split('?')[0]);
+  const filepath=path.resolve(ROOT,'.'+name);
+  if(!filepath.startsWith(ROOT+path.sep)) {res.writeHead(403).end();return}
+  fs.readFile(filepath,(err,data)=>{if(err){res.writeHead(404).end();return}
+    res.writeHead(200,{'Content-Type':types[path.extname(filepath)]||'application/octet-stream'}).end(data)
+  })
+});
+(async()=>{
+ await new Promise(ok=>server.listen(port,'127.0.0.1',ok));
+ const models={};
+ for(const id of ['plank','squat','deadlift']){
+  models[id]=fs.readFileSync(path.join(ROOT,'models',id+'.glb')).toString('base64');
+ }
+ const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--disable-gpu-sandbox']});
+ const page=await browser.newPage({viewport:{width:393,height:851},deviceScaleFactor:1});
+ const consoleErrors=[];
+ page.on('pageerror',e=>consoleErrors.push(String(e)));
+ page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});
+ await page.addInitScript(p=>{
+  window.FitAndroid={loadModelBase64:id=>p[id]||'',shareData:()=>{},analyzeMeal:()=>{}};
+ },models);
+ await page.goto('http://127.0.0.1:'+port+'/index.html');
+ await page.locator('[data-tab="library"]').click();
+ const screenshots=[];
+ for(const id of ['plank','squat','deadlift']){
+  await page.locator('[data-id="lib_'+id+'"]').click();
+  await page.waitForFunction((expect)=>window.scene?.real?.modelName===expect,{timeout:20000},id);
+  await page.waitForTimeout(500);
+  const state=await page.evaluate(()=>({
+     mode:scene.mode,
+     loaded:scene.real.modelName,
+     original:document.querySelector('#modelCanvas').style.display,
+     real:document.querySelector('#gymRealCanvas').style.display,
+     time:scene.real.mixer?.time,
+     clips:scene.real.actions?.length,
+     fail:scene.real.fail,
+     rect:scene.real.canvas.getBoundingClientRect().toJSON(),
+     error:document.querySelector('#real3dStatus').textContent
+  }));
+  assert.equal(state.mode,'real');
+  assert.equal(state.loaded,id);
+  assert.equal(state.original,'none','Low-poly canvas must be hidden');
+  assert.equal(state.real,'block','Real anatomy must be visible');
+  assert.ok(state.time >= 0);
+  assert.ok(state.clips >= 1);
+  assert.equal(state.fail,false);
+  console.log(id,JSON.stringify(state));
+  await page.locator('.scene').screenshot({path:'/tmp/fitkocum-'+id+'.png'});
+  screenshots.push(id);
+  const before=state.time;
+  await page.waitForTimeout(550);
+  const after=await page.evaluate(()=>scene.real.mixer.time);
+  assert.ok(after>before,'Animation must advance');
+  await page.locator('#close').click();
+ }
+ if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
+ console.log('PASS: all 3 realistic 3D animations visible and advancing');
+ await browser.close();
+})().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>server.close());
