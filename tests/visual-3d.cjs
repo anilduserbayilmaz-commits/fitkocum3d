@@ -40,7 +40,14 @@ const server = http.createServer((req,res)=>{
    assert.equal(ids.length,6,day+' must show six program moves');
    assert.ok(ids.every(id=>id.startsWith('lib_')),day+' must exclusively use real 3D models');
    console.log('PROGRAM '+day+': '+ids.join(','));
+   const first=ids[0].slice(4);
+   await page.locator('#moveList [data-id="'+ids[0]+'"]').click();
+   await page.waitForFunction(name=>typeof scene!=='undefined'&&scene.mode==='real'&&scene.real.modelName===name,first,{timeout:20000});
+   assert.equal(await page.locator('#gymRealCanvas').evaluate(el=>el.style.display),'block');
+   await page.locator('#close').click();
  }
+ await page.locator('[data-day="A"]').click();
+ await page.screenshot({path:'/tmp/fitkocum-program.png',fullPage:true});
  await page.locator('#chooseClassic').click();
  assert.equal((await page.locator('#moveList .watch').first().getAttribute('data-id')),'lunge');
  await page.locator('#choose3d').click();
@@ -48,7 +55,7 @@ const server = http.createServer((req,res)=>{
 
  const screenshots=[];
  for(const id of ['plank','squat','deadlift','romanian_deadlift','sumo_squat']){
-  await page.locator('[data-id="lib_'+id+'"]').click();
+  await page.locator('[data-id="lib_'+id+'"]').first().click();
   await page.waitForFunction((expected)=>typeof scene!=='undefined'&&scene?.real?.modelName===expected,id,{timeout:20000});
   await page.waitForTimeout(500);
   const state=await page.evaluate(()=>({
