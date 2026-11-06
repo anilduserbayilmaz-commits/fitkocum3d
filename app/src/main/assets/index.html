@@ -50,6 +50,19 @@
 .auto-rest-option{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12px;color:#c9dad5}
 .auto-rest-option input{accent-color:#bdf18a;width:17px;height:17px}
 .coach-mini{display:inline-block;color:#b8d9b6;font-size:11px;margin-top:5px;line-height:1.4}
+
+.technique-compare{background:linear-gradient(140deg,#172a2c,#1d2b35);border:1px solid #45615a;border-radius:16px;padding:14px;margin:10px 0 13px}
+.technique-compare h3{font-size:14px;letter-spacing:.15px;margin:0 0 6px;color:#eff6eb}
+.technique-compare p{font-size:11px;line-height:1.55;color:#b9c8ce;margin:7px 0 12px}
+.technique-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.technique-form-button{padding:12px 8px;border-radius:11px;font-size:12px;font-weight:850;border:1px solid #47606a;background:#273842;color:#d4e5ed}
+.technique-form-button.good[aria-pressed="true"]{color:#1d321a;background:#bdf18a;border-color:#bdf18a}
+.technique-form-button.bad[aria-pressed="true"]{color:#fff0ed;background:#883e49;border-color:#e4787e}
+.technique-warning{font-size:12px;line-height:1.5;border:1px solid #536b64;background:#22372f;border-radius:10px;padding:11px;margin-top:10px;color:#deeee3}
+.technique-warning.bad{background:#422c35;color:#ffe2df;border-color:#ac6068}
+.technique-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.technique-steps button{padding:10px 4px;border-radius:10px;background:#263c43;color:#dae7e9;border:1px solid #46616b;font-size:11px;font-weight:800}
+.technique-steps button:focus-visible{outline:2px solid #cdfb96}
 </style></head><body>
 <div class="shell">
 <header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
@@ -133,6 +146,21 @@
 <button class="viewbtn" data-camera="side">◧ Yandan</button>
 <button class="viewbtn active" data-camera="angle">◈ 45°</button>
 </div>
+<section id="techniqueCompare" class="technique-compare" hidden aria-label="3D doğru teknik ve hata karşılaştırması">
+<h3>Tekniği 3D karşılaştır</h3>
+<p>Yeşil işaretler örnek doğru hareket yolunu, kırmızılar ise kaçınılacak bir hatayı gösterir. Hata modu bir çalışma talimatı değildir.</p>
+<div class="technique-compare-grid">
+<button id="formCorrect" type="button" class="technique-form-button good" aria-pressed="true">✓ Doğru teknik</button>
+<button id="formWrong" type="button" class="technique-form-button bad" aria-pressed="false">! Yaygın hata</button>
+</div>
+<div id="techniqueWarning" role="status" class="technique-warning">Doğru form gösteriliyor.</div>
+<div class="technique-steps" aria-label="Hareketin aşamaları">
+<button type="button" data-technique-phase="0">1 · Başlangıç</button>
+<button type="button" data-technique-phase="0.5">2 · Kaldırış/çekiş</button>
+<button type="button" data-technique-phase="0.75">3 · Kontrollü dönüş</button>
+</div>
+<p style="margin-bottom:0">Görünen aşama: <b id="techniquePhase">Başlangıç</b> · Eklem açıları kişiye göre değişir, uygulama açı ölçümü yapmaz.</p>
+</section>
 <div class="scrub">
 <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px"><b>Hareketi adım adım incele</b><span id="poseStage" style="color:#c8f3a9">Oynatılıyor</span></div>
 <input aria-label="Hareket konumu" id="poseRange" type="range" min="0" max="100" value="0">
@@ -458,6 +486,38 @@ $('poseRange').addEventListener('input',()=>{
  $('poseStage').textContent=n<25?'Başlangıç':n<70?'Hareket ortası':'Bitiş';
  $('pause').textContent='▶ Oynat';
 });
+
+const TECHNIQUE_EDU={
+ bench:{correct:'Ayaklar yerde sabit; bar göğüs bölgesine kontrollü iner, bilek ile önkol hizalanır.',wrong:'Örnek hata: Barı boyun tarafına fazla indirmek ve dirsekleri gereğinden çok yana açmak omzu zorlayabilir.'},
+ pulldown:{correct:'Barı üst göğse doğru çek; gövdeyi sabit tut ve dirsekleri aşağıya yönlendir.',wrong:'Örnek hata: Barı ensenin arkasına indirmeye çalışmak boyun ve omuz pozisyonunu zorlayabilir.'},
+ legpress:{correct:'Dizler ayakların yönünü takip eder; bel minderden kalkmayacak rahat derinlikte kal.',wrong:'Örnek hata: Dizlerin içeri düşmesi. Bu kırmızı diz işaretleri içe kapanan diz yolunu temsil eder.'},
+ row:{correct:'Gövde sabit; kablo tutacağı karın yönüne yaklaşır ve kontrollü geri gider.',wrong:'Örnek hata: Gövdeyi ileri-geri sallayarak kabloyu çekmek. Kırmızı omuz işaretleri sallanmayı gösterir.'},
+ triceps:{correct:'Dirsekler gövdeye yakın sabit kalır; hareket önkolların aşağı açılmasıdır.',wrong:'Örnek hata: Dirseklerin öne kayıp omuzdan yardım alması. Kırmızı işaretler dirseğin kaydığını gösterir.'}
+};
+let techniqueForm='correct';
+function setTechniqueForm(mode){
+ const allowed=selected&&MOVES[selected]?.type.startsWith('technique:');
+ if(!allowed)return;
+ techniqueForm=mode==='mistake'?'mistake':'correct';
+ $('formCorrect').setAttribute('aria-pressed',String(techniqueForm==='correct'));
+ $('formWrong').setAttribute('aria-pressed',String(techniqueForm==='mistake'));
+ $('techniqueWarning').classList.toggle('bad',techniqueForm==='mistake');
+ const instruction=TECHNIQUE_EDU[selected]||TECHNIQUE_EDU.bench;
+ $('techniqueWarning').textContent=techniqueForm==='mistake'?instruction.wrong:instruction.correct;
+ if(scene?.setTechniqueMode)scene.setTechniqueMode(techniqueForm);
+}
+$('formCorrect').onclick=()=>setTechniqueForm('correct');
+$('formWrong').onclick=()=>setTechniqueForm('mistake');
+document.querySelectorAll('[data-technique-phase]').forEach(b=>b.onclick=()=>{
+ if(!scene||scene.mode!=='technique')return;
+ const v=Number(b.dataset.techniquePhase);
+ scene.setManualProgress(v);
+ $('poseRange').value=String(Math.round(v*100));
+ $('techniquePhase').textContent=v<.25?'Başlangıç':v<.65?'Hareketi tamamlama':'Kontrollü dönüş';
+ $('poseStage').textContent=$('techniquePhase').textContent;
+ $('pause').textContent='▶ Oynat';
+});
+
 function setGuide(id){
  const a=FORMGUIDES[id]||FORMGUIDES.squat;
  ['formSetup','formAngle','formPath','formMistake'].forEach((x,i)=>$(x).textContent=a[i]);
@@ -523,7 +583,8 @@ function refreshCoach(id){
  return summary;
 }
 
-function openMove(id){selected=id;let m=MOVES[id];setGuide(id);$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Kişisel hareket aralığını antrenörle doğrula.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const summary=refreshCoach(id);$('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';$('reps').value=summary.last?.reps??'';$('rir').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){scene.setExercise(m.type);$('sceneError').hidden=true}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
+function openMove(id){selected=id;let m=MOVES[id];setGuide(id);
+$('techniqueCompare').hidden=!m.type.startsWith('technique:');techniqueForm='correct';$('techniquePhase').textContent='Başlangıç';$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Kişisel hareket aralığını antrenörle doğrula.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const summary=refreshCoach(id);$('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';$('reps').value=summary.last?.reps??'';$('rir').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){scene.setExercise(m.type);$('sceneError').hidden=true;if(m.type.startsWith('technique:'))setTechniqueForm('correct')}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
 function close(){if(scene)scene.setPlaying(false);$('overlay').hidden=true;document.body.style.overflow='';selected=null} $('close').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('pause').onclick=()=>{if(!scene)return;scene.setPlaying(!scene.playing);$('pause').textContent=scene.playing?'⏸ Duraklat':'▶ Oynat'};
 $('save').onclick=()=>{if(!selected)return;let w=Number($('weight').value),r=Number($('reps').value);const rirValue=$('rir').value;const rir=rirValue===''?null:Number(rirValue);if(!$('weight').value.trim()||!Number.isFinite(w)||w<0||w>500||!Number.isInteger(r)||r<1||r>100){$('feedback').textContent='Geçerli bir ağırlık ve tekrar sayısı gir.';return}let item={id:selected,weight:w,reps:r,rir,date:new Date().toISOString()};let next=[...records,item];try{localStorage.setItem('fitkocum3d_records',JSON.stringify(next))}catch(e){$('feedback').textContent='Telefonda kayıt alanına erişilemedi.';return}records=next;update();refreshCoach(selected);$('feedback').textContent='✓ Set kaydedildi. Bir sonraki set için hazır ol.';if($('autoRest').checked)startRestTimer();};
 let timerPreset=90,timerLeft=90,timerEnd=0,timerHandle=null;
