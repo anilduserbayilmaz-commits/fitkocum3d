@@ -33,9 +33,9 @@ export function createFittedTrainingKit(body){
    const y=(p.getY(i)-min.y)/total;
    const x=Math.abs(p.getX(i));
    const torso=influence(i,main.shirt),hip=influence(i,main.shorts),feet=influence(i,main.shoes);
-   const isShirt=(y>.40&&y<.80&&torso>.18&& (x<.42||y>.69));
-   const isShorts=(y>.25&&y<.48&&hip>.22);
-   const isShoes=(y<.26&&feet>.16);
+   const isShirt=(y>.53&&y<.84&&torso>.18&& (x<.42||y>.71));
+   const isShorts=(y>.38&&y<.62&&hip>.18);
+   const isShoes=(y<.20&&feet>.16);
    let tone=new THREE.Color(0xffffff);
    if(isShirt){tone=jersey;counts.jersey++}
    else if(isShorts){tone=shorts;counts.shorts++}
