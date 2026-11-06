@@ -309,7 +309,60 @@ const server = http.createServer((req,res)=>{
    console.log('ANATOMICAL '+id+' correct/mistake/restored, accent '+wrong.color);
    await page.locator('#close').click();
  }
+
+ // v2.2 muscle overlays must follow animated skeletons and remain optional.
+ await page.locator('[data-move-filter="all"]').click();
+ for(const id of ['squat','deadlift','plank']){
+   await page.locator('#realMoveList [data-id="lib_'+id+'"]').click();
+   await page.waitForFunction(expected=>
+     typeof scene!=='undefined'&&scene.mode==='real'&&scene.real.modelName===expected&&
+     scene.real.muscleOverlay?.available,id,{timeout:25000});
+   assert.equal(await page.locator('#musclePanel').isVisible(),true);
+   const overlay=await page.evaluate(()=>({
+     id:scene.real.muscleOverlay.id,
+     count:scene.real.muscleOverlay.muscles.length,
+     visible:scene.real.muscleOverlay.group.visible,
+     mode:scene.real.muscleOverlay.mode,
+     primaries:scene.real.muscleOverlay.muscles.filter(x=>x.role==='primary'&&x.mesh.visible).length,
+     secondaries:scene.real.muscleOverlay.muscles.filter(x=>x.role==='secondary'&&x.mesh.visible).length
+   }));
+   assert.equal(overlay.id,id);
+   assert.equal(overlay.mode,'primary');
+   assert.ok(overlay.count>=1,'Real rig has bone-bound muscle markers '+id);
+   assert.ok(overlay.primaries>=1,'Primary muscles visible '+id);
+   assert.equal(overlay.secondaries,0,'Secondary hidden by default '+id);
+   await page.locator('[data-muscle-mode="all"]').click();
+   const secondary=await page.evaluate(()=>scene.real.muscleOverlay.muscles.filter(x=>x.role==='secondary'&&x.mesh.visible).length);
+   assert.ok(secondary>=1,'Secondary muscle group must appear '+id);
+   await page.locator('.scene').screenshot({path:'/tmp/fitkocum-muscles-'+id+'-all.png'});
+   await page.locator('[data-muscle-mode="off"]').click();
+   assert.equal(await page.evaluate(()=>scene.real.muscleOverlay.group.visible),false,'Off must hide real muscle geometry');
+   await page.locator('.scene').screenshot({path:'/tmp/fitkocum-muscles-'+id+'-off.png'});
+   await page.locator('[data-muscle-mode="primary"]').click();
+   assert.equal(await page.evaluate(()=>scene.real.muscleOverlay.group.visible),true);
+   await page.locator('[data-technique-phase="0.5"]').click();
+   const before=await page.evaluate(()=>scene.real.muscleOverlay.muscles[0].mesh.position.toArray());
+   await page.locator('[data-technique-phase="0.75"]').click();
+   const after=await page.evaluate(()=>scene.real.muscleOverlay.muscles[0].mesh.position.toArray());
+   if(id!=='plank')assert.notDeepEqual(before,after,'Markers must follow different phases of '+id);
+   console.log('MUSCLE '+id+' '+JSON.stringify(overlay)+' secondary='+secondary);
+   await page.locator('#close').click();
+ }
+ await page.locator('#realMoveList [data-id="bench"]').click();
+ assert.equal(await page.locator('#musclePanel').isVisible(),true);
+ await page.locator('[data-muscle-mode="off"]').click();
+ assert.equal(await page.evaluate(()=>scene.real.technique.muscleMode),'off');
+ await page.locator('[data-muscle-mode="all"]').click();
+ assert.equal(await page.evaluate(()=>scene.real.technique.muscleMode),'all');
+ await page.locator('#close').click();
+ await page.locator('#realMoveList [data-id="mobility_arm-circles-small"]').click();
+ assert.equal(await page.locator('#musclePanel').isVisible(),false,'Muscle diagrams are not misleadingly shown for mobility mannequin clips');
+ await page.locator('#close').click();
+ await page.reload();
+ await page.locator('#moveList .watch[data-id="bench"]').click();
+ assert.equal(await page.locator('[data-muscle-mode="all"]').getAttribute('aria-pressed'),'true','Muscle preference persists');
+ await page.locator('#close').click();
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: premium gym scene and quality settings, detailed barbell, anatomy guides, five machines, RIR smart coach, 65 3D');
+ console.log('PASS: muscle-region overlays primary/secondary, motion tracking, settings, premium gym, anatomy guides, 65 3D');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
