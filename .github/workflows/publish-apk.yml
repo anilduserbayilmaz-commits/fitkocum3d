@@ -13,15 +13,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Download verified v1.7 APK
+      - name: Download verified v1.8 APK
         run: |
           mkdir -p /tmp/fitkocum
-          gh run download 42264452022 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
+          gh run download 42273080883 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
           test -s /tmp/fitkocum/app-debug.apk
-          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v1.7.apk
-          unzip -t FitKocum3D-Plus-v1.7.apk | tail -1
-          sha256sum FitKocum3D-Plus-v1.7.apk
+          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v1.8.apk
+          unzip -t FitKocum3D-Plus-v1.8.apk | tail -1
+          sha256sum FitKocum3D-Plus-v1.8.apk
       - name: Publish direct install file
         run: |
-          gh release create v1.7.0 FitKocum3D-Plus-v1.7.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v1.7' --notes 'FitKoçum 3D+ v1.7 Android APK: 65 exercises (24 anatomical GLB, 36 mobility mannequin animations, 5 original 3D equipment-technique demonstrations). Program builder: custom A-F days, rename, move add/remove/reorder and sets/reps targets. Data locally stored, history preserved. Chromium 3D and custom planner integration tests passed.'
-          gh release view v1.7.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
+          gh release create v1.8.0 FitKocum3D-Plus-v1.8.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v1.8' --notes 'FitKoçum 3D+ v1.8: Smart Workout Coach. Previous weights and reps, conservative progression recommendations based on complete sessions and RIR, set difficulty logging (RIR), automatic adjustable rest timer. Keeps 65 offline 3D movements, custom program editor and existing local logs. Browser integration tests for coach and 3D passed. Debug APK for private testing; not Play Store release build.'
+          gh release view v1.8.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
