@@ -1,0 +1,32 @@
+name: Verify realistic 3D animations
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'app/src/main/assets/index.html'
+      - 'web-src/realistic-viewer.js'
+      - 'tests/visual-3d.cjs'
+      - '.github/workflows/verify-3d.yml'
+permissions: {contents: read}
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download anatomical models and viewer
+        run: |
+          mkdir -p app/src/main/assets/models app/src/main/assets/thumbs
+          curl -fsSL --retry 3 --max-time 120 'https://raw.githubusercontent.com/AssiamahS/opengym3d/main/dist/opengym3d-exercise-pack-v1.zip' -o /tmp/pack.zip
+          unzip -joq /tmp/pack.zip 'pack/models/plank.glb' 'pack/models/squat.glb' 'pack/models/deadlift.glb' -d app/src/main/assets/models
+          unzip -joq /tmp/pack.zip 'pack/thumbs/*.png' -d app/src/main/assets/thumbs
+          npm install --no-save --no-package-lock --ignore-scripts three@0.180.0 esbuild@0.25.12 playwright-core@1.56.1
+          ./node_modules/.bin/esbuild web-src/realistic-viewer.js --bundle --minify --format=iife --target=es2020 --outfile=app/src/main/assets/realistic-viewer.js
+      - name: Assert 3D canvas and moving clips
+        run: node tests/visual-3d.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anatomy-browser-screenshots
+          path: /tmp/fitkocum-*.png
+          if-no-files-found: warn
+          retention-days: 7
