@@ -10,6 +10,7 @@ const types = {'.html':'text/html; charset=utf-8','.js':'application/javascript'
 const server = http.createServer((req,res)=>{
   const name=decodeURIComponent(req.url.split('?')[0]);
   const filepath=path.resolve(ROOT,'.'+name);
+  if(name==='/favicon.ico'){res.writeHead(204).end();return}
   if(!filepath.startsWith(ROOT+path.sep)) {res.writeHead(403).end();return}
   fs.readFile(filepath,(err,data)=>{if(err){res.writeHead(404).end();return}
     res.writeHead(200,{'Content-Type':types[path.extname(filepath)]||'application/octet-stream'}).end(data)
@@ -55,10 +56,14 @@ const server = http.createServer((req,res)=>{
   assert.ok(state.clips >= 1);
   assert.equal(state.fail,false);
   console.log(id,JSON.stringify(state));
-  await page.locator('.scene').screenshot({path:'/tmp/fitkocum-'+id+'.png'});
+  const imageBefore=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-'+id+'.png'});
   screenshots.push(id);
   const before=state.time;
-  await page.waitForTimeout(550);
+  await page.waitForTimeout(720);
+  if(id!=='plank'){
+    const imageAfter=await page.locator('.scene').screenshot();
+    assert.notEqual(Buffer.compare(imageBefore,imageAfter),0,'Animated body must visibly change in '+id);
+  }
   const after=await page.evaluate(()=>scene.real.mixer.time);
   assert.ok(after>before,'Animation must advance');
   await page.locator('#close').click();
