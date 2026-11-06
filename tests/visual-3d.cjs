@@ -205,6 +205,23 @@ const server = http.createServer((req,res)=>{
    }));
    assert.equal(a.mode,'technique');assert.equal(a.kind,id);assert.ok(a.meshCount>18,id+' mesh count');
    assert.equal(a.visible,'block');assert.equal(a.original,'none');
+   assert.equal(await page.locator('#techniqueCompare').isVisible(),true);
+   assert.equal(await page.locator('#formCorrect').getAttribute('aria-pressed'),'true');
+   await page.locator('[data-technique-phase="0.5"]').click();
+   assert.equal(await page.evaluate(()=>scene.real.playing),false);
+   await page.waitForTimeout(120);
+   const good=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-technique-'+id+'-good.png'});
+   await page.locator('#formWrong').click();
+   assert.equal(await page.locator('#formWrong').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.evaluate(()=>scene.real.technique.formMode),'mistake');
+   assert.equal(await page.locator('#techniqueWarning').evaluate(el=>el.classList.contains('bad')),true);
+   assert.match(await page.locator('#techniqueWarning').innerText(),/Örnek hata/);
+   await page.waitForTimeout(120);
+   const bad=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-technique-'+id+'-mistake.png'});
+   assert.notEqual(Buffer.compare(good,bad),0,'Correct and wrong technique must look visibly different: '+id);
+   await page.locator('#formCorrect').click();
+   assert.equal(await page.evaluate(()=>scene.real.technique.formMode),'correct');
+   await page.locator('#pause').click();
    const frame1=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-technique-'+id+'.png'});
    await page.waitForTimeout(750);
    const frame2=await page.locator('.scene').screenshot();
@@ -216,7 +233,13 @@ const server = http.createServer((req,res)=>{
    console.log('TECHNIQUE '+id+' '+JSON.stringify(a));
    await page.locator('#close').click();
  }
+ await page.locator('#realMoveList [data-id="lib_squat"]').click();
+ assert.equal(await page.locator('#techniqueCompare').isVisible(),false,'Correct/mistake controls must not appear for unvalidated anatomical models');
+ await page.locator('#close').click();
+ await page.locator('#realMoveList [data-id="bench"]').click();
+ assert.equal(await page.locator('#formCorrect').getAttribute('aria-pressed'),'true','Form mode resets to correct for each new exercise');
+ await page.locator('#close').click();
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: smart workout coach, RIR records, safe progression, auto rest, 65 3D and custom editing');
+ console.log('PASS: 3D form comparison five machines, smart workout coach, RIR, 65 3D and custom editing');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
