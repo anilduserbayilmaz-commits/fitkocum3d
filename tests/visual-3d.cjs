@@ -171,7 +171,7 @@ const server = http.createServer((req,res)=>{
    assert.notEqual(Buffer.compare(frame1,frame2),0,'Model must visually animate: '+id);
    const r=await page.evaluate(()=>scene.real.progress);
    assert.notEqual(r,a.phase,'Progress must change: '+id);
-   await page.locator('#poseRange').fill('45');
+   await page.locator('#poseRange').evaluate(el=>{el.value='45';el.dispatchEvent(new Event('input',{bubbles:true}));});
    assert.equal(await page.locator('#pause').innerText(),'▶ Oynat');
    console.log('TECHNIQUE '+id+' '+JSON.stringify(a));
    await page.locator('#close').click();
