@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {retargetClip} from 'three/addons/utils/SkeletonUtils.js';
+import {createFittedTrainingKit} from './fitted-kit.js';
+import {PrototypeGymGear} from './realistic-gear.js';
 
 const MAP={
  'Root':'root','pelvis':'spine05','spine_01':'spine04',
@@ -16,25 +18,20 @@ const load=filename=>new Promise((resolve,reject)=>gltf.load('/assets/'+filename
 const skinned=root=>{let x;root.traverse(o=>{if(!x&&o.isSkinnedMesh)x=o});return x};
 const error=e=>{console.error('RETARGET_RIG_FAILURE',e.stack||String(e));document.querySelector('#error').textContent=String(e.stack||e);window.__v31={status:'error',message:String(e.stack||e)}};
 async function run(){
+ const exercise=new URL(location.href).searchParams.get('move')||'bicep_curl';
+ if(!['bicep_curl','squat','deadlift'].includes(exercise))throw Error('Unsupported prototype '+exercise);
  const [real,source,shorts,shirt,shoes]=await Promise.all([
-  load('realistic_body.glb'),load('bicep_curl.glb'),load('realistic_shorts.glb'),load('realistic_tshirt.glb'),load('realistic_shoes.glb')
+  load('realistic_body.glb'),load(exercise+'.glb'),load('realistic_shorts.glb'),load('realistic_tshirt.glb'),load('realistic_shoes.glb')
  ]);
  console.log('RETARGET_ASSET_LOAD',JSON.stringify([real,source,shorts,shirt,shoes].map((x,i)=>({i,hasScene:!!x?.scene,keys:Object.keys(x||{})}))));
  const realSkin=skinned(real.scene),sourceSkin=skinned(source.scene);
  if(!realSkin||!sourceSkin)throw Error('Missing skinned meshes');
  const realBones=new Map(realSkin.skeleton.bones.map(b=>[b.name,b]));
- let dressed=0;
- for(const asset of [shorts,shirt,shoes]){
-  const garmentMeshes=[];
-  asset.scene.traverse(o=>{if(o.isSkinnedMesh)garmentMeshes.push(o)});
-  for(const o of garmentMeshes){
-    const bones=o.skeleton.bones.map(b=>realBones.get(b.name));
-    if(bones.some(b=>!b))throw Error('Clothing rig cannot match base body');
-    o.bind(new THREE.Skeleton(bones,o.skeleton.boneInverses.map(m=>m.clone())),o.bindMatrix.clone());
-    real.scene.add(o);
-    dressed++;
-  }
- }
+ // Source garments have non-matching morph/bind data. Do not export the
+ // puffed-up clothing meshes. Generate fitted body-surface sports kit instead.
+ const sportswear=createFittedTrainingKit(realSkin);
+ real.scene.add(sportswear.group);
+ const dressed=sportswear.group.children.length;
  const clip=source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
  const runtimeBoneNames=new Set(sourceSkin.skeleton.bones.map(b=>b.name));
  const canonical=name=>name.toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -61,6 +58,7 @@ async function run(){
  const scene=new THREE.Scene();
  scene.background=new THREE.Color(0xedecea);
  scene.add(wrapper);
+ const gear=new PrototypeGymGear(scene,realBones,exercise);
  const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
  renderer.setSize(750,950);
  renderer.setPixelRatio(1);
@@ -78,7 +76,7 @@ async function run(){
  floor.rotation.x=-Math.PI/2;floor.position.y=-.015;scene.add(floor);
  const mixer=new THREE.AnimationMixer(realSkin);
  const action=mixer.clipAction(targetClip);action.play();
- function pose(time){mixer.setTime(time);renderer.render(scene,camera)}
+ function pose(time){mixer.setTime(time);scene.updateMatrixWorld(true);gear.update();renderer.render(scene,camera)}
  pose(0);
  const targetTracks=targetClip.tracks.map(t=>t.name);
  const times=[0,targetClip.duration*.25,targetClip.duration*.5,targetClip.duration*.75];
@@ -94,15 +92,15 @@ async function run(){
  for(const t of times){pose(t);frames.push({time:t,limbs:limbPose()})}
  pose(targetClip.duration*.5);
  const result={
-  status:'ok',character:'CC0 MakeHuman textured',originalClip:clip.name,
+  status:'ok',exercise,character:'CC0 MakeHuman textured with fitted gym outfit',originalClip:clip.name,
   sourceTracks:clip.tracks.length,retargetedTracks:targetTracks.length,
   targetTracks:targetTracks.slice(0,40),
-  duration:targetClip.duration,dressed,
+  duration:targetClip.duration,dressed,equipment:gear.kind,equipmentMeshes:gear.meshes.length,fitCounts:sportswear.counts,
   skeletonMapped:Object.keys(MAP).length,
   frames,
   size:size.toArray(),images:real.parser.json.images?.length||0
  };
- document.querySelector('#status').textContent='Prototype: '+result.retargetedTracks+' tracks · '+result.dressed+' garment meshes';
+ document.querySelector('#status').textContent=exercise+' · '+result.retargetedTracks+' tracks · fitted sports kit';
  window.__v31=result;
 }
 run().catch(error);
