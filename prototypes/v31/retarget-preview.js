@@ -20,10 +20,10 @@ const error=e=>{console.error('RETARGET_RIG_FAILURE',e.stack||String(e));documen
 async function run(){
  const exercise=new URL(location.href).searchParams.get('move')||'bicep_curl';
  if(!['bicep_curl','squat','deadlift'].includes(exercise))throw Error('Unsupported prototype '+exercise);
- const [real,source,shorts,shirt,shoes]=await Promise.all([
-  load('realistic_body.glb'),load(exercise+'.glb'),load('realistic_shorts.glb'),load('realistic_tshirt.glb'),load('realistic_shoes.glb')
+ const [real,source,shorts,shirt,shoes,hair]=await Promise.all([
+  load('realistic_body.glb'),load(exercise+'.glb'),load('realistic_shorts.glb'),load('realistic_tshirt.glb'),load('realistic_shoes.glb'),load('realistic_hair.glb')
  ]);
- console.log('RETARGET_ASSET_LOAD',JSON.stringify([real,source,shorts,shirt,shoes].map((x,i)=>({i,hasScene:!!x?.scene,keys:Object.keys(x||{})}))));
+ console.log('RETARGET_ASSET_LOAD',JSON.stringify([real,source,shorts,shirt,shoes,hair].map((x,i)=>({i,hasScene:!!x?.scene,keys:Object.keys(x||{})}))));
  const realSkin=skinned(real.scene),sourceSkin=skinned(source.scene);
  if(!realSkin||!sourceSkin)throw Error('Missing skinned meshes');
  const realBones=new Map(realSkin.skeleton.bones.map(b=>[b.name,b]));
@@ -31,6 +31,18 @@ async function run(){
  // puffed-up clothing meshes. Generate fitted body-surface sports kit instead.
  const sportswear=createFittedTrainingKit(realSkin);
  real.scene.add(sportswear.group);
+ let hairMeshes=0;
+ const hairParts=[];
+ hair.scene.traverse(o=>{if(o.isSkinnedMesh)hairParts.push(o)});
+ for(const o of hairParts){
+   const bones=o.skeleton.bones.map(b=>realBones.get(b.name));
+   if(bones.some(b=>!b))continue;
+   o.bind(new THREE.Skeleton(bones,o.skeleton.boneInverses.map(m=>m.clone())),o.bindMatrix.clone());
+   o.material?.color?.set('#302820');
+   real.scene.add(o);
+   hairMeshes++;
+ }
+
  const dressed=Object.values(sportswear.counts).filter(v=>v>20).length;
  const clip=source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
  const runtimeBoneNames=new Set(sourceSkin.skeleton.bones.map(b=>b.name));
@@ -109,7 +121,7 @@ async function run(){
   status:'ok',exercise,character:'CC0 MakeHuman textured with fitted gym outfit',originalClip:clip.name,
   sourceTracks:clip.tracks.length,retargetedTracks:targetTracks.length,
   targetTracks:targetTracks.slice(0,40),
-  duration:targetClip.duration,dressed,appearance:sportswear.method,equipment:gear.kind,equipmentMeshes:gear.meshes.length,fitCounts:sportswear.counts,
+  duration:targetClip.duration,dressed,hairMeshes,appearance:sportswear.method,equipment:gear.kind,equipmentMeshes:gear.meshes.length,fitCounts:sportswear.counts,
   skeletonMapped:Object.keys(MAP).length,
   frames,
   size:size.toArray(),images:real.parser.json.images?.length||0
