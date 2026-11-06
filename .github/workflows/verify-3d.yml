@@ -14,7 +14,7 @@ permissions: {contents: read}
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
       - name: Download anatomical models and viewer
@@ -23,6 +23,8 @@ jobs:
           curl -fsSL --retry 3 --max-time 120 'https://raw.githubusercontent.com/AssiamahS/opengym3d/main/dist/opengym3d-exercise-pack-v1.zip' -o /tmp/pack.zip
           unzip -joq /tmp/pack.zip 'pack/models/plank.glb' 'pack/models/squat.glb' 'pack/models/deadlift.glb' 'pack/models/romanian_deadlift.glb' 'pack/models/sumo_squat.glb' -d app/src/main/assets/models
           unzip -joq /tmp/pack.zip 'pack/thumbs/*.png' -d app/src/main/assets/thumbs
+          curl -fsSL --retry 3 --max-time 150 'https://raw.githubusercontent.com/shlomorsh/desk-break/main/library/exercises.glb' -o app/src/main/assets/models/mobility.glb
+          test -s app/src/main/assets/models/mobility.glb
           npm install --no-save --no-package-lock --ignore-scripts three@0.180.0 esbuild@0.25.12 playwright-core@1.56.1
           ./node_modules/.bin/esbuild web-src/realistic-viewer.js --bundle --minify --format=iife --target=es2020 --outfile=app/src/main/assets/realistic-viewer.js
       - name: Assert 3D canvas and moving clips
