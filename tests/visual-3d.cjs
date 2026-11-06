@@ -57,17 +57,20 @@ const server = http.createServer((req,res)=>{
  // Custom program builder must persist added days, set goals and ordering.
  await page.locator('#chooseCustom').click();
  await page.locator('#customAddDay').click();
+ await page.waitForFunction(()=>document.querySelectorAll('#dayTabs .day').length===4);
  assert.equal(await page.locator('#dayTabs .day').count(),4);
  await page.locator('#customDayTitle').fill('Yeni program günüm');
  await page.locator('#customDayTitle').dispatchEvent('change');
  await page.locator('#customSearch').fill('leg press');
  await page.locator('#customMoveSelect').selectOption('legpress');
  await page.locator('#customAddMove').click();
+ await page.waitForFunction(()=>document.querySelector('#moveList .watch')?.dataset.id==='legpress');
  assert.equal(await page.locator('#moveList .watch').first().getAttribute('data-id'),'legpress');
  await page.locator('[data-goal="sets"]').first().fill('4');
  await page.locator('[data-goal="sets"]').first().dispatchEvent('change');
  await page.locator('[data-goal="reps"]').first().fill('10–12');
  await page.locator('[data-goal="reps"]').first().dispatchEvent('change');
+ await page.waitForFunction(()=>document.getElementById('moveList').innerText.includes('4 × 10–12'));
  assert.match(await page.locator('#moveList').innerText(),/4 × 10–12/);
  await page.reload();
  assert.equal(await page.locator('#dayTabs .day').count(),4);
