@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {Technique3D} from './technique-viewer.js';
 
 const PACK = new Set([
   'bent_over_row','bicep_curl','calf_raise','crunch','deadlift',
@@ -100,6 +101,25 @@ class RealisticViewer {
     this.progress=0;this.playing=true;this.showStatus('');
   }
   async setExercise(name){
+    const isTechnique=name.startsWith('technique:');
+    if(isTechnique){
+      const id=name.substring('technique:'.length);
+      if(!['bench','pulldown','legpress','row','triceps'].includes(id)){this.showStatus('Bilinmeyen teknik modeli',true);return}
+      ++this.token;
+      if(!this.technique)this.technique=new Technique3D(this.scene);
+      if(this.modelRoot)this.modelRoot.visible=false;
+      if(this.equipment)this.equipment.visible=false;
+      this.technique.root.visible=true;
+      this.active=true;this.playing=true;this.progress=0;this.currentKind='technique';this.clipDuration=3.2;
+      this.modelName='technique:'+id;
+      this.technique.base(id);
+      this.showStatus('');
+      this.setCamera('angle');
+      return;
+    }
+    if(this.technique)this.technique.root.visible=false;
+    if(this.modelRoot)this.modelRoot.visible=true;
+    if(this.equipment)this.equipment.visible=true;
     const isMobility=name.startsWith('mobility:');
     const clipName=isMobility?name.substring('mobility:'.length):null;
     const assetName=isMobility?'mobility':name;
@@ -238,7 +258,7 @@ class RealisticViewer {
   setManualProgress(p){
     this.playing=false;
     this.progress=Math.max(0,Math.min(1,Number(p)||0));
-    if(this.mixer)this.mixer.setTime(this.progress*this.clipDuration);
+    if(this.currentKind==='technique'){this.technique?.frame(this.progress)}else if(this.mixer)this.mixer.setTime(this.progress*this.clipDuration);
   }
   animate(now){
     this.requestId=requestAnimationFrame(this.animate);
@@ -247,7 +267,12 @@ class RealisticViewer {
     if(!this.active || !this.renderer)return;
     const rect=this.canvas.getBoundingClientRect();
     if(rect.width<2||rect.height<2)return;
-    if(this.playing && this.mixer){
+    if(this.currentKind==='technique'){
+      if(this.playing)this.progress=(this.progress+dt/this.clipDuration)%1;
+      this.technique?.frame(this.progress);
+      const scrub=document.getElementById('poseRange');
+      if(scrub&&document.getElementById('overlay')?.hidden===false&&this.playing){scrub.value=String(Math.round(this.progress*100));document.getElementById('poseStage').textContent='Oynatılıyor'}
+    } else if(this.playing && this.mixer){
       this.mixer.update(dt);
       this.progress=(this.mixer.time%this.clipDuration)/this.clipDuration;
       const scrub=document.getElementById('poseRange');
@@ -261,12 +286,13 @@ class RealisticViewer {
     if(w!==this.lastW||h!==this.lastH){
       this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.lastW=w;this.lastH=h;
     }
-    this.updateWeights();
+    if(this.currentKind!=='technique')this.updateWeights();
     this.controls.update();
     this.renderer.render(this.scene,this.camera);
   }
   stop(){
     cancelAnimationFrame(this.requestId);
+    this.technique?.destroy();
     this.controls?.dispose();
     this.renderer?.dispose();
     this.active=false;
@@ -288,9 +314,10 @@ class Hybrid3D{
   }
   setExercise(type){
     const isMobility=type.startsWith('mobility:');
-    const model=type.startsWith('library:')?type.split(':')[1]:isMobility?type:MODEL_MAP[type];
-    if(model && (isMobility||PACK.has(model))&&!this.real.fail){
-      this.mode=isMobility?'mobility':'real';this.canvas.style.display='none';this.canvasReal.style.display='block';
+    const isTechnique=type.startsWith('technique:');
+    const model=type.startsWith('library:')?type.split(':')[1]:isMobility||isTechnique?type:MODEL_MAP[type];
+    if(model && (isMobility||isTechnique||PACK.has(model))&&!this.real.fail){
+      this.mode=isTechnique?'technique':isMobility?'mobility':'real';this.canvas.style.display='none';this.canvasReal.style.display='block';
       this.original.setPlaying(false);
       this.real.setExercise(model);
     }else{
@@ -301,7 +328,7 @@ class Hybrid3D{
     }
     this.playing=true;
     const badge=document.querySelector('.scene-label');
-    if(badge)badge.textContent=this.mode==='real'?'● ANATOMİK 3D':this.mode==='mobility'?'● HAREKETLİ 3D MANEKEN':'● ŞEMATİK 3D MODEL';
+    if(badge)badge.textContent=this.mode==='real'?'● ANATOMİK 3D':this.mode==='technique'?'● 3D HAREKET TEKNİĞİ':this.mode==='mobility'?'● HAREKETLİ 3D MANEKEN':'● ŞEMATİK 3D MODEL';
   }
   setCamera(mode){this.mode!=='old'?this.real.setCamera(mode):this.original.setCamera(mode)}
   setManualProgress(v){this.mode!=='old'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
