@@ -1,5 +1,5 @@
 const { chromium } = require('playwright-core');
-setTimeout(()=>{ console.error('FAIL: 3D browser test timed out'); process.exit(1); },230000).unref();
+setTimeout(()=>{ console.error('FAIL: 3D browser test timed out'); process.exit(1); },570000).unref();
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -25,6 +25,11 @@ const server = http.createServer((req,res)=>{
  models.mobility=fs.readFileSync(path.join(ROOT,'models','mobility.glb')).toString('base64');
  const browser=await chromium.launch({executablePath:'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage','--disable-gpu-sandbox']});
  const page=await browser.newPage({viewport:{width:393,height:851},deviceScaleFactor:1});
+ const clickLibrary=async id=>{
+   await page.locator('[data-move-filter="all"]').click();
+   await page.locator('#moveSearch').fill(id);
+   await page.locator('#realMoveList .watch[data-id="'+id+'"]').click();
+ };
  const consoleErrors=[];
  page.on('pageerror',e=>consoleErrors.push(e.stack||String(e)));
  page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});
@@ -194,16 +199,36 @@ const server = http.createServer((req,res)=>{
   await page.locator('#close').click();
  }
 
- // 24 anatomical + 36 distinct 3D mannequin exercises, with correct category filters.
- assert.equal(await page.locator('#moveFilters [data-move-filter]').count(),6);
- assert.equal(await page.locator('#realMoveList article').count(),65,'Total library count');
- for(const [category,count] of [['strength',24],['technique',5],['warmup',14],['mobility',14],['accessory',8]]){
+
+ // 390 verified unique 3D clips, real category counts, paginated instead of 390 DOM cards.
+ const catalog=await page.evaluate(()=>({
+   total:fullLibrary.length,extra:EXTRA_MOBILITY3D.length,
+   mobility:ALL_MOBILITY3D.length,
+   unique:new Set(fullLibrary.map(libraryKey)).size
+ }));
+ assert.deepEqual(catalog,{total:390,extra:325,mobility:361,unique:390});
+ assert.equal(await page.locator('#moveFilters [data-move-filter]').count(),16);
+ assert.equal(await page.locator('#realMoveList article').count(),24);
+ await page.locator('#loadMoreMoves').click();
+ assert.equal(await page.locator('#realMoveList article').count(),48);
+ for(const [category,count] of [
+   ['strength',24],['technique',5],['warmup',14],['mobility',14],['accessory',8],
+   ['upper',34],['back',29],['hips',21],['cardio',28],['balance',26],
+   ['chair',55],['floor-seated',40],['floor-lying',46],['yoga',46]
+ ]){
    await page.locator('[data-move-filter="'+category+'"]').click();
-   assert.equal(await page.locator('#realMoveList article').count(),count,category+' model count');
+   assert.equal(await page.locator('#realMoveList article').count(),Math.min(24,count),category+' first page');
+   assert.match(await page.locator('#moveCount').innerText(),new RegExp(count+' / 390'));
  }
  await page.locator('[data-move-filter="all"]').click();
+ await page.locator('#moveSearch').fill('chair-march');
+ assert.equal(await page.locator('#realMoveList .watch[data-id="mobility_chair-march"]').count(),1);
+ await page.locator('[data-favorite="mobility_chair-march"]').click();
+ await page.locator('[data-move-filter="favorites"]').click();
+ assert.equal(await page.locator('#realMoveList .watch[data-id="mobility_chair-march"]').count(),1);
+ await page.locator('[data-move-filter="all"]').click();
  for(const id of ['arm-circles-small','standing-hip-circles','standing-cross-crunch']){
-   await page.locator('#realMoveList [data-id="mobility_'+id+'"]').click();
+   await clickLibrary('mobility_'+id);
    await page.waitForFunction(
      (expected)=>typeof scene!=='undefined'&&scene.mode==='mobility'&&scene.real.modelName==='mobility'&&scene.real.actions?.[0]?.getClip()?.name===expected,
      id,{timeout:35000}
@@ -231,7 +256,7 @@ const server = http.createServer((req,res)=>{
  // Five separate equipment models have their own moving human figure, machine geometry and exercise path.
  await page.locator('[data-move-filter="technique"]').click();
  for(const id of ['bench','pulldown','legpress','row','triceps']){
-   await page.locator('#realMoveList [data-id="'+id+'"]').click();
+   await clickLibrary(id);
    await page.waitForFunction(expected=>typeof scene!=='undefined'&&scene.mode==='technique'&&scene.real.modelName==='technique:'+expected,id,{timeout:15000});
    const a=await page.evaluate(()=>({
       mode:scene.mode,kind:scene.real.technique?.kind,
@@ -271,17 +296,17 @@ const server = http.createServer((req,res)=>{
    await page.locator('#close').click();
  }
  await page.locator('[data-move-filter="all"]').click();
- await page.locator('#realMoveList [data-id="mobility_arm-circles-small"]').click();
+ await clickLibrary('mobility_arm-circles-small');
  assert.equal(await page.locator('#techniqueCompare').isVisible(),false,'Technique comparison only on validated strength and machine exercises');
  await page.locator('#close').click();
- await page.locator('#realMoveList [data-id="bench"]').click();
+ await clickLibrary('bench');
  assert.equal(await page.locator('#formCorrect').getAttribute('aria-pressed'),'true','Form mode resets to correct for each new exercise');
  await page.locator('#close').click();
  // Anatomical GLB form-guide regression: actual motion-captured rig plus
  // red/green training markers and physically distinct example joint offsets.
  await page.locator('[data-move-filter="all"]').click();
  for(const id of ['squat','deadlift','plank']){
-   await page.locator('#realMoveList [data-id="lib_'+id+'"]').click();
+   await clickLibrary('lib_'+id);
    await page.waitForFunction(expected=>
       typeof scene!=='undefined'&&scene.mode==='real'
       &&scene.real.modelName===expected
@@ -313,7 +338,7 @@ const server = http.createServer((req,res)=>{
  // v2.2 uses the original SkinnedMesh vertex colors, not floating spheres.
  await page.locator('[data-move-filter="all"]').click();
  for(const id of ['squat','deadlift','plank']){
-   await page.locator('#realMoveList [data-id="lib_'+id+'"]').click();
+   await clickLibrary('lib_'+id);
    await page.waitForFunction(expected=>
      typeof scene!=='undefined'&&scene.mode==='real'&&scene.real.modelName===expected&&
      scene.real.muscleOverlay?.available,id,{timeout:25000});
@@ -365,14 +390,14 @@ const server = http.createServer((req,res)=>{
    console.log('NATIVE_MUSCLE '+id+' '+JSON.stringify(overlay));
    await page.locator('#close').click();
  }
- await page.locator('#realMoveList [data-id="bench"]').click();
+ await clickLibrary('bench');
  assert.equal(await page.locator('#musclePanel').isVisible(),true);
  await page.locator('[data-muscle-mode="off"]').click();
  assert.equal(await page.evaluate(()=>scene.real.technique.muscleMode),'off');
  await page.locator('[data-muscle-mode="all"]').click();
  assert.equal(await page.evaluate(()=>scene.real.technique.muscleMode),'all');
  await page.locator('#close').click();
- await page.locator('#realMoveList [data-id="mobility_arm-circles-small"]').click();
+ await clickLibrary('mobility_arm-circles-small');
  assert.equal(await page.locator('#musclePanel').isVisible(),false,'Muscle diagrams are not misleadingly shown for mobility mannequin clips');
  await page.locator('#close').click();
  await page.reload();
@@ -380,6 +405,6 @@ const server = http.createServer((req,res)=>{
  assert.equal(await page.locator('[data-muscle-mode="all"]').getAttribute('aria-pressed'),'true','Muscle preference persists');
  await page.locator('#close').click();
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: native anatomical skinned mesh coloring primary/secondary, animation, settings, premium gym and 65 3D');
+ console.log('PASS: 390-clip Atlas, game athlete, exact exercise clips, procedural 3D and legacy workout protection');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
