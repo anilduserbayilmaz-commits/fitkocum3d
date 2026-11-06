@@ -37,7 +37,9 @@ async function run(){
  }
  const clip=source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
  const runtimeBoneNames=new Set(sourceSkin.skeleton.bones.map(b=>b.name));
- const resolvedMap=Object.fromEntries(Object.entries(MAP).map(([k,v])=>[k,runtimeBoneNames.has(v)?v:v.replace(/[.\-]/g,'_')]));
+ const canonical=name=>name.toLowerCase().replace(/[^a-z0-9]/g,'');
+ const boneLookup=new Map([...runtimeBoneNames].map(name=>[canonical(name),name]));
+ const resolvedMap=Object.fromEntries(Object.entries(MAP).map(([k,v])=>[k,boneLookup.get(canonical(v))||v]));
  console.log('RETARGET_MATCHES',JSON.stringify({target:realSkin.skeleton.bones.map(b=>b.name),source:[...runtimeBoneNames].slice(0,85),resolvedMap,
    matches:Object.values(resolvedMap).filter(v=>runtimeBoneNames.has(v)).length}));
  const targetClip=retargetClip(realSkin,sourceSkin,clip,{
