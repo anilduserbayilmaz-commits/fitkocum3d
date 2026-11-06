@@ -87,19 +87,38 @@ class RealisticViewer {
     el.hidden=!message;
     if(message){el.textContent=message;el.style.color=isError?'#ffc6b4':'#d1f3b4';}
   }
+  selectMobilityClip(clipName){
+    if(!this.mixer || !this.availableClips)throw new Error('3D animasyon yüklenmedi.');
+    const clip=THREE.AnimationClip.findByName(this.availableClips,clipName);
+    if(!clip)throw new Error('İstenen hareket bu kütüphanede yok: '+clipName);
+    this.mixer.stopAllAction();
+    this.mixer.setTime(0);
+    const action=this.mixer.clipAction(clip);
+    action.reset();action.setLoop(THREE.LoopRepeat,Infinity).play();
+    this.actions=[action];
+    this.clipDuration=Math.max(.2,clip.duration);
+    this.progress=0;this.playing=true;this.showStatus('');
+  }
   async setExercise(name){
-    if(!PACK.has(name)){this.fail=true;this.showStatus('Bu hareket için ayrıntılı model bulunamadı.',true);return}
-    this.active=true;this.playing=true;this.progress=0;
-    this.setCamera('angle');this.showStatus('Anatomik 3D model yükleniyor…');
-    if(this.modelName===name && this.modelRoot){
-      this.mixer.setTime(0);this.showStatus('');return;
+    const isMobility=name.startsWith('mobility:');
+    const clipName=isMobility?name.substring('mobility:'.length):null;
+    const assetName=isMobility?'mobility':name;
+    if(!isMobility&&!PACK.has(name)){this.showStatus('Bu hareketin 3D modeli yok.',true);return}
+    this.active=true;this.playing=true;this.progress=0;this.currentKind=isMobility?'mobility':'anatomical';
+    this.setCamera('angle');
+    if(this.modelName===assetName&&this.modelRoot){
+      if(isMobility){
+        try{this.selectMobilityClip(clipName)}catch(e){this.showStatus(String(e.message),true)}
+      }else{this.mixer?.setTime(0);this.showStatus('')}
+      return;
     }
+    this.showStatus(isMobility?'Mobilite animasyonu yükleniyor…':'Anatomik 3D model yükleniyor…');
     const stamp=++this.token;
     try{
       const bridge=window.FitAndroid;
-      if(!bridge || typeof bridge.loadModelBase64!=='function')throw new Error('Model dosyaları Android APK içinde açılır.');
-      const encoded=bridge.loadModelBase64(name);
-      if(typeof encoded!=='string'||encoded.length<1000)throw new Error('Model okunamadı.');
+      if(!bridge || typeof bridge.loadModelBase64!=='function')throw new Error('3D modeller APK içinden yüklenir.');
+      const encoded=bridge.loadModelBase64(assetName);
+      if(typeof encoded!=='string'||encoded.length<1000)throw new Error('3D model dosyası okunamadı: '+assetName);
       const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));
       const gltf=await new Promise((res,rej)=>this.loader.parse(bytes.buffer,'',res,rej));
       if(this.token!==stamp)return;
@@ -113,12 +132,10 @@ class RealisticViewer {
           }
         });
       }
-      const container=new THREE.Group();
-      const model=gltf.scene;
+      const container=new THREE.Group(),model=gltf.scene;
       model.updateMatrixWorld(true);
-      const box=new THREE.Box3().setFromObject(model);
-      const size=box.getSize(new THREE.Vector3());
-      if(!Number.isFinite(size.y)||size.y<=0)throw new Error('Model boyutları geçersiz.');
+      const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3());
+      if(!Number.isFinite(size.y)||size.y<=0)throw new Error('3D model boyutları geçersiz.');
       const scale=Math.min(1.3,2.28/size.y);
       model.scale.multiplyScalar(scale);
       model.position.set(-box.getCenter(new THREE.Vector3()).x*scale,-box.min.y*scale,-box.getCenter(new THREE.Vector3()).z*scale);
@@ -127,23 +144,28 @@ class RealisticViewer {
       });
       container.add(model);this.modelRoot=container;
       this.scene.add(container);
-      this.createWeights(name,model);
+      this.createWeights(assetName,model);
       this.mixer=new THREE.AnimationMixer(model);
-      this.actions=[];
-      const clips=gltf.animations||[];
-      this.clipDuration=Math.max(1,...clips.map(c=>c.duration||1));
-      for(const clip of clips){
-        const action=this.mixer.clipAction(clip);
-        action.setLoop(THREE.LoopRepeat,Infinity);action.play();
-        this.actions.push(action);
+      this.availableClips=gltf.animations||[];
+      this.modelName=assetName;
+      this.progress=0;this.playing=true;
+      if(isMobility){
+        this.selectMobilityClip(clipName);
+      }else{
+        this.actions=[];
+        const clips=this.availableClips;
+        this.clipDuration=Math.max(1,...clips.map(c=>c.duration||1));
+        for(const clip of clips){
+          const action=this.mixer.clipAction(clip);
+          action.setLoop(THREE.LoopRepeat,Infinity).play();
+          this.actions.push(action);
+        }
+        this.mixer.setTime(0);
+        this.showStatus(clips.length?'':'Modelde animasyon bulunamadı.',!clips.length);
       }
-      this.modelName=name;this.progress=0;this.playing=true;
-      if(this.mixer)this.mixer.setTime(0);
-      this.showStatus(clips.length?'':'Modelde hareket animasyonu bulunamadı.',clips.length===0);
     }catch(e){
       console.error('3D model error',e);
-      this.fail=true;
-      this.showStatus('3D model açılamadı: '+String(e.message||e),true);
+      this.showStatus('3D animasyon açılamadı: '+String(e.message||e),true);
     }
   }
   createWeights(name,model){
@@ -265,9 +287,10 @@ class Hybrid3D{
     this.playing=true;
   }
   setExercise(type){
-    const model=type.startsWith('library:')?type.split(':')[1]:MODEL_MAP[type];
-    if(model && PACK.has(model)&&!this.real.fail){
-      this.mode='real';this.canvas.style.display='none';this.canvasReal.style.display='block';
+    const isMobility=type.startsWith('mobility:');
+    const model=type.startsWith('library:')?type.split(':')[1]:isMobility?type:MODEL_MAP[type];
+    if(model && (isMobility||PACK.has(model))&&!this.real.fail){
+      this.mode=isMobility?'mobility':'real';this.canvas.style.display='none';this.canvasReal.style.display='block';
       this.original.setPlaying(false);
       this.real.setExercise(model);
     }else{
@@ -278,13 +301,13 @@ class Hybrid3D{
     }
     this.playing=true;
     const badge=document.querySelector('.scene-label');
-    if(badge)badge.textContent=this.mode==='real'?'● ANATOMİK 3D · MIT MODEL':'● ŞEMATİK 3D MODEL';
+    if(badge)badge.textContent=this.mode==='real'?'● ANATOMİK 3D':this.mode==='mobility'?'● HAREKETLİ 3D MANEKEN':'● ŞEMATİK 3D MODEL';
   }
-  setCamera(mode){this.mode==='real'?this.real.setCamera(mode):this.original.setCamera(mode)}
-  setManualProgress(v){this.mode==='real'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
+  setCamera(mode){this.mode!=='old'?this.real.setCamera(mode):this.original.setCamera(mode)}
+  setManualProgress(v){this.mode!=='old'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
   setPlaying(v){
     this.playing=Boolean(v);
-    if(this.mode==='real'){this.real.active=Boolean(v)||this.real.active;this.real.setPlaying(v);}
+    if(this.mode!=='old'){this.real.active=Boolean(v)||this.real.active;this.real.setPlaying(v);}
     else this.original.setPlaying(v);
   }
   stop(){this.real.stop();this.original.stop()}
