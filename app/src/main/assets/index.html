@@ -33,6 +33,23 @@
 .custom-goals{display:flex;gap:10px;margin-top:12px}
 .custom-goals label{font-size:11px;color:#abc4cf;display:flex;flex:1;gap:6px;align-items:center}
 .custom-goals input{width:100%;max-width:130px;background:#0c1721;border:1px solid #475b68;border-radius:9px;color:#e9f3f8;padding:9px;font-size:12px}
+
+.coach-panel{margin:15px 0 13px;background:linear-gradient(145deg,#1c3730,#172630 78%);border:1px solid #45674d;border-radius:16px;padding:15px}
+.coach-eyebrow{color:#c0f495;font-size:11px;font-weight:900;letter-spacing:.9px}
+.coach-panel h3{font-size:16px;margin:5px 0 9px}
+.coach-advice{font-size:13px;line-height:1.55;color:#deecdf}
+.coach-history{font-size:12px;color:#b5c9d2;margin-top:9px}
+.coach-safety{font-size:11px;color:#b9cbd0;line-height:1.5;margin-top:9px}
+.coach-count{display:inline-block;background:#33483e;border-radius:8px;padding:4px 8px;color:#d6f6bc;font-size:11px;margin-top:10px;font-weight:750}
+.rir-field{display:block;margin:10px 0 12px;font-size:12px;color:#c4d6dc}
+.rir-field select{width:100%;margin-top:8px;padding:12px;border:1px solid #405a63;border-radius:12px;background:#15232c;color:#eef9f5;font-size:14px}
+.quick-rest{margin-top:12px;padding:13px;border-radius:14px;border:1px solid #425f54;background:#192f2a}
+.quick-rest-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.quick-rest-head strong{font-variant-numeric:tabular-nums;font-size:22px;color:#c5fba1}
+.quick-rest button{background:#2e4540;border:1px solid #587064;padding:8px 13px;border-radius:10px;color:#e1f8d5;font-size:12px;font-weight:800}
+.auto-rest-option{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12px;color:#c9dad5}
+.auto-rest-option input{accent-color:#bdf18a;width:17px;height:17px}
+.coach-mini{display:inline-block;color:#b8d9b6;font-size:11px;margin-top:5px;line-height:1.4}
 </style></head><body>
 <div class="shell">
 <header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
@@ -128,7 +145,21 @@
 <div class="formtip"><b>04 · KAÇINILACAK HATA</b><span id="formMistake"></span></div>
 </div>
 <div style="font-size:11px;color:#b6c8d0;line-height:1.5;margin:8px 0 12px">Yeşil işaretler ağırlığın veya ana hareketin yaklaşık yolunu gösterir. Açı ve hareket açıklamaları eğitim amaçlıdır; herkese uygun sabit eklem dereceleri değildir.</div>
-<div id="real3dStatus" class="scene-label" style="top:auto;bottom:48px" hidden></div><div id="sceneError" class="caution" hidden>Bu cihazda 3D görüntü başlatılamadı. Hareket adımlarını aşağıdan okuyabilirsin.</div><div class="instructions"><h3>Hareketi nasıl yaparım?</h3><ol id="steps"></ol><div class="caution" id="caution"></div></div><div class="inputs"><label>Ağırlık (kg)<input type="number" id="weight" min="0" max="500" step="0.5" inputmode="decimal" placeholder="Örn. 20"></label><label>Tekrar<input type="number" id="reps" min="1" max="100" step="1" inputmode="numeric" placeholder="Örn. 10"></label></div><button class="save" id="save">✓ SETİ KAYDET</button><div class="feedback" id="feedback" role="status"></div></section></div>
+<div id="real3dStatus" class="scene-label" style="top:auto;bottom:48px" hidden></div><div id="sceneError" class="caution" hidden>Bu cihazda 3D görüntü başlatılamadı. Hareket adımlarını aşağıdan okuyabilirsin.</div><div class="instructions"><h3>Hareketi nasıl yaparım?</h3><ol id="steps"></ol><div class="caution" id="caution"></div></div><div class="coach-panel" id="coachPanel" aria-live="polite">
+<div class="coach-eyebrow">FİTKOÇUM · AKILLI SET KOÇU</div><h3 id="coachHeading">Son performansın</h3>
+<div id="coachAdvice" class="coach-advice"></div><div id="coachHistory" class="coach-history"></div>
+<div id="coachSetCount" class="coach-count"></div>
+<div class="coach-safety">Öneriler kayıtlarına dayalıdır; hareket tekniğini ölçmez. Ağrı, baş dönmesi veya kontrol kaybı varsa seti durdur.</div>
+</div>
+<div class="inputs"><label>Ağırlık (kg)<input type="number" id="weight" min="0" max="500" step="0.5" inputmode="decimal" placeholder="Örn. 20"></label><label>Tekrar<input type="number" id="reps" min="1" max="100" step="1" inputmode="numeric" placeholder="Örn. 10"></label></div>
+<label class="rir-field" for="rir">Bu setten sonra kaç tekrar daha yapabilirdin? (RIR)
+<select id="rir"><option value="">Bilmiyorum / kaydetme</option><option value="0">0 · Son sınırımdaydım</option><option value="1">1 tekrar</option><option value="2">2 tekrar</option><option value="3">3 tekrar</option><option value="4">4 veya daha fazla</option></select></label>
+<button class="save" id="save">✓ SETİ KAYDET</button><div class="feedback" id="feedback" role="status"></div>
+<div id="quickRest" class="quick-rest">
+<div class="quick-rest-head"><span style="font-size:12px">⏱ Set arası dinlenme</span><strong id="quickRestClock">01:30</strong><button id="quickRestToggle" type="button">⏸ Duraklat</button></div>
+<div class="auto-rest-option"><input type="checkbox" id="autoRest" checked><label for="autoRest">Set kaydedince dinlenme sayacını başlat</label></div>
+<div class="coach-mini">Dinlenme süresini alt menüdeki Dinlenme ekranından 60 / 90 / 120 sn olarak değiştirebilirsin.</div>
+</div></section></div>
 <script>/* FitKoçum offline 3D exercise demonstrator. No external libraries, assets or network calls. */
 (function(){'use strict';
 const V={add:(a,b)=>a.map((v,i)=>v+b[i]), sub:(a,b)=>a.map((v,i)=>v-b[i]),scale:(a,k)=>a.map(v=>v*k),lerp:(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t),cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],norm:a=>{const n=Math.hypot(...a)||1;return a.map(v=>v/n)}};
@@ -331,7 +362,7 @@ function update(){
  $('chooseCustom').classList.toggle('active',programMode==='custom');
  $('customEditor').hidden=programMode!=='custom';
  $('modeInfo').textContent=programMode==='3d'?'Hazır 3D antrenman: anatomik ve ekipmanlı teknik hareketler.':programMode==='classic'?'Önceki programın; kayıtların korunur.':'Programındaki günleri, hareketleri ve set hedeflerini kendin düzenle.';
- if(programMode==='custom')renderCustomEditor();const dates=new Set(records.map(r=>localDay(r.date)));$('sessions').textContent=dates.size;$('sets').textContent=records.length;$('hSets').textContent=records.length;$('hDays').textContent=dates.size;$('hVolume').textContent=Math.round(records.reduce((sum,r)=>sum+(+r.weight)*(+r.reps),0)).toLocaleString('tr-TR');$('dayCaption').textContent=currentDays()[day].title+' · '+currentDays()[day].ids.length+' hareket';document.querySelectorAll('[data-day]').forEach(el=>el.classList.toggle('active',el.dataset.day===day));$('moveList').innerHTML=currentDays()[day].ids.map(id=>{const m=MOVES[id],n=records.filter(r=>r.id===id&&localDay(r.date)===localDay(new Date())).length;return `<article class="move"><div class="move-art" aria-hidden="true">${id.startsWith("lib_")?`<img src="thumbs/${id.slice(4)}.png" style="width:76px;height:76px;object-fit:cover;border-radius:13px" alt="">`:`<span>${m.icon}</span>`}</div><div class="move-content"><h3>${m.name}</h3><p>${m.group} · ${moveGoal(id)}</p><div class="move-actions"><button class="watch" data-id="${id}">${id.startsWith("lib_")?"◈ ANATOMİK 3D":m.type.startsWith("technique:")?"◈ EKİPMANLI 3D":"▶ ŞEMATİK 3D"}</button>${n?`<span class="logged">✓ Bugün ${n} set</span>`:''}</div></div></article>`}).join('');document.querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));$('logs').innerHTML=records.length?[...records].reverse().slice(0,100).map(r=>`<div class="history-item"><strong>${MOVES[r.id].name}</strong><small>${(+r.weight).toLocaleString('tr-TR')} kg × ${r.reps} tekrar · ${new Date(r.date).toLocaleString('tr-TR')}</small></div>`).join(''):'<div class="empty">Henüz kayıt yok. Bir hareketin 3D gösterimini açıp ilk setini kaydet.</div>'}
+ if(programMode==='custom')renderCustomEditor();const dates=new Set(records.map(r=>localDay(r.date)));$('sessions').textContent=dates.size;$('sets').textContent=records.length;$('hSets').textContent=records.length;$('hDays').textContent=dates.size;$('hVolume').textContent=Math.round(records.reduce((sum,r)=>sum+(+r.weight)*(+r.reps),0)).toLocaleString('tr-TR');$('dayCaption').textContent=currentDays()[day].title+' · '+currentDays()[day].ids.length+' hareket';document.querySelectorAll('[data-day]').forEach(el=>el.classList.toggle('active',el.dataset.day===day));$('moveList').innerHTML=currentDays()[day].ids.map(id=>{const m=MOVES[id],n=records.filter(r=>r.id===id&&localDay(r.date)===localDay(new Date())).length;return `<article class="move"><div class="move-art" aria-hidden="true">${id.startsWith("lib_")?`<img src="thumbs/${id.slice(4)}.png" style="width:76px;height:76px;object-fit:cover;border-radius:13px" alt="">`:`<span>${m.icon}</span>`}</div><div class="move-content"><h3>${m.name}</h3><p>${m.group} · ${moveGoal(id)}</p><div class="move-actions"><button class="watch" data-id="${id}">${id.startsWith("lib_")?"◈ ANATOMİK 3D":m.type.startsWith("technique:")?"◈ EKİPMANLI 3D":"▶ ŞEMATİK 3D"}</button>${n?`<span class="logged">✓ Bugün ${n} set</span>`:''}<span class="coach-mini">${(()=>{const prev=exerciseSummary(id).last;return prev?'Son: '+fmtKg(prev.weight)+' × '+prev.reps:''})()}</span></div></div></article>`}).join('');document.querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));$('logs').innerHTML=records.length?[...records].reverse().slice(0,100).map(r=>`<div class="history-item"><strong>${MOVES[r.id].name}</strong><small>${(+r.weight).toLocaleString('tr-TR')} kg × ${r.reps} tekrar${Number.isInteger(r.rir)?' · RIR '+r.rir:''} · ${new Date(r.date).toLocaleString('tr-TR')}</small></div>`).join(''):'<div class="empty">Henüz kayıt yok. Bir hareketin 3D gösterimini açıp ilk setini kaydet.</div>'}
 
 function scheduleCustomUpdate(){requestAnimationFrame(()=>update())}
 const editorList=()=>Object.entries(MOVES).filter(([id,m])=>id.startsWith('lib_')||id.startsWith('mobility_')||['bench','pulldown','row','legpress','triceps'].includes(id));
@@ -433,10 +464,101 @@ function setGuide(id){
  $('poseRange').value='0';$('poseStage').textContent='Oynatılıyor';
  document.querySelectorAll('[data-camera]').forEach(b=>b.classList.toggle('active',b.dataset.camera==='angle'));
 }
-function openMove(id){selected=id;let m=MOVES[id];setGuide(id);$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Kişisel hareket aralığını antrenörle doğrula.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const bodyweight=new Set(['lib_squat','lib_push_up','lib_plank','lib_lunge','lib_sumo_squat','lib_crunch','lib_glute_bridge']);if(id.startsWith('mobility_')) bodyweight.add(id);$('weight').value=bodyweight.has(id)?'0':'';$('reps').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){scene.setExercise(m.type);$('sceneError').hidden=true}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
+
+const BODYWEIGHT_IDS=new Set(['lib_squat','lib_push_up','lib_plank','lib_lunge','lib_sumo_squat','lib_crunch','lib_glute_bridge','lib_calf_raise','lib_wall_sit','lib_superman','lib_high_knees','lib_jumping_jack','lib_reverse_lunge','lib_glute_bridge','lib_good_morning']);
+const nonWeighted=id=>BODYWEIGHT_IDS.has(id)||id.startsWith('mobility_');
+const fmtKg=n=>Number(n).toLocaleString('tr-TR',{maximumFractionDigits:1})+' kg';
+const sameSession=(r,stamp)=>localDay(r.date)===stamp;
+const moveRecords=id=>records.filter(x=>x.id===id).sort((a,b)=>new Date(a.date)-new Date(b.date));
+function goalSpec(id){
+ const m=String(moveGoal(id)).match(/^\s*(\d+)\s*×\s*(\d+)\s*[–-]\s*(\d+)/);
+ return m?{sets:Math.min(10,+m[1]),min:+m[2],max:+m[3]}:null;
+}
+function exerciseSummary(id){
+ const entries=moveRecords(id),last=entries.length?entries.at(-1):null;
+ const today=localDay(new Date());
+ const previous=entries.filter(r=>localDay(r.date)!==today);
+ const latestDay=previous.length?localDay(previous.at(-1).date):null;
+ const previousSet=latestDay?previous.filter(r=>sameSession(r,latestDay)):[];
+ const todaySets=entries.filter(r=>sameSession(r,today));
+ const goal=goalSpec(id);
+ const pref=nonWeighted(id)?0:last?Number(last.weight):null;
+ const suggested={weight:pref,reason:'İlk kaydını oluşturduktan sonra önceki setini hatırlayacağım.',kind:'new'};
+ if(last){
+   suggested.reason='Son kaldırdığın ağırlığı başlangıç olarak kullanabilirsin.';
+   suggested.kind='hold';
+ }
+ if(latestDay && goal && !nonWeighted(id) && previousSet.length>=goal.sets){
+   const completed=previousSet.slice(-goal.sets);
+   const weights=completed.map(x=>Number(x.weight));
+   const sameWeight=weights.every(w=>Number.isFinite(w)&&w>0&&Math.abs(w-weights[0])<.01);
+   const ready=sameWeight&&completed.every(x=>Number(x.reps)>=goal.max&&Number.isInteger(x.rir)&&x.rir>=2);
+   if(ready){
+     const increment=['legpress','lib_deadlift','lib_romanian_deadlift'].includes(id)?5:2.5;
+     const proposal=Math.round((weights[0]+increment)*2)/2;
+     if(proposal<=500){
+       suggested.weight=proposal;
+       suggested.reason='Son antrenmanda tüm hedef setlerinde üst tekrar sınırına, en az 2 tekrar yedekle ulaştın. Teknik aynı kalıyorsa küçük bir artışı deneyebilirsin.';
+       suggested.kind='increase';
+     }
+   }else if(completed.some(x=>x.rir===0||Number(x.reps)<goal.min)){
+     suggested.reason='Son antrenmanda en az bir set zorlayıcıydı. Ağırlığı artırmadan kontrollü tekrarlara odaklan.';
+     suggested.kind='hold';
+   }else{
+     suggested.reason='İlerlemek için hedef tekrar aralığını ve set sonrası kaç tekrarın kaldığını kaydetmeye devam et.';
+   }
+ }
+ return {entries,last,previousSet,latestDay,todaySets,goal,suggested};
+}
+function refreshCoach(id){
+ const summary=exerciseSummary(id);
+ const {last,previousSet,latestDay,todaySets,goal,suggested}=summary;
+ $('coachHeading').textContent='Son performansın ve sonraki set';
+ $('coachHistory').textContent=last?'Son kayıt: '+fmtKg(last.weight)+' × '+last.reps+' tekrar'+(Number.isInteger(last.rir)?' · '+last.rir+' tekrar yedek':'')+' · '+new Date(last.date).toLocaleDateString('tr-TR'):'Henüz bu hareket için set kaydın yok.';
+ const target=goal?goal.sets+' set × '+goal.min+'–'+goal.max+' tekrar':'Kendi hedefin';
+ $('coachSetCount').textContent='Bugün: '+todaySets.length+(goal?'/'+goal.sets:'')+' set · Hedef: '+target;
+ const text=suggested.weight===null?'Ağırlığını ve tekrarını girerek başla.':
+    'Öneri: '+fmtKg(suggested.weight)+'. '+suggested.reason;
+ $('coachAdvice').textContent=text;
+ return summary;
+}
+
+function openMove(id){selected=id;let m=MOVES[id];setGuide(id);$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Kişisel hareket aralığını antrenörle doğrula.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const summary=refreshCoach(id);$('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';$('reps').value=summary.last?.reps??'';$('rir').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){scene.setExercise(m.type);$('sceneError').hidden=true}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
 function close(){if(scene)scene.setPlaying(false);$('overlay').hidden=true;document.body.style.overflow='';selected=null} $('close').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('pause').onclick=()=>{if(!scene)return;scene.setPlaying(!scene.playing);$('pause').textContent=scene.playing?'⏸ Duraklat':'▶ Oynat'};
-$('save').onclick=()=>{if(!selected)return;let w=Number($('weight').value),r=Number($('reps').value);if(!$('weight').value.trim()||!Number.isFinite(w)||w<0||w>500||!Number.isInteger(r)||r<1||r>100){$('feedback').textContent='Geçerli bir ağırlık ve tekrar sayısı gir.';return}let item={id:selected,weight:w,reps:r,date:new Date().toISOString()};let next=[...records,item];try{localStorage.setItem('fitkocum3d_records',JSON.stringify(next))}catch(e){$('feedback').textContent='Telefonda kayıt alanına erişilemedi.';return}records=next;update();$('feedback').textContent='✓ Set kaydedildi. Tebrikler!'};
-let timerPreset=90,timerLeft=90,timerEnd=0,timerHandle=null;function clock(){let s=Math.max(0,Math.ceil(timerLeft));$('clock').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;let active=Boolean(timerHandle);$('timerToggle').textContent=active?'⏸ Duraklat':timerLeft<=0?'▶ Yeniden başlat':'▶ Başlat'}function stopTimer(){if(timerHandle){clearInterval(timerHandle);timerHandle=null}}function selectRest(sec){stopTimer();timerPreset=sec;timerLeft=sec;clock()}document.querySelectorAll('[data-rest]').forEach(b=>b.onclick=()=>selectRest(+b.dataset.rest));$('timerReset').onclick=()=>selectRest(timerPreset);$('timerToggle').onclick=()=>{if(timerHandle){timerLeft=Math.max(0,(timerEnd-Date.now())/1000);stopTimer();clock();return}if(timerLeft<=0)timerLeft=timerPreset;timerEnd=Date.now()+timerLeft*1000;timerHandle=setInterval(()=>{timerLeft=Math.max(0,(timerEnd-Date.now())/1000);if(timerLeft<=0){stopTimer();try{navigator.vibrate([140,90,140])}catch{}}clock()},200);clock()};
+$('save').onclick=()=>{if(!selected)return;let w=Number($('weight').value),r=Number($('reps').value);const rirValue=$('rir').value;const rir=rirValue===''?null:Number(rirValue);if(!$('weight').value.trim()||!Number.isFinite(w)||w<0||w>500||!Number.isInteger(r)||r<1||r>100){$('feedback').textContent='Geçerli bir ağırlık ve tekrar sayısı gir.';return}let item={id:selected,weight:w,reps:r,rir,date:new Date().toISOString()};let next=[...records,item];try{localStorage.setItem('fitkocum3d_records',JSON.stringify(next))}catch(e){$('feedback').textContent='Telefonda kayıt alanına erişilemedi.';return}records=next;update();refreshCoach(selected);$('feedback').textContent='✓ Set kaydedildi. Bir sonraki set için hazır ol.';if($('autoRest').checked)startRestTimer();};
+let timerPreset=90,timerLeft=90,timerEnd=0,timerHandle=null;
+function clock(){
+ const sec=Math.max(0,Math.ceil(timerLeft));
+ const display=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+ $('clock').textContent=display;$('quickRestClock').textContent=display;
+ const active=Boolean(timerHandle);
+ $('timerToggle').textContent=active?'⏸ Duraklat':sec<=0?'▶ Yeniden başlat':'▶ Başlat';
+ $('quickRestToggle').textContent=active?'⏸ Duraklat':sec<=0?'↻ Yeniden başlat':'▶ Devam et';
+}
+function stopTimer(){if(timerHandle){clearInterval(timerHandle);timerHandle=null}}
+function selectRest(sec){stopTimer();timerPreset=sec;timerLeft=sec;clock()}
+function startRestTimer(){
+ stopTimer();timerLeft=timerPreset;timerEnd=Date.now()+timerLeft*1000;
+ timerHandle=setInterval(()=>{
+    timerLeft=Math.max(0,(timerEnd-Date.now())/1000);
+    if(timerLeft<=0){stopTimer();try{navigator.vibrate([140,90,140])}catch{}}
+    clock();
+ },200);
+ clock();
+}
+document.querySelectorAll('[data-rest]').forEach(b=>b.onclick=()=>selectRest(+b.dataset.rest));
+$('timerReset').onclick=()=>selectRest(timerPreset);
+$('timerToggle').onclick=()=>{
+ if(timerHandle){timerLeft=Math.max(0,(timerEnd-Date.now())/1000);stopTimer();clock();return}
+ if(timerLeft<=0)timerLeft=timerPreset;
+ timerEnd=Date.now()+timerLeft*1000;
+ timerHandle=setInterval(()=>{timerLeft=Math.max(0,(timerEnd-Date.now())/1000);if(timerLeft<=0){stopTimer();try{navigator.vibrate([140,90,140])}catch{}}clock()},200);
+ clock();
+};
+$('quickRestToggle').onclick=()=>$('timerToggle').click();
+try{$('autoRest').checked=localStorage.getItem('fitkocum_autorest')!=='false'}catch{}
+$('autoRest').onchange=()=>{try{localStorage.setItem('fitkocum_autorest',String($('autoRest').checked))}catch{}};
+
 $('export').onclick=()=>{if(window.FitAndroid&&window.FitAndroid.shareData){window.FitAndroid.shareData(JSON.stringify(records));return}let data=new Blob([JSON.stringify(records,null,2)],{type:'application/json'}),a=document.createElement('a'),u=URL.createObjectURL(data);a.href=u;a.download='fitkocum-3d-kayitlar.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),3000)};
 
 let mealImage=null,foodRecords=[];
@@ -508,7 +630,7 @@ $('importWorkoutBtn').onclick=()=>{
  const valid=input.filter(x=>x&&MOVES[x.id]&&Number.isFinite(Number(x.weight))&&
  Number(x.weight)>=0&&Number(x.weight)<=500&&Number.isInteger(Number(x.reps))&&
  Number(x.reps)>0&&Number(x.reps)<=100&&!Number.isNaN(new Date(x.date).getTime()))
- .map(x=>({id:x.id,weight:Number(x.weight),reps:Number(x.reps),date:new Date(x.date).toISOString()}));
+ .map(x=>({id:x.id,weight:Number(x.weight),reps:Number(x.reps),rir:Number.isInteger(x.rir)&&x.rir>=0&&x.rir<=4?x.rir:null,date:new Date(x.date).toISOString()}));
  const before=records.length,unique=new Set(records.map(x=>[x.id,x.weight,x.reps,x.date].join('|')));
  const merged=[...records];for(const x of valid){const k=[x.id,x.weight,x.reps,x.date].join('|');if(!unique.has(k)){unique.add(k);merged.push(x)}}
  try{localStorage.setItem('fitkocum3d_records',JSON.stringify(merged))}catch{$('importWorkoutStatus').textContent='Kayıt alanı kullanılamıyor.';return}
