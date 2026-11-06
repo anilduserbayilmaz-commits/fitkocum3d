@@ -272,8 +272,7 @@ class RealisticViewer {
       // Restore tracked rig bones from the original 3D animation before
       // applying any intentional illustrative error offsets.
       this.rigGuide.setMode(mode);
-      if(this.mixer)this.mixer.setTime(this.mixer.time);
-      this.rigGuide.apply(this.progress);
+      this.rigGuide.apply(this.progress,false);
       this.updateWeights();
     }
   }
