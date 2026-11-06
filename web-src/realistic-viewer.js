@@ -3,6 +3,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {Technique3D} from './technique-viewer.js';
 import {RigFormGuide, GUIDED_ANATOMY_IDS} from './rig-form-guide.js';
+import {PremiumStudio} from './premium-studio.js';
 
 const PACK = new Set([
   'bent_over_row','bicep_curl','calf_raise','crunch','deadlift',
@@ -35,22 +36,23 @@ class RealisticViewer {
     this.actions=[];
     this.clipDuration=2.5;
     this.rigGuide=null;
+    this.quality='balanced';
+    this.studioVisible=true;
     try{this.init()}catch(e){console.error('[FitKoçum 3D+]',e);this.fail=true}
   }
   init(){
     const c=this.canvas;
     this.renderer=new THREE.WebGLRenderer({canvas:c,antialias:true,alpha:false,powerPreference:'high-performance'});
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure=1.25;
+    this.renderer.toneMappingExposure=1.24;
     this.renderer.shadowMap.enabled=true;
     this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     this.scene=new THREE.Scene();
-    this.scene.background=new THREE.Color('#111a23');
-    this.scene.fog=new THREE.Fog('#111a23',6.8,16);
+    this.scene.background=new THREE.Color('#101b25');
+    this.scene.fog=new THREE.Fog('#101b25',8,20);
     this.camera=new THREE.PerspectiveCamera(42,1,.05,100);
-    this.camera.position.set(3.3,2.7,4.0);
+    this.camera.position.set(3.3,2.5,4.0);
     this.controls=new OrbitControls(this.camera,c);
     this.controls.target.set(0,1.13,0);
     this.controls.minDistance=2.6;
@@ -61,25 +63,28 @@ class RealisticViewer {
     this.controls.enableDamping=true;
     this.controls.dampingFactor=.055;
     this.controls.update();
-    this.scene.add(new THREE.HemisphereLight(0xe4f5ff,0x293944,1.6));
-    const key=new THREE.DirectionalLight(0xffffff,3.0);
-    key.position.set(-2.5,6,4.5);key.castShadow=true;
-    key.shadow.mapSize.set(1024,1024);
-    key.shadow.camera.left=-4;key.shadow.camera.right=4;
-    key.shadow.camera.top=5;key.shadow.camera.bottom=-4;
-    key.shadow.normalBias=.028;key.shadow.bias=-.00016;
-    this.scene.add(key);
-    const rim=new THREE.DirectionalLight(0xbad8ff,1.8);
-    rim.position.set(3,3,-2.7);this.scene.add(rim);
-    const fill=new THREE.PointLight(0xb9ff96,15,9,2);
-    fill.position.set(3,3,4);this.scene.add(fill);
-    const floor=new THREE.Mesh(new THREE.PlaneGeometry(18,18),new THREE.MeshStandardMaterial({color:0x17222b,roughness:.92,metalness:.04}));
-    floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;floor.position.y=-.025;
-    this.scene.add(floor);
-    const grid=new THREE.GridHelper(10,24,0x415360,0x273740);
-    grid.position.y=-.01;this.scene.add(grid);
-    const disc=new THREE.Mesh(new THREE.RingGeometry(1.42,1.44,96),new THREE.MeshBasicMaterial({color:0x8ecc71,transparent:true,opacity:.34,side:THREE.DoubleSide}));
-    disc.rotation.x=-Math.PI/2;disc.position.y=.012;this.scene.add(disc);
+    // Three-source studio lighting makes muscle contours easier to read.
+    this.scene.add(new THREE.HemisphereLight(0xe0edfa,0x27373f,1.52));
+    this.keyLight=new THREE.DirectionalLight(0xf7fbff,2.9);
+    this.keyLight.position.set(-3.0,6.4,4.2);
+    this.keyLight.castShadow=true;
+    this.keyLight.shadow.camera.left=-4.2;
+    this.keyLight.shadow.camera.right=4.2;
+    this.keyLight.shadow.camera.top=5;
+    this.keyLight.shadow.camera.bottom=-4.2;
+    this.keyLight.shadow.normalBias=.025;
+    this.keyLight.shadow.bias=-.00012;
+    this.keyLight.shadow.radius=3;
+    this.scene.add(this.keyLight);
+    this.rimLight=new THREE.DirectionalLight(0xe6f4ff,1.8);
+    this.rimLight.position.set(3.1,3.8,-2.7);
+    this.scene.add(this.rimLight);
+    this.warmFill=new THREE.DirectionalLight(0xffe9cf,.75);
+    this.warmFill.position.set(3,3.2,3);
+    this.scene.add(this.warmFill);
+    this.studio=new PremiumStudio(this.scene);
+    this.setQuality('balanced');
+    this.setStudioVisible(true);
     this.loader=new GLTFLoader();
     this.ready=true;
     this.animate=this.animate.bind(this);
@@ -170,7 +175,18 @@ class RealisticViewer {
       model.scale.multiplyScalar(scale);
       model.position.set(-box.getCenter(new THREE.Vector3()).x*scale,-box.min.y*scale,-box.getCenter(new THREE.Vector3()).z*scale);
       model.traverse(o=>{
-        if(o.isMesh||o.isSkinnedMesh){o.castShadow=true;o.receiveShadow=true;}
+        if(o.isMesh||o.isSkinnedMesh){
+          o.castShadow=true;o.receiveShadow=true;
+          // Retain licensed model maps and vertex colours, but replace the
+          // very flat default plastic response with a softer satin finish.
+          const mats=Array.isArray(o.material)?o.material:[o.material];
+          for(const m of mats){
+            if(!m||!m.isMeshStandardMaterial)continue;
+            if(m.roughness!==undefined)m.roughness=Math.max(.42,Math.min(.84,m.roughness*.87));
+            if(m.metalness!==undefined)m.metalness=Math.min(m.metalness,.25);
+            m.needsUpdate=true;
+          }
+        }
       });
       container.add(model);this.modelRoot=container;
       this.scene.add(container);
@@ -202,40 +218,78 @@ class RealisticViewer {
       this.showStatus('3D animasyon açılamadı: '+String(e.message||e),true);
     }
   }
+  disposeEquipment(){
+    if(!this.equipment)return;
+    this.scene.remove(this.equipment);
+    const geometries=new Set(),materials=new Set();
+    this.equipment.traverse(o=>{
+      if(o.isMesh){
+        if(o.geometry)geometries.add(o.geometry);
+        for(const mat of Array.isArray(o.material)?o.material:[o.material])
+          if(mat)materials.add(mat);
+      }
+    });
+    for(const g of geometries)g.dispose();
+    for(const m of materials)m.dispose();
+    this.equipment=null;
+  }
   createWeights(name,model){
-    if(this.equipment){this.scene.remove(this.equipment);this.equipment=null}
-    const wristBones=[];
-    model.traverse(node=>{if(/wrist/i.test(node.name||'')) wristBones.push(node)});
-    this.wrists=[wristBones[0]||null,wristBones[1]||null];
+    this.disposeEquipment();
+    const wrists=[];
+    model.traverse(node=>{if(/wrist/i.test(node.name||''))wrists.push(node)});
+    this.wrists=[wrists[0]||null,wrists[1]||null];
     if(!this.wrists[0]||!this.wrists[1])return;
     const bars=new Set(['deadlift','romanian_deadlift','bent_over_row','overhead_press']);
     const dumbbells=new Set(['bicep_curl','hammer_curl','dumbbell_shoulder_press','front_raise','lateral_raise','overhead_tricep_extension']);
     if(!bars.has(name)&&!dumbbells.has(name))return;
     this.equipment=new THREE.Group();
+    this.equipment.name='AnimatedPremiumGymEquipment';
     this.scene.add(this.equipment);
-    const metal=new THREE.MeshStandardMaterial({color:0xb8c7cf,metalness:.82,roughness:.21});
-    const grip=new THREE.MeshStandardMaterial({color:0x30393f,metalness:.4,roughness:.43});
-    const plates=new THREE.MeshStandardMaterial({color:0x242d37,metalness:.57,roughness:.29});
+    const metal=new THREE.MeshStandardMaterial({color:0xc3d4df,metalness:.93,roughness:.19});
+    const sleeve=new THREE.MeshStandardMaterial({color:0x839ca8,metalness:.83,roughness:.29});
+    const rubber=new THREE.MeshStandardMaterial({color:0x171d23,metalness:.10,roughness:.80});
+    const plate=new THREE.MeshStandardMaterial({color:0x25303a,metalness:.32,roughness:.63});
+    const accent=new THREE.MeshStandardMaterial({color:0x8ec999,metalness:.22,roughness:.4,emissive:0x23462f,emissiveIntensity:.25});
+    const grip=new THREE.MeshStandardMaterial({color:0x343d45,metalness:.54,roughness:.55});
+    const component=(parent,geometry,material,y=0)=>{
+      const o=new THREE.Mesh(geometry,material);
+      o.position.y=y;o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;
+    };
     if(bars.has(name)){
+      this.equipKind='bar';
       const root=new THREE.Group();
-      const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.028,.028,2.12,18),metal);
-      root.add(shaft);
-      for(const side of [-1,1]){
-        const weight=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.082,28),plates);
-        weight.position.y=side*.84;root.add(weight);
-        const collar=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.04,20),metal);
-        collar.position.y=side*.94;root.add(collar);
+      root.name='OlympicBarbellWithBumperPlates';
+      component(root,new THREE.CylinderGeometry(.024,.024,2.40,24),metal);
+      for(const sign of [-1,1]){
+        // Smooth sleeves, two realistic rubber discs and retaining collars.
+        component(root,new THREE.CylinderGeometry(.033,.033,.34,24),sleeve,sign*.99);
+        for(const [off,rad,depth] of [[.82,.21,.09],[.93,.18,.065]]){
+          component(root,new THREE.CylinderGeometry(rad,rad,depth,44),plate,sign*off);
+          const facing=sign*(off+depth/2+.005);
+          component(root,new THREE.CylinderGeometry(rad*.73,rad*.73,.007,36),rubber,facing);
+          component(root,new THREE.CylinderGeometry(rad*.39,rad*.39,.009,36),accent,facing+sign*.008);
+        }
+        component(root,new THREE.CylinderGeometry(.052,.052,.045,24),metal,sign*1.085);
+        // Fine grip ribs, low vertex count and no external textures.
+        for(let n=0;n<8;n++)component(root,new THREE.CylinderGeometry(.025,.025,.004,18),grip,sign*(.26+n*.033));
       }
-      this.equipment.add(root);this.equipKind='bar';
-    } else {
+      this.equipment.add(root);
+    }else{
       this.equipKind='dumbbell';
       for(const side of [-1,1]){
         const root=new THREE.Group();
-        root.add(new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,.38,14),metal));
-        for(const y of [-.155,.155]){
-          const p=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,.055,20),plates);
-          p.position.y=y;root.add(p);
+        root.name=side<0?'LeftPremiumHexDumbbell':'RightPremiumHexDumbbell';
+        component(root,new THREE.CylinderGeometry(.024,.024,.41,20),metal);
+        component(root,new THREE.CylinderGeometry(.031,.031,.21,24),grip);
+        for(const sign of [-1,1]){
+          component(root,new THREE.CylinderGeometry(.12,.12,.103,6),rubber,sign*.155);
+          component(root,new THREE.CylinderGeometry(.094,.094,.007,6),plate,sign*.211);
+          component(root,new THREE.CylinderGeometry(.051,.051,.009,28),accent,sign*.217);
+          component(root,new THREE.CylinderGeometry(.041,.041,.02,20),sleeve,sign*.223);
         }
+        // Thin center grooves suggest a real knurled, textured grip.
+        for(let n=0;n<7;n++)
+          component(root,new THREE.CylinderGeometry(.032,.032,.004,20),sleeve,(n-3)*.025);
         this.equipment.add(root);
       }
     }
@@ -246,7 +300,9 @@ class RealisticViewer {
     const a=new THREE.Vector3(),b=new THREE.Vector3();
     this.wrists[0].getWorldPosition(a);
     this.wrists[1].getWorldPosition(b);
-    const axis=new THREE.Vector3().subVectors(b,a).normalize();
+    const axis=new THREE.Vector3().subVectors(b,a);
+    if(axis.lengthSq()<.0001)axis.set(0,1,0);
+    axis.normalize();
     const rot=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
     if(this.equipKind==='bar'){
       this.equipment.children[0].position.copy(a).add(b).multiplyScalar(.5);
@@ -259,6 +315,28 @@ class RealisticViewer {
         g.quaternion.copy(rot);
       });
     }
+  }
+  setQuality(level){
+    this.quality=level==='high'?'high':level==='eco'?'eco':'balanced';
+    if(!this.renderer)return;
+    const ratios={eco:1,balanced:1.45,high:2};
+    const shadowSizes={eco:512,balanced:1024,high:2048};
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,ratios[this.quality]));
+    if(this.keyLight){
+      const target=shadowSizes[this.quality];
+      if(this.keyLight.shadow.mapSize.width!==target){
+        this.keyLight.shadow.mapSize.set(target,target);
+        if(this.keyLight.shadow.map)this.keyLight.shadow.map.dispose();
+        this.keyLight.shadow.map=null;
+        this.keyLight.shadow.needsUpdate=true;
+      }
+    }
+    this.lastW=0;this.lastH=0;
+  }
+  setStudioVisible(value){
+    this.studioVisible=Boolean(value);
+    this.studio?.setVisible(this.studioVisible);
+    this.scene.background.set(this.studioVisible?'#101b25':'#14202a');
   }
   setPlaying(v){this.playing=Boolean(v)}
   setPlaybackSpeed(value){const n=Number(value);this.playbackSpeed=[.5,1,1.5].includes(n)?n:1;}
@@ -334,6 +412,8 @@ class RealisticViewer {
     cancelAnimationFrame(this.requestId);
     this.technique?.destroy();
     this.rigGuide?.dispose();
+    this.disposeEquipment();
+    this.studio?.dispose();
     this.controls?.dispose();
     this.renderer?.dispose();
     this.active=false;
@@ -373,6 +453,8 @@ class Hybrid3D{
   }
   setCamera(mode){this.mode!=='old'?this.real.setCamera(mode):this.original.setCamera(mode)}
   setPlaybackSpeed(value){this.real.setPlaybackSpeed(value)}
+  setQuality(level){this.real.setQuality(level)}
+  setStudioVisible(value){this.real.setStudioVisible(value)}
   setTechniqueMode(mode){if(this.mode==='technique'||this.mode==='real')this.real.setTechniqueMode(mode)}
   setManualProgress(v){this.mode!=='old'?this.real.setManualProgress(v):this.original.setManualProgress(v);this.playing=false;}
   setPlaying(v){
