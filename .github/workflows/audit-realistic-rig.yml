@@ -1,0 +1,32 @@
+name: v3.1 realistic character compatibility research
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/audit-realistic-rig.cjs'
+      - '.github/workflows/audit-realistic-rig.yml'
+permissions: {contents: read}
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download CC0 realistic body and two current exercise rigs
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/v31
+          curl -fsSL --retry 3 --max-time 120 https://raw.githubusercontent.com/kblood/CharacterCreator/master/output/base_body_anim.glb -o /tmp/v31/realistic_body.glb
+          curl -fsSL --retry 3 --max-time 120 https://raw.githubusercontent.com/kblood/CharacterCreator/master/output/clothing_shorts.glb -o /tmp/v31/realistic_shorts.glb
+          curl -fsSL --retry 3 --max-time 120 https://raw.githubusercontent.com/kblood/CharacterCreator/master/output/clothing_shoes.glb -o /tmp/v31/realistic_shoes.glb
+          curl -fsSL --retry 3 --max-time 120 'https://raw.githubusercontent.com/AssiamahS/opengym3d/main/dist/opengym3d-exercise-pack-v1.zip' -o /tmp/v31/gym.zip
+          unzip -joq /tmp/v31/gym.zip 'pack/models/bicep_curl.glb' 'pack/models/squat.glb' 'pack/models/deadlift.glb' -d /tmp/v31
+          ls -lh /tmp/v31/*.glb
+      - name: Verify glTF animation/skeleton compatibility
+        run: node tools/audit-realistic-rig.cjs /tmp/v31/realistic_body.glb /tmp/v31/realistic_shorts.glb /tmp/v31/realistic_shoes.glb /tmp/v31/bicep_curl.glb /tmp/v31/squat.glb /tmp/v31/deadlift.glb
+      - name: Save detailed evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3.1-realistic-rig-audit
+          path: v31-rig-audit.json
+          retention-days: 14
