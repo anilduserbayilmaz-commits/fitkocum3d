@@ -42,6 +42,33 @@ const server = http.createServer((req,res)=>{
  },fixture);
  await page.reload();
  await page.locator('#moveList .watch[data-id="bench"]').click();
+ // The gym stage is a real rendered 3D environment, with adjustable mobile cost.
+ assert.equal(await page.locator('[data-render-quality]').count(),3);
+ const initial=await page.evaluate(()=>({
+   props:scene.real.studio.group.children.length,
+   visible:scene.real.studio.group.visible,
+   q:scene.real.quality,
+   shadow:scene.real.keyLight.shadow.mapSize.width
+ }));
+ assert.ok(initial.props>35,'Premium gym props should be 3D geometry');
+ assert.equal(initial.visible,true);
+ assert.equal(initial.q,'balanced');
+ await page.locator('[data-render-quality="high"]').click();
+ assert.equal(await page.evaluate(()=>scene.real.quality),'high');
+ assert.equal(await page.evaluate(()=>scene.real.keyLight.shadow.mapSize.width),2048);
+ await page.locator('[data-stage-mode="focus"]').click();
+ assert.equal(await page.evaluate(()=>scene.real.studio.group.visible),false);
+ await page.locator('.scene').screenshot({path:'/tmp/fitkocum-gym-focus.png'});
+ await page.locator('[data-stage-mode="studio"]').click();
+ assert.equal(await page.evaluate(()=>scene.real.studio.group.visible),true);
+ const withStudio=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-gym-premium.png'});
+ const withoutStudio=fs.readFileSync('/tmp/fitkocum-gym-focus.png');
+ assert.notEqual(Buffer.compare(withStudio,withoutStudio),0,'Gym environment should alter rendered scene');
+ await page.locator('[data-render-quality="eco"]').click();
+ assert.equal(await page.evaluate(()=>scene.real.keyLight.shadow.mapSize.width),512);
+ await page.locator('[data-render-quality="balanced"]').click();
+ assert.equal(await page.evaluate(()=>scene.real.keyLight.shadow.mapSize.width),1024);
+ console.log('PREMIUM STUDIO '+JSON.stringify(initial));
  await page.waitForFunction(()=>document.getElementById('coachAdvice').textContent.includes('52,5 kg'));
  assert.equal(await page.locator('#weight').inputValue(),'52.5','Conservative 2.5 kg suggestion after 3 well-controlled sets');
  assert.match(await page.locator('#coachHistory').innerText(),/50 kg × 12 tekrar/);
@@ -142,7 +169,17 @@ const server = http.createServer((req,res)=>{
   assert.ok(state.time >= 0);
   assert.ok(state.clips >= 1);
   assert.equal(state.fail,false);
-  if(id==='deadlift')assert.ok(state.equipment>0,'Deadlift barbell must be present');
+  if(id==='deadlift'){
+    assert.ok(state.equipment>0,'Deadlift barbell must be present');
+    const equipment=await page.evaluate(()=>({
+      kind:scene.real.equipKind,
+      children:scene.real.equipment?.children[0]?.children?.length||0,
+      name:scene.real.equipment?.children[0]?.name
+    }));
+    assert.equal(equipment.kind,'bar');
+    assert.ok(equipment.children>=22,'Premium barbell must include sleeves, grip and multiple bumper plates');
+    assert.equal(equipment.name,'OlympicBarbellWithBumperPlates');
+  }
   console.log(id,JSON.stringify(state));
   const imageBefore=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-'+id+'.png'});
   screenshots.push(id);
@@ -273,6 +310,6 @@ const server = http.createServer((req,res)=>{
    await page.locator('#close').click();
  }
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: 12 anatomy guides (3 sampled visually), five machine comparisons, RIR smart coach, 65 3D and custom editing');
+ console.log('PASS: premium gym scene and quality settings, detailed barbell, anatomy guides, five machines, RIR smart coach, 65 3D');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
