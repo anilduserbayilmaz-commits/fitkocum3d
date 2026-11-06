@@ -45,6 +45,8 @@ const server = http.createServer((req,res)=>{
      time:scene.real.mixer?.time,
      clips:scene.real.actions?.length,
      fail:scene.real.fail,
+     equipment:scene.real.equipment?.children?.length||0,
+     wrists:scene.real.wrists?.map(x=>x?.name||null)||[],
      rect:scene.real.canvas.getBoundingClientRect().toJSON(),
      error:document.querySelector('#real3dStatus').textContent
   }));
@@ -55,6 +57,7 @@ const server = http.createServer((req,res)=>{
   assert.ok(state.time >= 0);
   assert.ok(state.clips >= 1);
   assert.equal(state.fail,false);
+  if(id==='deadlift')assert.ok(state.equipment>0,'Deadlift barbell must be present');
   console.log(id,JSON.stringify(state));
   const imageBefore=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-'+id+'.png'});
   screenshots.push(id);
