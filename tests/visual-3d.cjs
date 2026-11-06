@@ -137,6 +137,7 @@ const server = http.createServer((req,res)=>{
  assert.equal(await page.locator('#moveList .watch').first().getAttribute('data-id'),'legpress');
  await page.locator('[data-goal="sets"]').first().fill('4');
  await page.locator('[data-goal="sets"]').first().dispatchEvent('change');
+ await page.waitForFunction(()=>document.getElementById('moveList').innerText.includes('4 ×'),null,{timeout:10000});
  await page.locator('[data-goal="reps"]').first().fill('10–12');
  await page.locator('[data-goal="reps"]').first().dispatchEvent('change');
  await page.waitForFunction(()=>document.getElementById('moveList').innerText.includes('4 × 10–12'));
@@ -254,6 +255,7 @@ const server = http.createServer((req,res)=>{
    await page.locator('#close').click();
  }
  // Five separate equipment models have their own moving human figure, machine geometry and exercise path.
+ await page.locator('#moveSearch').fill('');
  await page.locator('[data-move-filter="technique"]').click();
  for(const id of ['bench','pulldown','legpress','row','triceps']){
    await clickLibrary(id);
