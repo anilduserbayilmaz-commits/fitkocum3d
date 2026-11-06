@@ -1,0 +1,27 @@
+name: Publish direct APK download
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-apk.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download verified v1.4 APK
+        run: |
+          mkdir -p /tmp/fitkocum
+          gh run download 42247962706 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
+          test -s /tmp/fitkocum/app-debug.apk
+          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v1.4.apk
+          unzip -t FitKocum3D-Plus-v1.4.apk | tail -1
+          sha256sum FitKocum3D-Plus-v1.4.apk
+      - name: Publish direct install file
+        run: |
+          gh release create v1.4.0 FitKocum3D-Plus-v1.4.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v1.4' --notes 'Android APK. 24 offline 3D exercise models, workout tracking and meal photo features. User testing ongoing.'
+          gh release view v1.4.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
