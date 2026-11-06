@@ -13,15 +13,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Download verified v1.5 APK
+      - name: Download verified v1.6 APK
         run: |
           mkdir -p /tmp/fitkocum
-          gh run download 42257295105 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
+          gh run download 42260930436 --repo anilduserbayilmaz-commits/fitkocum3d --name FitKocum-3D-APK --dir /tmp/fitkocum
           test -s /tmp/fitkocum/app-debug.apk
-          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v1.5.apk
-          unzip -t FitKocum3D-Plus-v1.5.apk | tail -1
-          sha256sum FitKocum3D-Plus-v1.5.apk
+          cp /tmp/fitkocum/app-debug.apk FitKocum3D-Plus-v1.6.apk
+          unzip -t FitKocum3D-Plus-v1.6.apk | tail -1
+          sha256sum FitKocum3D-Plus-v1.6.apk
       - name: Publish direct install file
         run: |
-          gh release create v1.5.0 FitKocum3D-Plus-v1.5.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v1.5' --notes 'Android APK v1.5.0. A/B/C workout program now opens real anatomical 3D animations. Classic workout is optional. 24 models integrated into Program; local workout and meal data retained. Chromium 3D tests passed.'
-          gh release view v1.5.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
+          gh release create v1.6.0 FitKocum3D-Plus-v1.6.apk --repo anilduserbayilmaz-commits/fitkocum3d --title 'FitKoçum 3D+ v1.6' --notes 'Android APK v1.6.0. A/B/C workout program now opens real anatomical 3D animations. Classic workout is optional. 24 models integrated into Program; local workout and meal data retained. Chromium 3D tests passed.'
+          gh release view v1.6.0 --repo anilduserbayilmaz-commits/fitkocum3d --json assets,url
