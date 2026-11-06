@@ -20,6 +20,24 @@ export class PrototypeGymGear {
       m.castShadow=true;m.receiveShadow=true;
       parent.add(m);this.meshes.push(m);return m;
     };
+    // Simple athletic sneakers for each animated foot instead of the bare
+    // model feet. Both upper and sole remain on the foot's world position.
+    this.sneakers=[];
+    for(const side of ['l','r']){
+      const shoe=new THREE.Group();
+      shoe.name='TrainerSneaker_'+side;
+      const upperGeo=new THREE.SphereGeometry(1,20,12);
+      const soleGeo=new THREE.BoxGeometry(.31,.045,.44);
+      this.geometries.push(upperGeo,soleGeo);
+      const top=new THREE.Mesh(upperGeo,this.plastic);
+      top.scale.set(.155,.090,.245);
+      top.position.z=.09;
+      const sole=new THREE.Mesh(soleGeo,this.accent);
+      sole.position.set(0,-.069,.09);
+      shoe.add(top,sole);
+      this.group.add(shoe);
+      this.sneakers.push({side,shoe});
+    }
     if(this.kind==='dumbbell'){
       this.dumbbells=[];
       for(let i=0;i<2;i++){
@@ -51,6 +69,10 @@ export class PrototypeGymGear {
     return p;
   }
   update(){
+    for(const {side,shoe} of this.sneakers){
+      const b=this.bones.get('foot_'+side);
+      if(b){const p=new THREE.Vector3();b.getWorldPosition(p);shoe.position.copy(p);shoe.position.y-=.025;}
+    }
     const left=this.hand('l'),right=this.hand('r');
     if(this.kind==='dumbbell'){
       this.dumbbells[0].position.copy(left);
