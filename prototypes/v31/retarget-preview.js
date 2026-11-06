@@ -35,7 +35,7 @@ async function run(){
     dressed++;
   }
  }
- const clip=source.animations.find(c=>c.name==='Human')||source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
+ const clip=source.animations.reduce((a,b)=>a.tracks.length>b.tracks.length?a:b);
  const targetClip=retargetClip(realSkin,sourceSkin,clip,{
    names:MAP,
    hip:'spine05',
