@@ -27,7 +27,7 @@ const server = http.createServer((req,res)=>{
  const page=await browser.newPage({viewport:{width:393,height:851},deviceScaleFactor:1});
  const clickLibrary=async id=>{
    await page.locator('[data-move-filter="all"]').click();
-   await page.locator('#moveSearch').fill(id);
+   await page.locator('#moveSearch').fill(id.startsWith('mobility_')?id.slice(9):id.startsWith('lib_')?id.slice(4):id);
    await page.locator('#realMoveList .watch[data-id="'+id+'"]').click();
  };
  const consoleErrors=[];
