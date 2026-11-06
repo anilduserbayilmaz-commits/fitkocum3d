@@ -76,7 +76,7 @@ async function run(){
  const rim=new THREE.DirectionalLight(0xcfdfff,2);rim.position.set(3,4,-3);scene.add(rim);
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(15,15),new THREE.MeshStandardMaterial({color:0xdedbd4,roughness:1}));
  floor.rotation.x=-Math.PI/2;floor.position.y=-.015;scene.add(floor);
- const mixer=new THREE.AnimationMixer(real.scene);
+ const mixer=new THREE.AnimationMixer(realSkin);
  const action=mixer.clipAction(targetClip);action.play();
  function pose(time){mixer.setTime(time);renderer.render(scene,camera)}
  pose(0);
