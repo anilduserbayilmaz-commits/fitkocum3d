@@ -17,13 +17,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/v31
-          for file in base_body_anim clothing_shorts clothing_tshirt clothing_shoes; do
+          for file in base_body_anim clothing_shorts clothing_tshirt clothing_shoes hair_short04; do
             curl -fsSL --retry 3 --max-time 120 "https://raw.githubusercontent.com/kblood/CharacterCreator/master/output/${file}.glb" -o "/tmp/v31/${file}.glb"
           done
           mv /tmp/v31/base_body_anim.glb /tmp/v31/realistic_body.glb
           mv /tmp/v31/clothing_shorts.glb /tmp/v31/realistic_shorts.glb
           mv /tmp/v31/clothing_tshirt.glb /tmp/v31/realistic_tshirt.glb
           mv /tmp/v31/clothing_shoes.glb /tmp/v31/realistic_shoes.glb
+          mv /tmp/v31/hair_short04.glb /tmp/v31/realistic_hair.glb
           curl -fsSL --retry 3 --max-time 120 'https://raw.githubusercontent.com/AssiamahS/opengym3d/main/dist/opengym3d-exercise-pack-v1.zip' -o /tmp/v31/pack.zip
           unzip -joq /tmp/v31/pack.zip 'pack/models/bicep_curl.glb' 'pack/models/squat.glb' 'pack/models/deadlift.glb' -d /tmp/v31
           ls -lh /tmp/v31/*.glb
