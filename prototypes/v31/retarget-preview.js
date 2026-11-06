@@ -14,11 +14,12 @@ const MAP={
 const gltf=new GLTFLoader();
 const load=filename=>new Promise((resolve,reject)=>gltf.load('/assets/'+filename,resolve,undefined,reject));
 const skinned=root=>{let x;root.traverse(o=>{if(!x&&o.isSkinnedMesh)x=o});return x};
-const error=e=>{document.querySelector('#error').textContent=String(e.stack||e);window.__v31={status:'error',message:String(e)}};
+const error=e=>{console.error('RETARGET_RIG_FAILURE',e.stack||String(e));document.querySelector('#error').textContent=String(e.stack||e);window.__v31={status:'error',message:String(e.stack||e)}};
 async function run(){
  const [real,source,shorts,shirt,shoes]=await Promise.all([
   load('realistic_body.glb'),load('bicep_curl.glb'),load('realistic_shorts.glb'),load('realistic_tshirt.glb'),load('realistic_shoes.glb')
  ]);
+ console.log('RETARGET_ASSET_LOAD',JSON.stringify([real,source,shorts,shirt,shoes].map((x,i)=>({i,hasScene:!!x?.scene,keys:Object.keys(x||{})}))));
  const realSkin=skinned(real.scene),sourceSkin=skinned(source.scene);
  if(!realSkin||!sourceSkin)throw Error('Missing skinned meshes');
  const realBones=new Map(realSkin.skeleton.bones.map(b=>[b.name,b]));
