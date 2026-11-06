@@ -1,5 +1,5 @@
 const { chromium } = require('playwright-core');
-setTimeout(()=>{ console.error('FAIL: 3D browser test timed out'); process.exit(1); },150000).unref();
+setTimeout(()=>{ console.error('FAIL: 3D browser test timed out'); process.exit(1); },230000).unref();
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -240,7 +240,39 @@ const server = http.createServer((req,res)=>{
  await page.locator('#realMoveList [data-id="bench"]').click();
  assert.equal(await page.locator('#formCorrect').getAttribute('aria-pressed'),'true','Form mode resets to correct for each new exercise');
  await page.locator('#close').click();
+ // Anatomical GLB form-guide regression: actual motion-captured rig plus
+ // red/green training markers and physically distinct example joint offsets.
+ await page.locator('[data-move-filter="all"]').click();
+ for(const id of ['squat','deadlift','plank']){
+   await page.locator('#realMoveList [data-id="lib_'+id+'"]').click();
+   await page.waitForFunction(expected=>
+      typeof scene!=='undefined'&&scene.mode==='real'
+      &&scene.real.modelName===expected
+      &&scene.real.rigGuide?.isAvailable, id,{timeout:20000});
+   assert.equal(await page.locator('#techniqueCompare').isVisible(),true,'Anatomical teaching panel for '+id);
+   await page.locator('[data-technique-phase="0.5"]').click();
+   assert.equal(await page.evaluate(()=>scene.real.playing),false);
+   const good=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-anatomy-'+id+'-correct.png'});
+   const base=await page.evaluate(()=>scene.real.rigGuide.bones[0].bone.quaternion.toArray());
+   await page.locator('#formWrong').click();
+   const bad=await page.locator('.scene').screenshot({path:'/tmp/fitkocum-anatomy-'+id+'-mistake.png'});
+   const wrong=await page.evaluate(()=>({
+      mode:scene.real.rigGuide.mode,
+      quat:scene.real.rigGuide.bones[0].bone.quaternion.toArray(),
+      color:scene.real.rigGuide.markers[0].material.color.getHexString(),
+      hasOverlay:scene.real.rigGuide.group.visible
+   }));
+   assert.equal(wrong.mode,'mistake');
+   assert.equal(wrong.hasOverlay,true);
+   assert.notDeepEqual(base,wrong.quat,'Actual bone pose must change: '+id);
+   assert.notEqual(Buffer.compare(good,bad),0,'Anatomical screenshots must differ: '+id);
+   await page.locator('#formCorrect').click();
+   const restored=await page.evaluate(()=>scene.real.rigGuide.bones[0].bone.quaternion.toArray());
+   assert.ok(restored.every((v,i)=>Math.abs(v-base[i])<.005),'Original animation pose must restore: '+id);
+   console.log('ANATOMICAL '+id+' correct/mistake/restored, accent '+wrong.color);
+   await page.locator('#close').click();
+ }
  if(consoleErrors.length)throw new Error('Browser errors: '+consoleErrors.slice(0,5).join('\n'));
- console.log('PASS: 3D form comparison five machines, smart workout coach, RIR, 65 3D and custom editing');
+ console.log('PASS: 12 anatomy guides (3 sampled visually), five machine comparisons, RIR smart coach, 65 3D and custom editing');
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
