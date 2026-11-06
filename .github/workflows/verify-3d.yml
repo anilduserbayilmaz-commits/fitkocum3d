@@ -7,10 +7,14 @@ on:
       - 'web-src/realistic-viewer.js'
       - 'tests/visual-3d.cjs'
       - '.github/workflows/verify-3d.yml'
+concurrency:
+  group: verify-3d
+  cancel-in-progress: true
 permissions: {contents: read}
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v4
       - name: Download anatomical models and viewer
