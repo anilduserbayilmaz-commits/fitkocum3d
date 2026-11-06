@@ -31,6 +31,16 @@ async function run(){
  // puffed-up clothing meshes. Generate fitted body-surface sports kit instead.
  const sportswear=createFittedTrainingKit(realSkin);
  real.scene.add(sportswear.group);
+ let shoeMeshes=0;
+ const shoeParts=[];
+ shoes.scene.traverse(o=>{if(o.isSkinnedMesh)shoeParts.push(o)});
+ for(const o of shoeParts){
+   const bones=o.skeleton.bones.map(b=>realBones.get(b.name));
+   if(bones.some(b=>!b))continue;
+   o.bind(new THREE.Skeleton(bones,o.skeleton.boneInverses.map(m=>m.clone())),o.bindMatrix.clone());
+   real.scene.add(o);
+   shoeMeshes++;
+ }
  let hairMeshes=0;
  const hairParts=[];
  hair.scene.traverse(o=>{if(o.isSkinnedMesh)hairParts.push(o)});
@@ -71,6 +81,7 @@ async function run(){
  scene.background=new THREE.Color(0xedecea);
  scene.add(wrapper);
  const gear=new PrototypeGymGear(scene,realBones,exercise);
+ if(shoeMeshes)for(const {shoe} of gear.sneakers)shoe.visible=false;
  const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
  renderer.setSize(750,950);
  renderer.setPixelRatio(1);
@@ -79,8 +90,8 @@ async function run(){
  renderer.toneMappingExposure=1.1;
  document.querySelector('#render').append(renderer.domElement);
  const camera=new THREE.PerspectiveCamera(37,750/950,.1,100);
- camera.position.set(3,2.25,4.9);
- camera.lookAt(0,1.1,0);
+ camera.position.set(2.35,2.15,3.8);
+ camera.lookAt(0,1.17,0);
  scene.add(new THREE.HemisphereLight(0xffffff,0x9a9a9a,2.1));
  const key=new THREE.DirectionalLight(0xffffff,3.5);key.position.set(-3,6,3);scene.add(key);
  const rim=new THREE.DirectionalLight(0xcfdfff,2);rim.position.set(3,4,-3);scene.add(rim);
@@ -121,7 +132,7 @@ async function run(){
   status:'ok',exercise,character:'CC0 MakeHuman textured with fitted gym outfit',originalClip:clip.name,
   sourceTracks:clip.tracks.length,retargetedTracks:targetTracks.length,
   targetTracks:targetTracks.slice(0,40),
-  duration:targetClip.duration,dressed,hairMeshes,appearance:sportswear.method,equipment:gear.kind,equipmentMeshes:gear.meshes.length,fitCounts:sportswear.counts,
+  duration:targetClip.duration,dressed,hairMeshes,shoeMeshes,appearance:sportswear.method,equipment:gear.kind,equipmentMeshes:gear.meshes.length,fitCounts:sportswear.counts,
   skeletonMapped:Object.keys(MAP).length,
   frames,
   size:size.toArray(),images:real.parser.json.images?.length||0
