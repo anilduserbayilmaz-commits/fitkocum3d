@@ -91,6 +91,7 @@ export class PremiumStudio {
       }
     }
     this._brand();
+    this._buildMobilityProps();
     // Faint, centered rubber mat, below the feet. No visual intersection.
     const mat=this.material({color:0x1a282e,roughness:.96,metalness:0});
     this.mesh(new THREE.CylinderGeometry(1.68,1.68,.012,64),mat,[0,-.008,0]);
@@ -115,6 +116,41 @@ export class PremiumStudio {
     const mat=new THREE.MeshBasicMaterial({map:tx,transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
     this.materials.push(mat);
     this.mesh(new THREE.PlaneGeometry(2.85,.71),mat,[0,2.98,-5.17]);
+  }
+
+  _buildMobilityProps(){
+    const mat=this.material({color:0x2b605c,roughness:.94,metalness:.02});
+    const edge=this.material({color:0x9be0bf,roughness:.7,metalness:.12});
+    this.yogaMat=new THREE.Group();
+    this.yogaMat.name='TrainerYogaMat';
+    this.group.add(this.yogaMat);
+    const meshTo=(parent,geo,material,pos)=>{
+      const o=new THREE.Mesh(geo,material);
+      o.position.set(...pos);
+      o.castShadow=true;o.receiveShadow=true;
+      parent.add(o);this.geometries.push(geo);
+      return o;
+    };
+    meshTo(this.yogaMat,new THREE.BoxGeometry(1.12,.018,2.7),mat,[0,.012,0]);
+    for(const x of [-.53,.53])
+      meshTo(this.yogaMat,new THREE.BoxGeometry(.016,.020,2.64),edge,[x,.023,0]);
+    this.mobilityChair=new THREE.Group();
+    this.mobilityChair.name='TrainerChair';
+    this.group.add(this.mobilityChair);
+    const metal=this.material({color:0x94a9b3,roughness:.32,metalness:.72});
+    const pad=this.material({color:0x344c57,roughness:.79,metalness:.03});
+    meshTo(this.mobilityChair,new THREE.BoxGeometry(.72,.08,.67),pad,[0,.585,0]);
+    meshTo(this.mobilityChair,new THREE.BoxGeometry(.71,.58,.08),pad,[0,.95,.31]);
+    for(const x of [-.29,.29]){
+      for(const z of [-.25,.25])
+        meshTo(this.mobilityChair,new THREE.BoxGeometry(.045,.61,.045),metal,[x,.305,z]);
+    }
+    this.setMobilityCategory(null);
+  }
+  setMobilityCategory(category){
+    this.activeCategory=category||null;
+    if(this.yogaMat)this.yogaMat.visible=['yoga','floor-lying','floor-seated'].includes(category);
+    if(this.mobilityChair)this.mobilityChair.visible=category==='chair';
   }
   setVisible(value){this.visible=Boolean(value);this.group.visible=this.visible;}
   dispose(){
