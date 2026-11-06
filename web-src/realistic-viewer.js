@@ -127,6 +127,7 @@ class RealisticViewer {
       });
       container.add(model);this.modelRoot=container;
       this.scene.add(container);
+      this.createWeights(name,model);
       this.mixer=new THREE.AnimationMixer(model);
       this.actions=[];
       const clips=gltf.animations||[];
@@ -145,13 +146,69 @@ class RealisticViewer {
       this.showStatus('3D model açılamadı: '+String(e.message||e),true);
     }
   }
+  createWeights(name,model){
+    if(this.equipment){this.scene.remove(this.equipment);this.equipment=null}
+    this.wrists=[model.getObjectByName('wrist.L'),model.getObjectByName('wrist.R')];
+    if(!this.wrists[0]||!this.wrists[1])return;
+    const bars=new Set(['deadlift','romanian_deadlift','bent_over_row','overhead_press']);
+    const dumbbells=new Set(['bicep_curl','hammer_curl','dumbbell_shoulder_press','front_raise','lateral_raise','overhead_tricep_extension']);
+    if(!bars.has(name)&&!dumbbells.has(name))return;
+    this.equipment=new THREE.Group();
+    this.scene.add(this.equipment);
+    const metal=new THREE.MeshStandardMaterial({color:0xb8c7cf,metalness:.82,roughness:.21});
+    const grip=new THREE.MeshStandardMaterial({color:0x30393f,metalness:.4,roughness:.43});
+    const plates=new THREE.MeshStandardMaterial({color:0x242d37,metalness:.57,roughness:.29});
+    if(bars.has(name)){
+      const root=new THREE.Group();
+      const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.028,.028,2.12,18),metal);
+      root.add(shaft);
+      for(const side of [-1,1]){
+        const weight=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.082,28),plates);
+        weight.position.y=side*.84;root.add(weight);
+        const collar=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.04,20),metal);
+        collar.position.y=side*.94;root.add(collar);
+      }
+      this.equipment.add(root);this.equipKind='bar';
+    } else {
+      this.equipKind='dumbbell';
+      for(const side of [-1,1]){
+        const root=new THREE.Group();
+        root.add(new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,.38,14),metal));
+        for(const y of [-.155,.155]){
+          const p=new THREE.Mesh(new THREE.CylinderGeometry(.105,.105,.055,20),plates);
+          p.position.y=y;root.add(p);
+        }
+        this.equipment.add(root);
+      }
+    }
+  }
+  updateWeights(){
+    if(!this.equipment||!this.wrists||!this.modelRoot)return;
+    this.modelRoot.updateMatrixWorld(true);
+    const a=new THREE.Vector3(),b=new THREE.Vector3();
+    this.wrists[0].getWorldPosition(a);
+    this.wrists[1].getWorldPosition(b);
+    const axis=new THREE.Vector3().subVectors(b,a).normalize();
+    const rot=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),axis);
+    if(this.equipKind==='bar'){
+      this.equipment.children[0].position.copy(a).add(b).multiplyScalar(.5);
+      this.equipment.children[0].quaternion.copy(rot);
+    } else {
+      [a,b].forEach((p,i)=>{
+        const g=this.equipment.children[i];
+        if(!g)return;
+        g.position.copy(p);
+        g.quaternion.copy(rot);
+      });
+    }
+  }
   setPlaying(v){this.playing=Boolean(v)}
   setCamera(mode){
     if(!this.camera)return;
     const theta=mode==='front'?0:mode==='side'?Math.PI/2:Math.PI/4;
-    const distance=4.7;
+    const distance=3.55;
     this.controls.target.set(0,1.15,0);
-    this.camera.position.set(Math.sin(theta)*distance,2.45,Math.cos(theta)*distance);
+    this.camera.position.set(Math.sin(theta)*distance,2.15,Math.cos(theta)*distance);
     this.controls.update();
   }
   setManualProgress(p){
@@ -180,6 +237,7 @@ class RealisticViewer {
     if(w!==this.lastW||h!==this.lastH){
       this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();this.lastW=w;this.lastH=h;
     }
+    this.updateWeights();
     this.controls.update();
     this.renderer.render(this.scene,this.camera);
   }
