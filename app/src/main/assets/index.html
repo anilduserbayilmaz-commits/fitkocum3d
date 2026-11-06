@@ -63,6 +63,12 @@
 .technique-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
 .technique-steps button{padding:10px 4px;border-radius:10px;background:#263c43;color:#dae7e9;border:1px solid #46616b;font-size:11px;font-weight:800}
 .technique-steps button:focus-visible{outline:2px solid #cdfb96}
+.render-panel{background:#16242d;border:1px solid #364d56;border-radius:14px;padding:12px;margin:4px 0 14px}
+.render-panel-title{display:flex;align-items:center;justify-content:space-between;color:#d4f4d9;font-size:11px;font-weight:850;letter-spacing:.55px;margin-bottom:9px}
+.render-panel-title span:last-child{letter-spacing:0;color:#bfe58e}
+.render-panel-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.render-panel-buttons .viewbtn{padding:10px 5px;font-size:11px;line-height:1.3}
+.render-panel-note{margin:10px 2px 0;font-size:10px;color:#a9bcc7;line-height:1.5}
 </style></head><body>
 <div class="shell">
 <header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
@@ -150,6 +156,19 @@
 <button type="button" class="viewbtn" data-play-speed="0.5">◁ 0,5× Yavaş</button>
 <button type="button" class="viewbtn active" data-play-speed="1">1× Normal</button>
 <button type="button" class="viewbtn" data-play-speed="1.5">▷ 1,5× Hızlı</button>
+</div>
+<div class="render-panel" aria-label="3D görüntü kalitesi ve ortamı">
+  <div class="render-panel-title"><span>◈ 3D GÖRÜNTÜ AYARLARI</span><span id="renderQualityLabel">Dengeli</span></div>
+  <div class="render-panel-buttons" role="group" aria-label="3D grafik kalitesi">
+    <button type="button" class="viewbtn" data-render-quality="eco">⚡ Performans</button>
+    <button type="button" class="viewbtn active" data-render-quality="balanced">◈ Dengeli</button>
+    <button type="button" class="viewbtn" data-render-quality="high">✦ Yüksek</button>
+  </div>
+  <div class="render-panel-buttons" role="group" aria-label="3D sahne ortamı" style="grid-template-columns:repeat(2,1fr);margin-top:7px">
+    <button type="button" class="viewbtn active" data-stage-mode="studio">▦ Spor salonu</button>
+    <button type="button" class="viewbtn" data-stage-mode="focus">◯ Sade arka plan</button>
+  </div>
+  <p class="render-panel-note">Yüksek kalite daha fazla pil tüketebilir. 3D model aynı kalır; ışık, gölge ve çözünürlük değişir.</p>
 </div>
 <section id="techniqueCompare" class="technique-compare" hidden aria-label="3D doğru teknik ve hata karşılaştırması">
 <h3>Tekniği 3D karşılaştır</h3>
@@ -530,6 +549,32 @@ document.querySelectorAll('[data-play-speed]').forEach(button=>button.onclick=()
  if(scene?.setPlaybackSpeed)scene.setPlaybackSpeed(value);
  document.querySelectorAll('[data-play-speed]').forEach(b=>b.classList.toggle('active',b===button));
 });
+
+let renderQuality='balanced',studioMode='studio';
+try{
+ const storedQuality=localStorage.getItem('fitkocum_render_quality');
+ const storedStage=localStorage.getItem('fitkocum_stage_mode');
+ if(['eco','balanced','high'].includes(storedQuality))renderQuality=storedQuality;
+ if(['studio','focus'].includes(storedStage))studioMode=storedStage;
+}catch{}
+function applyVisualSettings(){
+ if(scene?.setQuality)scene.setQuality(renderQuality);
+ if(scene?.setStudioVisible)scene.setStudioVisible(studioMode==='studio');
+ document.querySelectorAll('[data-render-quality]').forEach(b=>b.classList.toggle('active',b.dataset.renderQuality===renderQuality));
+ document.querySelectorAll('[data-stage-mode]').forEach(b=>b.classList.toggle('active',b.dataset.stageMode===studioMode));
+ $('renderQualityLabel').textContent=renderQuality==='eco'?'Performans':renderQuality==='high'?'Yüksek':'Dengeli';
+}
+document.querySelectorAll('[data-render-quality]').forEach(button=>button.onclick=()=>{
+ renderQuality=button.dataset.renderQuality;
+ try{localStorage.setItem('fitkocum_render_quality',renderQuality)}catch{}
+ applyVisualSettings();
+});
+document.querySelectorAll('[data-stage-mode]').forEach(button=>button.onclick=()=>{
+ studioMode=button.dataset.stageMode;
+ try{localStorage.setItem('fitkocum_stage_mode',studioMode)}catch{}
+ applyVisualSettings();
+});
+
 function setGuide(id){
  const a=FORMGUIDES[id]||FORMGUIDES.squat;
  ['formSetup','formAngle','formPath','formMistake'].forEach((x,i)=>$(x).textContent=a[i]);
@@ -598,7 +643,7 @@ function refreshCoach(id){
 }
 
 function openMove(id){selected=id;let m=MOVES[id];setGuide(id);
-$('techniqueCompare').hidden=!Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id);techniqueForm='correct';$('techniquePhase').textContent='Başlangıç';$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Bazı hareketlerde gösterilen hatalı eklem pozları eğitsel canlandırmadır, tek başına form değerlendirmesi değildir.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const summary=refreshCoach(id);$('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';$('reps').value=summary.last?.reps??'';$('rir').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){scene.setExercise(m.type);$('sceneError').hidden=true;if(Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id))setTechniqueForm('correct')}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
+$('techniqueCompare').hidden=!Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id);techniqueForm='correct';$('techniquePhase').textContent='Başlangıç';$('title').textContent=m.name;$('sub').textContent=m.group+' · '+moveGoal(id);$('steps').innerHTML=m.steps.map(x=>`<li>${x}</li>`).join('');$('caution').textContent=id.startsWith('lib_')?'Bu hareketin anatomik 3D animasyonudur. Bazı hareketlerde gösterilen hatalı eklem pozları eğitsel canlandırmadır, tek başına form değerlendirmesi değildir.':m.type.startsWith('technique:')?'Bu hareket için özel hazırlanmış 3D teknik modeli gösterilir; gerçek hareket yakalama değildir. Formunu ve makine ayarlarını antrenörle doğrula.':id.startsWith('mobility_')?'Hareket, ahşap 3D mankenle gösterilir. Ağrısız ve kontrollü aralıkta uygula.':'Bu hareket için birebir anatomik animasyon yok; şematik görüntü gösteriliyor.';const summary=refreshCoach(id);$('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';$('reps').value=summary.last?.reps??'';$('rir').value='';$('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';$('feedback').textContent='';$('overlay').hidden=false;document.body.style.overflow='hidden';if(!scene)try{scene=new FitScene3D($('modelCanvas'))}catch(e){console.error(e)}if(scene&&!scene.fail){applyVisualSettings();scene.setExercise(m.type);$('sceneError').hidden=true;if(Object.prototype.hasOwnProperty.call(TECHNIQUE_EDU,id))setTechniqueForm('correct')}else{$('sceneError').hidden=false;$('modelCanvas').style.display='none'}$('pause').textContent='⏸ Duraklat'}
 function close(){if(scene)scene.setPlaying(false);$('overlay').hidden=true;document.body.style.overflow='';selected=null} $('close').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('pause').onclick=()=>{if(!scene)return;scene.setPlaying(!scene.playing);$('pause').textContent=scene.playing?'⏸ Duraklat':'▶ Oynat'};
 $('save').onclick=()=>{if(!selected)return;let w=Number($('weight').value),r=Number($('reps').value);const rirValue=$('rir').value;const rir=rirValue===''?null:Number(rirValue);if(!$('weight').value.trim()||!Number.isFinite(w)||w<0||w>500||!Number.isInteger(r)||r<1||r>100){$('feedback').textContent='Geçerli bir ağırlık ve tekrar sayısı gir.';return}let item={id:selected,weight:w,reps:r,rir,date:new Date().toISOString()};let next=[...records,item];try{localStorage.setItem('fitkocum3d_records',JSON.stringify(next))}catch(e){$('feedback').textContent='Telefonda kayıt alanına erişilemedi.';return}records=next;update();refreshCoach(selected);$('feedback').textContent='✓ Set kaydedildi. Bir sonraki set için hazır ol.';if($('autoRest').checked)startRestTimer();};
 let timerPreset=90,timerLeft=90,timerEnd=0,timerHandle=null;
