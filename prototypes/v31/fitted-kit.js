@@ -1,73 +1,62 @@
 import * as THREE from 'three';
 
-// V3.1 preview: skin-tight sports kit generated from the exact animated body
-// surface. This avoids the severe deformation of independent garment meshes
-// until their bind spaces/morphs can be reconciled.
+// A provisional visual fallback, NOT physically tailored clothing. Paint the
+// original skinned body surface instead of placing detached geometry above it.
+// This avoids holes and polygon clipping during animation retargeting.
 export function createFittedTrainingKit(body){
-  if(!body?.isSkinnedMesh)throw Error('Body is not a skinned mesh');
-  const source=body.geometry;
-  const positions=source.getAttribute('position');
-  const joints=source.getAttribute('skinIndex');
-  const weights=source.getAttribute('skinWeight');
-  if(!positions||!joints||!weights)throw Error('Missing skinned body vertex data');
-  source.computeBoundingBox();
-  const {min,max}=source.boundingBox;
-  const height=max.y-min.y;
-  const boneNames=body.skeleton.bones.map(b=>b.name.toLowerCase());
-  const nameMatches=(name,search)=>search.some(x=>name.includes(x));
-  const bones={
-    jersey:boneNames.map(n=>nameMatches(n,['spine','clavicle','upperarm','neck'])&&!n.includes('neck')),
-    shorts:boneNames.map(n=>nameMatches(n,['pelvis','thigh'])),
-    shoes:boneNames.map(n=>nameMatches(n,['foot','ball']))
-  };
-  const themes={
-    jersey:{color:0x143c42,roughness:.86,metalness:.01},
-    shorts:{color:0x20262f,roughness:.92,metalness:.01},
-    shoes:{color:0xeeeeed,roughness:.50,metalness:.0}
-  };
-  const masks={jersey:new Uint8Array(positions.count),shorts:new Uint8Array(positions.count),shoes:new Uint8Array(positions.count)};
-  const getInfluence=(i,m)=>{let s=0;for(let c=0;c<4;c++){const idx=joints.array[i*joints.itemSize+c]||0,weight=weights.array[i*weights.itemSize+c]||0;if(m[idx])s+=weight;}return s;};
-  for(let i=0;i<positions.count;i++){
-    const y=(positions.getY(i)-min.y)/height;
-    // Keep face, bare arms and hands, lower legs uncovered.
-    masks.jersey[i]=(y>.45&&y<.82&&getInfluence(i,bones.jersey)>.52)?1:0;
-    masks.shorts[i]=(y>.29&&y<.51&&getInfluence(i,bones.shorts)>.52)?1:0;
-    masks.shoes[i]=(y<.19&&getInfluence(i,bones.shoes)>.58)?1:0;
-  }
-  const layerRoot=new THREE.Group();
-  layerRoot.name='FittedSportswear';
-  const counts={};
-  const originalIndex=source.index;
-  const vertexCount=positions.count;
-  const indices=originalIndex?.array||null;
-  const totalTriangles=indices?Math.floor(indices.length/3):Math.floor(vertexCount/3);
-  for(const region of Object.keys(masks)){
-    const chosen=[];
-    const mask=masks[region];
-    for(let f=0;f<totalTriangles;f++){
-      const a=indices?indices[f*3]:f*3;
-      const b=indices?indices[f*3+1]:f*3+1;
-      const c=indices?indices[f*3+2]:f*3+2;
-      if(mask[a]&&mask[b]&&mask[c])chosen.push(a,b,c);
-    }
-    const geo=source.clone();
-    const type=vertexCount>65535?Uint32Array:Uint16Array;
-    geo.setIndex(new THREE.BufferAttribute(new type(chosen),1));
-    const mat=new THREE.MeshStandardMaterial({
-      ...themes[region],side:THREE.DoubleSide,
-      polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1
-    });
-    const mesh=new THREE.SkinnedMesh(geo,mat);
-    mesh.name='Fitted_'+region;
-    mesh.frustumCulled=false;
-    mesh.castShadow=true;
-    mesh.receiveShadow=true;
-    mesh.bind(body.skeleton,body.bindMatrix.clone());
-    mesh.position.copy(body.position);
-    mesh.quaternion.copy(body.quaternion);
-    mesh.scale.copy(body.scale);
-    layerRoot.add(mesh);
-    counts[region]=chosen.length/3;
-  }
-  return {group:layerRoot,counts};
+ if(!body?.isSkinnedMesh)throw Error('Body is not a skinned mesh');
+ const geometry=body.geometry;
+ const p=geometry.getAttribute('position'),j=geometry.getAttribute('skinIndex'),w=geometry.getAttribute('skinWeight');
+ if(!p||!j||!w)throw Error('Missing rig attributes');
+ geometry.computeBoundingBox();
+ const min=geometry.boundingBox.min,max=geometry.boundingBox.max;
+ const total=Math.max(.001,max.y-min.y);
+ const boneNames=body.skeleton.bones.map(x=>x.name.toLowerCase());
+ const main={
+   shirt:boneNames.map(n=>['spine_','clavicle','upperarm'].some(q=>n.includes(q))),
+   shorts:boneNames.map(n=>['pelvis','thigh'].some(q=>n.includes(q))),
+   shoes:boneNames.map(n=>['foot','ball'].some(q=>n.includes(q)))
+ };
+ function influence(i,bones){
+   let acc=0;
+   for(let t=0;t<4;t++){
+     const b=t===0?j.getX(i):t===1?j.getY(i):t===2?j.getZ(i):j.getW(i);
+     const a=t===0?w.getX(i):t===1?w.getY(i):t===2?w.getZ(i):w.getW(i);
+     if(bones[b])acc+=a;
+   }
+   return acc;
+ }
+ const jersey=new THREE.Color('#214b55'),shorts=new THREE.Color('#2a303f'),shoes=new THREE.Color('#e1e8e6');
+ const rgb=new Float32Array(p.count*3);
+ const counts={jersey:0,shorts:0,shoes:0};
+ for(let i=0;i<p.count;i++){
+   const y=(p.getY(i)-min.y)/total;
+   const x=Math.abs(p.getX(i));
+   const torso=influence(i,main.shirt),hip=influence(i,main.shorts),feet=influence(i,main.shoes);
+   const isShirt=(y>.40&&y<.80&&torso>.18&& (x<.42||y>.69));
+   const isShorts=(y>.25&&y<.48&&hip>.22);
+   const isShoes=(y<.26&&feet>.16);
+   let tone=new THREE.Color(0xffffff);
+   if(isShirt){tone=jersey;counts.jersey++}
+   else if(isShorts){tone=shorts;counts.shorts++}
+   else if(isShoes){tone=shoes;counts.shoes++}
+   rgb[i*3]=tone.r;rgb[i*3+1]=tone.g;rgb[i*3+2]=tone.b;
+ }
+ const before=geometry.getAttribute('color');
+ const beforeMat=body.material;
+ const attribute=new THREE.BufferAttribute(rgb,3);
+ geometry.setAttribute('color',attribute);
+ // Multiply original licensed skin textures with our clothing-region colors.
+ const materials=(Array.isArray(beforeMat)?beforeMat:[beforeMat]).map(m=>{
+   const n=m.clone();
+   n.vertexColors=true;
+   n.needsUpdate=true;
+   return n;
+ });
+ body.material=Array.isArray(beforeMat)?materials:materials[0];
+ const group=new THREE.Group();group.name='IntegratedSportswearSurface';
+ return {group,counts,method:'native surface tint',dispose(){
+   if(before)geometry.setAttribute('color',before);else geometry.deleteAttribute('color');
+   body.material=beforeMat;materials.forEach(m=>m.dispose());
+ }};
 }
