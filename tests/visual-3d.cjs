@@ -49,7 +49,7 @@ const server = http.createServer((req,res)=>{
  await page.locator('[data-day="A"]').click();
  await page.screenshot({path:'/tmp/fitkocum-program.png',fullPage:true});
  await page.locator('#chooseClassic').click();
- assert.equal((await page.locator('#moveList .watch').first().getAttribute('data-id')),'lunge');
+ assert.equal((await page.locator('#moveList .watch').first().getAttribute('data-id')),'squat');
  await page.locator('#choose3d').click();
  await page.locator('#exerciseLibrary').evaluate(el=>el.open=true);
 
