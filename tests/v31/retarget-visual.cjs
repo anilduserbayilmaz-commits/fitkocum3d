@@ -36,10 +36,11 @@ const server=http.createServer((req,res)=>{
       outfit:r.fitCounts,gear:r.equipment,gearMeshes:r.equipmentMeshes,duration:r.duration,
       first:r.frames?.[0]?.limbs,last:r.frames?.[2]?.limbs}));
    assert.equal(r.status,'ok',String(r.message));
-   assert.equal(r.dressed,3);
+   assert.equal(r.appearance,'native surface tint');
+   assert.ok(r.dressed>=2,'Gym clothing regions must cover torso and shorts');
    assert.equal(r.exercise,move);
    assert.ok(r.retargetedTracks>=20,'Expected major bones retargeted for '+move);
-   assert.ok(r.fitCounts.jersey>20&&r.fitCounts.shorts>20,'Fitted workout clothes should have triangle geometry: '+move);
+   assert.ok(r.fitCounts.jersey>100&&r.fitCounts.shorts>100,'Fitted workout clothes should have triangle geometry: '+move);
    assert.equal(r.equipment,move==='bicep_curl'?'dumbbell':move==='deadlift'?'barbell':'none');
    const start=r.frames[0].limbs,mid=r.frames[2].limbs;
    const movement=Object.keys(start).reduce((n,k)=>n+Math.sqrt(start[k].reduce((t,v,i)=>t+(v-mid[k][i])**2,0)),0);
