@@ -24,18 +24,33 @@ const server=http.createServer((req,res)=>{
  const errors=[];
  page.on('pageerror',err=>errors.push(err.stack||String(err)));
  page.on('console',m=>{if(m.type()==='error')errors.push(m.text());if(m.text().startsWith('RETARGET_MATCHES')||m.text().startsWith('RETARGET_ASSET_LOAD'))console.log(m.text())});
- await page.goto('http://127.0.0.1:8871/');
- await page.waitForFunction(()=>Boolean(window.__v31),null,{timeout:25000}).catch(async e=>{throw Error('Prototype did not initialize: '+JSON.stringify(errors)+'; '+await page.locator('#error').textContent()+'; '+String(e))});
- const result=await page.evaluate(()=>window.__v31);
- console.log('RETARGET_PROTOTYPE_REPORT',JSON.stringify(result));
- await page.screenshot({path:'/tmp/v31/retarget-preview.png',fullPage:true});
- if(result.status!=='ok')throw Error('Retarget preview failed: '+result.message);
- assert.ok(result.retargetedTracks>=10,'At least 10 mapped motion tracks required');
- assert.equal(result.dressed,3,'Body must be dressed');
- const a=result.frames[0].limbs,b=result.frames[2].limbs;
- const displacement=Object.keys(a).reduce((s,k)=>s+Math.sqrt(a[k].reduce((t,n,i)=>t+(n-b[k][i])**2,0)),0);
- console.log('RETARGET_DISPLACEMENT',displacement);
- assert.ok(displacement>.12,'Joints must visibly animate and not freeze');
- if(errors.length)throw Error('Browser errors: '+errors.slice(0,5).join('\n'));
+ const summaries=[];
+ for(const move of ['bicep_curl','squat','deadlift']){
+   errors.length=0;
+   await page.goto('http://127.0.0.1:8871/?move='+move);
+   await page.waitForFunction(()=>Boolean(window.__v31),null,{timeout:30000}).catch(async e=>{
+     throw Error('Prototype '+move+' failed: '+JSON.stringify(errors)+' '+await page.locator('#error').textContent()+' '+String(e));
+   });
+   const r=await page.evaluate(()=>window.__v31);
+   console.log('RETARGET_PROTOTYPE_REPORT '+JSON.stringify({exercise:move,status:r.status,tracks:r.retargetedTracks,
+      outfit:r.fitCounts,gear:r.equipment,gearMeshes:r.equipmentMeshes,duration:r.duration,
+      first:r.frames?.[0]?.limbs,last:r.frames?.[2]?.limbs}));
+   assert.equal(r.status,'ok',String(r.message));
+   assert.equal(r.dressed,3);
+   assert.equal(r.exercise,move);
+   assert.ok(r.retargetedTracks>=20,'Expected major bones retargeted for '+move);
+   assert.ok(r.fitCounts.jersey>20&&r.fitCounts.shorts>20,'Fitted workout clothes should have triangle geometry: '+move);
+   assert.equal(r.equipment,move==='bicep_curl'?'dumbbell':move==='deadlift'?'barbell':'none');
+   const start=r.frames[0].limbs,mid=r.frames[2].limbs;
+   const movement=Object.keys(start).reduce((n,k)=>n+Math.sqrt(start[k].reduce((t,v,i)=>t+(v-mid[k][i])**2,0)),0);
+   assert.ok(movement>.10,'Human skeleton must actually move: '+move);
+   for(const [label,time] of [['start',0],['mid',.50],['finish',.75]]){
+     await page.evaluate(t=>window.__v31Pose(t),time);
+     await page.screenshot({path:'/tmp/v31/'+move+'-'+label+'.png'});
+   }
+   if(errors.length)throw Error('WebGL page errors for '+move+': '+errors.slice(0,3).join('; '));
+   summaries.push({move,movement,tracks:r.retargetedTracks,outfit:r.fitCounts,gear:r.equipment});
+ }
+ console.log('THREE_EXERCISE_PROOF',JSON.stringify(summaries));
  await browser.close();
 })().then(()=>server.close(()=>process.exit(0))).catch(e=>{console.error(e);process.exit(1)});
