@@ -92,7 +92,7 @@ jobs:
       - name: Saate aktarılabilir MP4 dosyalarını yayınla
         uses: actions/upload-artifact@v4
         with:
-          name: FitKocum-WatchFit5Pro-5-MP4
+          name: FitKocum-WatchFit5Pro-v4.1-5-MP4
           path: |
             app/src/main/assets/watch-videos/*.mp4
             app/src/main/assets/watch-videos/README.txt
@@ -113,7 +113,7 @@ jobs:
       - name: APK dosyasını sakla
         uses: actions/upload-artifact@v4
         with:
-          name: FitKocum-v4.0-WATCH-LAB-APK
+          name: FitKocum-v4.1-WATCH-LAB-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
