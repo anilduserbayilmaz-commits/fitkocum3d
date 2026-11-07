@@ -152,7 +152,7 @@
     $('v31CardioTitle').textContent=MOVES[id].name;
     $('v31CardioHint').textContent='Tamamladığın süreyi dakika olarak kaydet. Burada gerçek 3D animasyon yok.';
     $('v31CardioStatus').textContent='';
-    $('v31Minutes').value='30';
+    $('v31Minutes').value=String(Number(MOVES[id].sets.match(/(\d+)\s*dk/)?.[1]||30));
     cardioModal.hidden=false;document.body.style.overflow='hidden';
     $('v31Minutes').focus();
   }
@@ -186,6 +186,13 @@
     $('modeInfo').textContent=programMode==='custom'?'Kendi haftalık programın: her günün hareketlerini ve hedeflerini değiştirebilirsin.':'Haftada 5 antrenman: Pzt/Çrş/Cum ağırlık, Sal/Paz kardiyo. Perşembe ve Cumartesi dinlenme.';
     const info=weekMap[day];
     $('dayCaption').textContent=info.name+' · '+info.title+' · '+(info.type==='rest'?'Dinlenme':targetDays()[day].ids.length+' hareket');
+    // A cardio session uses "minutes", not repetitions or a loaded weight.
+    $('logs').querySelectorAll('.history-item').forEach(el=>{
+      const name=el.querySelector('strong')?.textContent||'';
+      const cardio=Object.entries(MOVES).find(([id,m])=>m.kind==='cardio'&&m.name===name);
+      if(!cardio)return;
+      const small=el.querySelector('small');if(small)small.textContent=small.textContent.replace(/0 kg × (\d+) tekrar/, '$1 dk');
+    });
     if(info.type==='rest'){
       $('moveList').innerHTML='<article class="panel" style="margin-top:12px"><h3>🌙 Dinlenme günü</h3><p>Bugün programlı ağırlık veya kardiyo yok. Uyku, beslenme ve toparlanmaya odaklan.</p></article>';
       return;
@@ -198,6 +205,9 @@
       const actions=card.querySelector('.move-actions');
       const button=card.querySelector('button.watch');
       if(isCardio(id) && button){
+        const last=exerciseSummary(id).last;
+        const mini=card.querySelector('.coach-mini');
+        if(mini)mini.textContent=last?'Son: '+last.reps+' dk':'';
         button.textContent='⏱ Süre kaydet';
         button.onclick=()=>openCardio(id);
         const art=card.querySelector('.move-art');
@@ -220,13 +230,7 @@
       if(programMode==='custom')target.goals={};
       persist();update();
     };
-    // A cardio session uses "minutes", not repetitions or a loaded weight.
-    $('logs').querySelectorAll('.history-item').forEach(el=>{
-      const name=el.querySelector('strong')?.textContent||'';
-      const cardio=Object.entries(MOVES).find(([id,m])=>m.kind==='cardio'&&m.name===name);
-      if(!cardio)return;
-      const small=el.querySelector('small');if(small)small.textContent=small.textContent.replace(/0 kg × (\d+) tekrar/, '$1 dk');
-    });
+
   };
   update();
 })();
