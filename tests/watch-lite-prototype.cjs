@@ -18,4 +18,8 @@ assert.ok(hml.includes('SET +')&&hml.includes('restText'));
 assert.ok(css.includes('background-color: #101d2d'));
 const clips=['0025','drv-cable-bar-lateral-pulldown-wide-shoulder-grip','1435','0314','0294'];
 for(const id of clips)assert.ok(main.includes(id+'.mp4'),'Missing watch video ID '+id);
+for(const id of clips){
+ const movie=path.join(root,'js/MainAbility/common/videos/'+id+'.mp4');
+ assert.ok(fs.existsSync(movie)&&fs.statSync(movie).size>8000,'Watch Lite prototype clip missing: '+id);
+}
 console.log('PASS: Lite Wearable v4.1 prototype source files and local playlist syntax; NOT hardware-validated');
