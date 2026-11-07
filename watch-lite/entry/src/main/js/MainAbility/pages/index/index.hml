@@ -1,15 +1,17 @@
 <div class="container">
-  <text class="brand">FITKOÇUM WATCH</text>
+  <text class="brand">FITKOÇUM WATCH v4.2</text>
   <text class="heading">{{title}}</text>
-  <video class="exercise" ref="exerciseVideo" id="exerciseVideo"
+  <video if="{{!showPoster}}" class="exercise" id="exerciseVideo"
     src="{{videoSrc}}" autoplay="true" muted="true" controls="false"
-    @finish="loopVideo" @error="videoError"></video>
+    onprepared="videoPrepared" onfinish="loopVideo" onerror="videoError"></video>
+  <image if="{{showPoster}}" class="exercise" src="{{posterSrc}}" object-fit="contain"></image>
   <text class="set-text">SET {{setCount}} / {{targetSets}}</text>
   <text class="rest">Dinlenme: {{restText}}</text>
   <div class="actions">
-    <input type="button" class="moveButton" value="◀" @click="previous"/>
-    <input type="button" class="saveButton" value="SET +" @click="completeSet"/>
-    <input type="button" class="moveButton" value="▶" @click="next"/>
+    <input type="button" class="moveButton" value="◀" @click="previous"></input>
+    <input type="button" class="saveButton" value="SET +" @click="completeSet"></input>
+    <input type="button" class="moveButton" value="▶" @click="next"></input>
   </div>
   <text class="status">{{status}}</text>
+  <text class="connection">{{linkStatus}}</text>
 </div>
