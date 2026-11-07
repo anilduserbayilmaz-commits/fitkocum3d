@@ -25,8 +25,15 @@ if(!(html.indexOf(dataTag)>=0 && html.indexOf(dataTag)<html.indexOf(weeklyTag)
   && html.indexOf(weeklyTag)<html.indexOf(playerTag))) throw Error('Video scripts are out of order');
 if(!html.includes('Object.assign(MOVES,FREE_VIDEO_EXERCISES)'))throw Error('317 exercises not imported into program');
 if(!player.includes('window.FitLegacyVideoMatches'))throw Error('Bench Press/Lat Pulldown mapping missing from player');
-if(!player.includes("const FIT_BUILD='3.1.3'"))throw Error('Visible v3.1.3 build marker missing');
-if(!html.includes('v3.1.3 · VIDEO'))throw Error('App version badge missing');
+if(!player.includes("const BUILD='3.2.0'"))throw Error('Visible v3.1.3 build marker missing');
+if(!html.includes('v3.2.0 · OFFLINE'))throw Error('App version badge missing');
 if(html.includes('Bu hareket için henüz onaylanmış MoveKit videosu yok')||
   player.includes('Bu hareket için henüz onaylanmış MoveKit videosu yok'))throw Error('Stale version UI warning');
-console.log('PASS: 317 records + 6 core matches + correct player script order + visible v3.1.3');
+const offline=fs.readFileSync('app/src/main/assets/offline-video-index.js','utf8');
+const localFiles=fs.readdirSync('app/src/main/assets/offline-videos').filter(x=>x.endsWith('.mp4'));
+if(localFiles.length<300)throw Error('Need 300+ embedded exercise videos. Got '+localFiles.length);
+for(const id of ['0025','drv-cable-bar-lateral-pulldown-wide-shoulder-grip']){
+ if(!localFiles.includes(id+'.mp4')||!offline.includes('offline-videos/'+id+'.mp4'))throw Error('Missing core offline video '+id);
+}
+if(player.includes('Bu hareket için video henüz eklenmedi'))throw Error('Legacy placeholder is still shown');
+console.log('PASS: '+localFiles.length+' offline MP4 assets, main exercises mapped, v3.2.0');
