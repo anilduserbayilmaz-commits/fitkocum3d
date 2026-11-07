@@ -94,6 +94,9 @@
     +'<button type="button" class="v31-mini-btn" data-quick="Omuz">Omuz</button>'
     +'<button type="button" class="v31-mini-btn" data-quick="Bacak">Bacak</button>'
     +'<button type="button" class="v31-mini-btn" data-quick="Arka kol">Arka kol</button></div>'
+    +'<div id="v31PickerFilters" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:9px 0 3px">'
+    +'<label style="font-size:11px;color:#c3d0d6">Kas grubu<select id="v31PickerMuscle" style="width:100%;padding:9px 7px;color:#ecfaf6;background:#21323f;border:1px solid #526675;border-radius:9px;margin-top:4px"></select></label>'
+    +'<label style="font-size:11px;color:#c3d0d6">Ekipman<select id="v31PickerEquipment" style="width:100%;padding:9px 7px;color:#ecfaf6;background:#21323f;border:1px solid #526675;border-radius:9px;margin-top:4px"></select></label></div>'
     +'<div class="v31-results" id="v31PickerList"></div>'
     +'<button type="button" class="v31-mini-btn" id="v31PickerMore" style="display:none;margin-top:6px;width:100%">+ Daha fazla göster</button>'
     +'<div class="v31-dialog-actions"><small class="v31-muted" role="status" aria-live="polite" id="v31PickerCount"></small><button class="v31-mini-btn" id="v31PickerClose">Vazgeç</button></div>'
@@ -118,11 +121,16 @@
   };
   const targetDays=()=>programMode==='custom'?customDays:DAYS;
   const isCardio=id=>MOVES[id]?.kind==='cardio';
-  let pickerLimit=48;
+  let pickerLimit=48,pickerMuscle='all',pickerEquipment='all';
+  const pickerSetup=(id,options)=>{$(id).innerHTML=options.map(x=>'<option value="'+escapeText(x.value)+'">'+escapeText(x.label)+'</option>').join('')};
+  pickerSetup('v31PickerMuscle',FitExerciseFilters.muscles);
+  pickerSetup('v31PickerEquipment',FitExerciseFilters.equipment);
   function openPicker(index){
     if(weekMap[day].type==='rest')return;
     swapIndex=index;
-    pickerLimit=48;
+    pickerLimit=48;pickerMuscle='all';pickerEquipment='all';
+    $('v31PickerMuscle').value='all';$('v31PickerEquipment').value='all';
+    $('v31PickerFilters').style.display=weekMap[day].type==='cardio'?'none':'grid';
     $('v31PickerTitle').textContent=index<0?'Hareket ekle':'Hareket değiştir';
     $('v31PickerHint').textContent=weekMap[day].name+' · '+(weekMap[day].type==='cardio'?'Kardiyo hareketleri arasından seç.':'317 çevrimdışı video ve kayıtlı hareketleri Türkçe veya İngilizce ara.');
     $('v31PickerSearch').value='';
@@ -134,17 +142,18 @@
     const query=$('v31PickerSearch').value.trim();
     const ids=targetDays()[day].ids;
     const available=Object.entries(MOVES).filter(([id,m])=>
-       (weekMap[day].type!=='cardio' ? m.kind!=='cardio' :
+       (weekMap[day].type!=='cardio' ? m.kind!=='cardio' && m.category!=='cardio' :
          m.kind==='cardio') &&
        (weekMap[day].type==='cardio' || id.startsWith('movekit_') || id.startsWith('free_') ||
           Object.prototype.hasOwnProperty.call(window.FitLegacyVideoMatches||{},id)) &&
        (swapIndex>=0 ? (id===ids[swapIndex]||!ids.includes(id)) : !ids.includes(id))
     );
-    const all=FitExerciseSearch.filter(available,query,([id,m])=>({...m,id}));
+    const all=FitExerciseFilters.filter(available,query,{muscle:pickerMuscle,equipment:pickerEquipment},([id,m])=>({...m,id}));
     $('v31PickerCount').textContent=all.length+' sonuç · '+Math.min(all.length,pickerLimit)+' gösteriliyor';
-    $('v31PickerList').innerHTML=all.slice(0,pickerLimit).map(([id,m])=>'<button type="button" class="v31-option" data-pick="'+escapeText(id)+'"><b>'
-      +escapeText(m.name)+'</b><small>'+escapeText(m.group)+' · '+escapeText(m.sets||'')+'</small></button>').join('')
-      ||'<p>Hareket bulunamadı. Örn: göğüs, chest, bench, incline, barfiks, sırt.</p>';
+    $('v31PickerList').innerHTML=all.slice(0,pickerLimit).map(([id,m])=>'<button type="button" class="v31-option" data-pick="'+escapeText(id)+'" style="display:flex;gap:10px;align-items:center">'
+      +(m.poster?'<img loading="lazy" src="'+escapeText(m.poster)+'" alt="" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0">':'')
+      +'<span><b>'+escapeText(m.name)+'</b><small>'+escapeText(FitExerciseFilters.labelMuscle(m))+' · '+escapeText(FitExerciseFilters.labelEquipment(m))+'</small></span></button>').join('')
+      ||'<p>Bu filtrelerle hareket bulunamadı. Farklı kas/ekipman seç veya aramayı temizle.</p>';
     $('v31PickerMore').style.display=all.length>pickerLimit?'block':'none';
     $('v31PickerMore').textContent='+ '+Math.min(48,all.length-pickerLimit)+' hareket daha';
     $('v31PickerList').querySelectorAll('[data-pick]').forEach(button=>button.onclick=()=>{
@@ -156,6 +165,8 @@
     });
   }
   $('v31PickerSearch').addEventListener('input',()=>{pickerLimit=48;showChoices()});
+  $('v31PickerMuscle').onchange=e=>{pickerMuscle=e.target.value;pickerLimit=48;showChoices()};
+  $('v31PickerEquipment').onchange=e=>{pickerEquipment=e.target.value;pickerLimit=48;showChoices()};
   $('v31PickerMore').onclick=()=>{pickerLimit+=48;showChoices()};
   $('v31PickerClear').onclick=()=>{$('v31PickerSearch').value='';pickerLimit=48;showChoices();$('v31PickerSearch').focus()};
   $('v31PickerQuick').querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>{
