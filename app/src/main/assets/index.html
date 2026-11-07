@@ -103,18 +103,25 @@
 .athlete-grid button.active{background:#32665c!important;border-color:#81dbbd!important;color:#e5fff4!important}
 </style></head><body>
 <div class="shell">
-<header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#bdf18a;font-size:11px">3D+ v4.0 · WATCH LAB</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline" style="font-size:10px">● Kayıtlar ve videolar · Çevrimdışı</div></header>
+<header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#bdf18a;font-size:11px">3D+ v4.1 · WATCH LAB</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline" style="font-size:10px">● Kayıtlar ve videolar · Çevrimdışı</div></header>
 <section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Haftanın 5 gününü planla, hareketleri değiştir, set ve kardiyo süreni kaydet.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div>
 <div class="panel" style="background:linear-gradient(140deg,#13362e,#1c2e3b);border:1px solid #598b72;margin:15px 0">
-<div class="eyebrow" style="color:#b7ef9e">⌚ WATCH FIT 5 PRO · V4 TEST</div>
+<div class="eyebrow" style="color:#b7ef9e">⌚ WATCH FIT 5 PRO · V4.1</div>
 <h3 style="margin:9px 0 5px">Gerçek egzersiz videosunu saatine taşı</h3>
 <p style="font-size:13px;color:#d2e3dc;line-height:1.5;margin:6px 0 14px">
-Bench Press, Lat Pulldown, Squat, Incline Press ve Biceps Curl için kısa MP4 hazır.
+Sporcusu büyütülmüş, koyu arka planlı beş hareket videosu hazır.
 Hareketi aç ve “⌚ SAAT İÇİN VİDEOYU KAYDET” düğmesine bas.
 Huawei Sağlık → Cihazlar → Kadranlarım → Video bölümünden telefonuna kaydettiğin klibi seç.
 Bu, ilk aşamada video kadranı testidir; saat uygulaması ve otomatik senkronizasyon değildir.
 </p>
-<button type="button" class="chip primary" id="watchV4Explore" style="width:100%">⌚ Saat için hareket seç</button>
+<div id="watchV41Gallery" style="display:grid;gap:8px;margin:13px 0">
+ <button type="button" class="chip" data-watch-move="free_0025" style="text-align:left">🏋️ Bench Press · Videoyu aç</button>
+ <button type="button" class="chip" data-watch-move="free_drv-cable-bar-lateral-pulldown-wide-shoulder-grip" style="text-align:left">↧ Lat Pulldown · Videoyu aç</button>
+ <button type="button" class="chip" data-watch-move="free_1435" style="text-align:left">🦵 Squat · Videoyu aç</button>
+ <button type="button" class="chip" data-watch-move="free_0314" style="text-align:left">🏋️ Incline Press · Videoyu aç</button>
+ <button type="button" class="chip" data-watch-move="free_0294" style="text-align:left">💪 Biceps Curl · Videoyu aç</button>
+</div>
+<button type="button" class="chip primary" id="watchV4Explore" style="width:100%">⌕ Tüm video kütüphanesini aç</button>
 </div>
 <div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong id="offlineVideoTotal">0</strong><span>APK içindeki video</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 5 antrenman · 2 dinlenme</span></div><div class="days" id="dayTabs"></div>
 <div style="display:flex;justify-content:flex-end;margin:7px 0 12px">
@@ -206,7 +213,7 @@ Bu, ilk aşamada video kadranı testidir; saat uygulaması ve otomatik senkroniz
 </div></section>
 </div>
 <nav class="bottom" aria-label="Alt menü"><button class="nav active" data-tab="home"><span>⌂</span>PROGRAM</button><button class="nav" data-tab="history"><span>▥</span>İLERLEME</button><button class="nav" data-tab="rest"><span>◷</span>DİNLENME</button><button class="nav" data-tab="meal"><span>🍽</span>YEMEK</button></nav>
-<div class="overlay" id="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="title"><div class="dialog-header"><div><div class="eyebrow">FitKoçum v4.0 · WATCH LAB</div><h2 id="title"></h2><div class="dialog-sub" id="sub"></div></div><button id="close" aria-label="Kapat" class="close">×</button></div><div class="scene" style="height:360px"><canvas id="modelCanvas" aria-label="Döndürülebilir, animasyonlu 3D sporcu modeli"></canvas><div class="scene-label">● UYGULAMA İÇİ 3D MODEL</div><div class="scene-help">↻ Parmağınla çevir</div><button id="pause" class="pause">⏸ Duraklat</button></div><div class="viewcontrols" aria-label="Kamera açısı">
+<div class="overlay" id="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="title"><div class="dialog-header"><div><div class="eyebrow">FitKoçum v4.1 · WATCH LAB</div><h2 id="title"></h2><div class="dialog-sub" id="sub"></div></div><button id="close" aria-label="Kapat" class="close">×</button></div><div class="scene" style="height:360px"><canvas id="modelCanvas" aria-label="Döndürülebilir, animasyonlu 3D sporcu modeli"></canvas><div class="scene-label">● UYGULAMA İÇİ 3D MODEL</div><div class="scene-help">↻ Parmağınla çevir</div><button id="pause" class="pause">⏸ Duraklat</button></div><div class="viewcontrols" aria-label="Kamera açısı">
 <button class="viewbtn" data-camera="front">◉ Önden</button>
 <button class="viewbtn" data-camera="side">◧ Yandan</button>
 <button class="viewbtn active" data-camera="angle">◈ 45°</button>
@@ -1027,10 +1034,14 @@ $('quickMoveSearches').querySelectorAll('[data-quick-search]').forEach(button=>b
  setLibrarySearch(button.dataset.quickSearch);
  $('moveSearch').focus();
 });
+document.querySelectorAll('#watchV41Gallery [data-watch-move]').forEach(button=>button.onclick=()=>{
+ const id=button.dataset.watchMove;
+ if(MOVES[id])openMove(id);
+});
 $('watchV4Explore').onclick=()=>{
  $('exerciseLibrary').open=true;
  $('exerciseLibrary').scrollIntoView({block:'start',behavior:'smooth'});
- setLibrarySearch('bench press');
+ setLibrarySearch('');
 };
 $('jumpToLibrary').onclick=()=>{
  $('exerciseLibrary').open=true;
