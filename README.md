@@ -29,6 +29,16 @@ Türkçe, çevrimdışı çalışan Android spor salonu asistanı. Android uygul
 - 588 MoveKit videosunun tümü **satın alınmadı ve bu APK'da yoktur**. Diğer dosyalar ancak uygun lisansla sağlandıktan sonra içe aktarılabilir.
 - Kaynak: [MoveKit Licensing](https://movekit.com/licensing). MoveKit eserlerinin hakları kendi sahiplerindedir.
 
+
+## v3.1.2 — 317 ücretsiz çevrimiçi egzersiz videosu
+
+- Kaynak: [Free Exercise DB with Videos](https://github.com/harshvishu/free-exercise-db-with-videos). Kod ve metadata için MIT lisansı; video hakları için kaynak sahibinin beyanı geçerlidir. Test APK'sı kişisel kullanım içindir.
+- 317 egzersizli katalog ve erkekler için 317 MP4 URL'si, 303 alternatif kadın videosu. **Videoların kendisi APK'da değil, CDN'de barınıyor.** Oynatmak için internet gereklidir.
+- Bench Press, Lat Pulldown, Squat, Seated Cable Row, Leg Press, Incline Dumbbell Press ve diğer uygun hareketler eski antrenman kartlarının kimliklerine eşlendi; kayıtlar korunur.
+- Katalogdan doğrudan video izlenebilir ve **↔ Değiştir** ile programa hareket eklenebilir.
+- 390 hareketlik eski şematik liste, mevcut açıklamalar ve kardiyo günlükleri korunur; birebir eşleşmeyen eski hareketler video varmış gibi gösterilmez.
+- Kullanıcı tarafında gerçekten açılan videoların biçim ve mekanik kalitesinin ayrıca kontrol edilmesi gerekir. Bağlantılar çevrimiçi servise bağlı olduğundan kesilebilir.
+
 ## Android APK
 
 GitHub > Actions > **FitKoçum 3D APK** > başarılı çalışma > **Artifacts** > FitKocum-3D-APK. Bu Android **debug** derlemesidir; Google Play yayın paketi değildir.
