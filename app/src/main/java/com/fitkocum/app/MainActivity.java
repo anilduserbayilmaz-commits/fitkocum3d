@@ -49,6 +49,8 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(12, 17, 24));
         webView.getSettings().setJavaScriptEnabled(true);
+        // Allow locally bundled muted exercise MP4s to autoplay in WebView.
+        webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setAllowContentAccess(true);
