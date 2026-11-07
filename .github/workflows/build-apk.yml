@@ -86,15 +86,25 @@ jobs:
           node tools/build-offline-videos.cjs
           node --check app/src/main/assets/offline-video-index.js
           du -sh app/src/main/assets/offline-videos
-      - name: Huawei Lite Wearable prototip kaynaklarını kontrol et
-        run: |
-          node tests/watch-lite-prototype.cjs
       - name: Huawei Watch Fit 5 Pro gerçek MP4 kliplerini hazırla
         run: |
           set -euo pipefail
           node --check tools/build-watch-videos.cjs
           node tools/build-watch-videos.cjs
           node tests/watch-videos.cjs
+      - name: Deneysel Lite Wearable uygulamasına gerçek MP4 dosyalarını ekle
+        run: |
+          set -euo pipefail
+          mkdir -p watch-lite/entry/src/main/js/MainAbility/common/videos
+          cp app/src/main/assets/watch-videos/*.mp4 watch-lite/entry/src/main/js/MainAbility/common/videos/
+          node tests/watch-lite-prototype.cjs
+      - name: Watch Lite deneysel DevEco projesini sakla (HAP değildir)
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitKocum-Watch-v4.1-DevEco-SOURCE-NOT-INSTALLABLE
+          path: watch-lite/
+          if-no-files-found: error
+          retention-days: 30
       - name: Saate aktarılabilir MP4 dosyalarını yayınla
         uses: actions/upload-artifact@v4
         with:
