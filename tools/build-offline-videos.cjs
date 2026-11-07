@@ -32,7 +32,7 @@ async function convert(item){
  const id=item.id.slice(5),input=path.join(tmp,id+'.mp4');
  const output=path.join(out,id+'.mp4'),poster=path.join(posters,id+'.jpg');
  try{
-  if(!/^[a-z0-9-]+$/.test(id)||!/^https:\/\/pub-[a-z0-9]+\.r2\.dev\/exercise-videos\/male\/[a-z0-9-]+\.mp4$/.test(item.video))
+  if(!/^[a-z0-9-]+$/.test(id)||!/^https:\/\/pub-[a-z0-9]+\.r2\.dev\/exercise-videos\/(male|female)\/[a-z0-9-]+\.mp4$/.test(item.video))
    throw Error('Invalid id or source URL');
   await run('curl',['-fSL','--retry','2','--retry-all-errors','--connect-timeout','15','--max-time','150',item.video,'-o',input]);
   if(fs.statSync(input).size<8000)throw Error('Source video missing');
