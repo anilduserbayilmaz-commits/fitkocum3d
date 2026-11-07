@@ -75,6 +75,8 @@ jobs:
         run: |
           node --check app/src/main/assets/weekly-v31.js
           node --check app/src/main/assets/video-v31.js
+          node --check app/src/main/assets/free-videos-v31.js
+          grep -q 'freevideo_0025' app/src/main/assets/free-videos-v31.js
       - name: APK oluştur
         run: gradle --no-daemon --stacktrace assembleDebug
       - name: APK dosyasını sakla
