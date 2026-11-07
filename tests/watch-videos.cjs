@@ -18,6 +18,29 @@ for(const e of entries){
  assert.equal(video.r_frame_rate,'25/1');
  assert.ok(Number(p.format.duration)>1 && Number(p.format.duration)<=5.05,'Incorrect watch length');
  assert.ok(!p.streams.some(x=>x.codec_type==='audio'),'Watch clip has audio');
+
+ // Regression against the user's watch photo: the v4 pilot had a huge white
+ // rectangle and tiny human. On v4.1, the visible area is dark and animated.
+ function frameAt(second){
+   return cp.execFileSync('ffmpeg',['-hide_banner','-loglevel','error','-ss',String(second),
+     '-i',name,'-frames:v','1','-f','rawvideo','-pix_fmt','rgb24','pipe:1'],
+     {maxBuffer:1024*1024});
+ }
+ const image=frameAt(0.5),later=frameAt(2.5);
+ assert.equal(image.length,408*480*3,'Unexpected RGB frame size');
+ assert.equal(later.length,image.length);
+ let whites=0,pixels=0,changing=0;
+ for(let y=85;y<417;y+=2)for(let x=10;x<398;x+=2){
+   const i=(y*408+x)*3;
+   if(image[i]>230&&image[i+1]>230&&image[i+2]>230)whites++;
+   const delta=Math.max(Math.abs(image[i]-later[i]),Math.abs(image[i+1]-later[i+1]),Math.abs(image[i+2]-later[i+2]));
+   if(delta>18)changing++;
+   pixels++;
+ }
+ assert.ok(whites/pixels<0.08,'White studio background still too large in '+e.id);
+ assert.ok(changing/pixels>0.005,'Watch clip appears static in '+e.id);
+ assert.equal(e.style,'v4.1-dark-cropped');
+
  console.log('WATCH_TEST '+e.id+' '+Number(p.format.duration).toFixed(2)+'s '+p.format.size+' bytes');
 }
 const java=fs.readFileSync('app/src/main/java/com/fitkocum/app/MainActivity.java','utf8');
@@ -27,4 +50,4 @@ assert.ok(java.includes('exportWatchClip(String clipId)'));
 assert.ok(java.includes('MediaStore.Video.Media.RELATIVE_PATH'));
 assert.ok(html.includes('<script src="watch-video-index.js"></script>'));
 assert.ok(player.includes('FitAndroid.exportWatchClip(watchCurrent)'));
-console.log('PASS: Five real Huawei 408x480 watch clips, Android export bridge, 4-second H264 MP4');
+console.log('PASS: Five real enlarged, dark, animated Huawei watch clips; Android export works at source level');
