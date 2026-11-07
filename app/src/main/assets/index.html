@@ -126,8 +126,8 @@
 </section>
 <div id="moveList"></div>
 <details id="exerciseLibrary" class="panel" style="margin-top:22px">
-<summary style="cursor:pointer;font-size:15px;font-weight:850;color:#c8f6a6">◈ Hareket kütüphanesi · 2 MoveKit video</summary>
-<p style="margin:12px 0">24 anatomik kuvvet animasyonu, 5 ekipmanlı 3D teknik sahnesi ve 361 farklı mobilite, yoga, denge, hafif kardiyo ve sandalye hareketi. Ek 325 hareketin özgün yönergeleri doğruluk için İngilizcedir. Tüm animasyonlar APK'da, internet gerektirmez.</p>
+<summary style="cursor:pointer;font-size:15px;font-weight:850;color:#c8f6a6">◈ Hareket kütüphanesi · 317 ücretsiz video</summary>
+<p style="margin:12px 0">Ücretsiz veri tabanındaki 317 harekete ait çevrimiçi video bağlantıları eklenmiştir. Videolar için internet gerekir; diğer hareketlerde yalnızca açıklama gösterilebilir.</p>
 <label class="foodField" for="moveSearch">Hareket ara</label>
 <input id="moveSearch" class="foodText" placeholder="390 harekette ara: squat, yoga, neck, denge...">
 <div class="move-filter-row" id="moveFilters" style="display:flex;gap:7px;overflow-x:auto;margin:13px 0 17px;padding:2px 0"></div>
@@ -356,7 +356,7 @@ class Scene3D{
 }
 window.FitScene3D=Scene3D;
 })();
-</script><script src="realistic-viewer.js"></script><script src="exercises-extra.js"></script><script>
+</script><script src="realistic-viewer.js"></script><script src="exercises-extra.js"></script><script src="free-exercise-data.js"></script><script>
 'use strict';const $=id=>document.getElementById(id);
 const MOVES={
  squat:{name:'Barbell Squat',group:'Bacak · Kalça',sets:'3 × 8–10',type:'squat',icon:'🏋️',steps:['Ayaklarını omuz genişliğine yakın aç, gövdeni sabit tut.','Kalçanı geriye ve aşağıya indir; topukların yerde kalsın.','Dizlerini ayak yönünde takip ettirerek kontrollü yüksel.']},
@@ -419,6 +419,8 @@ const MOVEKIT_CLIPS={
  movekit_dumbbell_chest_fly:{name:'Dumbbell Chest Fly',group:'Göğüs',sets:'3 × 10–12',type:'video',kind:'video',icon:'▶',poster:'movekit/posters/dumbbell-chest-fly.png',video:'movekit/dumbbell-chest-fly.mp4',steps:['Dambılları kontrollü biçimde göğüs üzerinde tut.','Dirsekleri hafif bükülü tutarak kolları iki yana aç.','Omuzları zorlamadan başlangıç pozisyonuna dön.']}
 };
 Object.assign(MOVES,MOVEKIT_CLIPS);
+const FREE_VIDEO_EXERCISES=window.FitFreeVideoClips||{};
+Object.assign(MOVES,FREE_VIDEO_EXERCISES);
 
 const FORMGUIDES={
 squat:['Ayakları yaklaşık omuz genişliğine yerleştir; ağırlık tüm tabana dağılsın.','Yandan bak: omurga nötr, dizler ayakların baktığı yönde; derinlik kalça ve ayak bileği hareketliliğine göre değişir.','Bar orta ayağın üstünde mümkün olduğunca dikey ilerler; yükselirken gövde ve kalça birlikte kalkar.','Topukları kaldırmak veya dizleri içeri düşürmek.'],
@@ -493,7 +495,7 @@ function update(){
  if(programMode==='custom')renderCustomEditor();const dates=new Set(records.map(r=>localDay(r.date)));$('sessions').textContent=dates.size;$('sets').textContent=records.length;$('hSets').textContent=records.length;$('hDays').textContent=dates.size;$('hVolume').textContent=Math.round(records.reduce((sum,r)=>sum+(+r.weight)*(+r.reps),0)).toLocaleString('tr-TR');$('dayCaption').textContent=currentDays()[day].title+' · '+currentDays()[day].ids.length+' hareket';document.querySelectorAll('[data-day]').forEach(el=>el.classList.toggle('active',el.dataset.day===day));$('moveList').innerHTML=currentDays()[day].ids.map(id=>{const m=MOVES[id],n=records.filter(r=>r.id===id&&localDay(r.date)===localDay(new Date())).length;return `<article class="move"><div class="move-art" aria-hidden="true">${id.startsWith("lib_")?`<img src="thumbs/${id.slice(4)}.png" style="width:76px;height:76px;object-fit:cover;border-radius:13px" alt="">`:`<span>${m.icon}</span>`}</div><div class="move-content"><h3>${m.name}</h3><p>${m.group} · ${moveGoal(id)}</p><div class="move-actions"><button class="watch" data-id="${id}">${id.startsWith("lib_")?"◈ ANATOMİK 3D":m.type.startsWith("technique:")?"◈ EKİPMANLI 3D":"▶ ŞEMATİK 3D"}</button>${n?`<span class="logged">✓ Bugün ${n} set</span>`:''}<span class="coach-mini">${(()=>{const prev=exerciseSummary(id).last;return prev?'Son: '+fmtKg(prev.weight)+' × '+prev.reps:''})()}</span></div></div></article>`}).join('');document.querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));$('logs').innerHTML=records.length?[...records].reverse().slice(0,100).map(r=>`<div class="history-item"><strong>${MOVES[r.id].name}</strong><small>${(+r.weight).toLocaleString('tr-TR')} kg × ${r.reps} tekrar${Number.isInteger(r.rir)?' · RIR '+r.rir:''} · ${new Date(r.date).toLocaleString('tr-TR')}</small></div>`).join(''):'<div class="empty">Henüz kayıt yok. Bir hareketin 3D gösterimini açıp ilk setini kaydet.</div>'}
 
 function scheduleCustomUpdate(){requestAnimationFrame(()=>update())}
-const editorList=()=>Object.entries(MOVES).filter(([id,m])=>id.startsWith('movekit_')||id.startsWith('lib_')||id.startsWith('mobility_')||['bench','pulldown','row','legpress','triceps'].includes(id));
+const editorList=()=>Object.entries(MOVES).filter(([id,m])=>id.startsWith('free_')||id.startsWith('movekit_')||id.startsWith('lib_')||id.startsWith('mobility_')||['bench','pulldown','row','legpress','triceps'].includes(id));
 function renderCustomEditor(){
  const v=customDays[day];if(!v)return;
  const field=$('customDayTitle');if(document.activeElement!==field)field.value=v.title;
@@ -909,7 +911,7 @@ $('importWorkoutBtn').onclick=()=>{
 
 let moveFilter='all',moveQuery='',visibleLimit=24;
 const libraryStrength=LIBRARY3D.map(m=>({...m,category:'strength',kind:'anatomical'}));
-const fullLibrary=[...Object.entries(MOVEKIT_CLIPS).map(([id,m])=>({...m,id,category:'strength',kind:'video'})),...libraryStrength,...TECHNIQUE3D,...ALL_MOBILITY3D];
+const fullLibrary=[...Object.values(FREE_VIDEO_EXERCISES),...Object.entries(MOVEKIT_CLIPS).map(([id,m])=>({...m,id,category:'strength',kind:'video'})),...libraryStrength,...TECHNIQUE3D,...ALL_MOBILITY3D];
 const categoryLabels=[
  ['all','Tümü'],['favorites','★ Favoriler'],
  ['strength','Anatomik Kuvvet'],['technique','Makineler'],
@@ -952,7 +954,7 @@ function renderLibrary(){
    const label=m.kind==='freevideo'?'Ücretsiz MP4 · İnternet gerekli':m.kind==='video'?'MoveKit · Profesyonel MP4':isAnatomical?'Anatomik hareket kaydı yok':isTechnique?'Ekipmanlı hareket kaydı yok':'Hareket açıklaması · '+m.group;
    return '<article class="move catalog-move"><div class="move-art" aria-hidden="true">'+art+'</div>'
      +'<div class="move-content"><h3>'+escapeText(m.name)+'</h3><p>'+escapeText(label)+'</p>'
-     +'<div class="library-actions"><button class="watch" data-id="'+escapeText(id)+'">'+(m.kind==='video'?'▶ VİDEO İZLE':'📖 ADIMLARI GÖR')+'</button>'
+     +'<div class="library-actions"><button class="watch" data-id="'+escapeText(id)+'">'+((m.kind==='video'||m.kind==='freevideo')?'▶ VİDEO İZLE':'📖 ADIMLARI GÖR')+'</button>'
      +'<button class="favorite-move'+(favoriteMoves.has(id)?' selected':'')+'" data-favorite="'+escapeText(id)+'" aria-label="Favorilere '+(favoriteMoves.has(id)?'eklenmiş':'ekle')+'">'+(favoriteMoves.has(id)?'★':'☆')+'</button></div></div></article>';
  }).join(''):'<div class="empty">Aradığın hareket bulunamadı. Başka bir isim veya kategori dene.</div>';
  $('loadMoreMoves').hidden=matches.length<=visibleLimit;
