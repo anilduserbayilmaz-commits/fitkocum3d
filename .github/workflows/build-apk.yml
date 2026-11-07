@@ -83,6 +83,21 @@ jobs:
           node tools/build-offline-videos.cjs
           node --check app/src/main/assets/offline-video-index.js
           du -sh app/src/main/assets/offline-videos
+      - name: Huawei Watch Fit 5 Pro gerçek MP4 kliplerini hazırla
+        run: |
+          set -euo pipefail
+          node --check tools/build-watch-videos.cjs
+          node tools/build-watch-videos.cjs
+          node tests/watch-videos.cjs
+      - name: Saate aktarılabilir MP4 dosyalarını yayınla
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitKocum-WatchFit5Pro-5-MP4
+          path: |
+            app/src/main/assets/watch-videos/*.mp4
+            app/src/main/assets/watch-videos/README.txt
+          if-no-files-found: error
+          retention-days: 30
       - name: JavaScript ve çevrimdışı video dosyalarını doğrula
         run: |
           node --check app/src/main/assets/weekly-v31.js
@@ -98,7 +113,7 @@ jobs:
       - name: APK dosyasını sakla
         uses: actions/upload-artifact@v4
         with:
-          name: FitKocum-v3.2.2-FILTERS-OFFLINE-APK
+          name: FitKocum-v4.0-WATCH-LAB-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
