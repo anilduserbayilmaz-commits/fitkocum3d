@@ -3,8 +3,8 @@
     "bundleName": "com.fitkocum.watchlite",
     "vendor": "FitKocum",
     "version": {
-      "code": 4100000,
-      "name": "4.1.0"
+      "code": 4200000,
+      "name": "4.2.0"
     }
   },
   "deviceConfig": {},
