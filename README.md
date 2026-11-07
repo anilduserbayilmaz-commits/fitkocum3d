@@ -16,7 +16,18 @@ Türkçe, çevrimdışı çalışan Android spor salonu asistanı. Android uygul
 - Kardiyo kaydı dakika üzerinden yapılır; 3D animasyon varmış gibi gösterilmez.
 - 390 hareketlik önceki atlas korunur; kalite iyileştirme (gerçekçi humanoid, ağırlık tutuşu, ekipman IK) sonraki aşamadır.
 
-**Durum:** v3.1 kaynak kodu geliştirme aşamasında. Başarılı Android derlemesi ve telefon testi yapılmadan v3.1 APK'nın hazır olduğu söylenemez.
+**Durum:** v3.1.1 video önizlemesi geliştirme aşamasında. Başarılı Android derlemesi ve telefon testi yapılmadan v3.1 APK'nın hazır olduğu söylenemez.
+
+
+## v3.1.1 MoveKit video önizlemesi
+
+- Gerçek video oynatıcı: H.264 MP4, çevrimdışı, döngü ve 0.5×/1×/1.5× hız.
+- MoveKit'in ticari uygulamalarda kullanımına izin verdiği **iki ücretsiz örnek** uygulamaya derleme sırasında dahil edilir: **Pull-ups** ve **Dumbbell Chest Fly**.
+- Bu hareketler haftalık kuvvet programında ve hareket değiştirme kütüphanesinde bulunur.
+- Diğer hareketlerde lisanslı MoveKit videosu henüz bulunmadığı açıkça belirtilir; biyomekanik açıdan hatalı olabilen eski 3D sahneler artık egzersiz kartlarından açılmaz.
+- MoveKit örnek dosyaları halka açık kaynak depomuzda tutulmaz. APK üretiminde [resmî ücretsiz örnek ZIP](https://movekit.com/free-sample) alınır, son kullanıcı uygulamasına dahil edilir.
+- 588 MoveKit videosunun tümü **satın alınmadı ve bu APK'da yoktur**. Diğer dosyalar ancak uygun lisansla sağlandıktan sonra içe aktarılabilir.
+- Kaynak: [MoveKit Licensing](https://movekit.com/licensing). MoveKit eserlerinin hakları kendi sahiplerindedir.
 
 ## Android APK
 
