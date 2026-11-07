@@ -4,7 +4,7 @@
 */
 (function(){
 'use strict';
-const BUILD='4.0.0-watch-alpha';
+const BUILD='4.1.0-watch-lab';
 const watchClips=window.FitWatchClips||{};
 let watchCurrent=null;
 const clips={
