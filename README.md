@@ -1,5 +1,19 @@
 # FitKoçum 3D+
 
+## v3.2.2 — Video kütüphanesi filtreleme
+
+- **317 ücretsiz egzersiz videosu** H.264 MP4 olarak APK içinde bulunur ve internet olmadan oynatılır. İki MoveKit örneği ayrı tutulur.
+- Ana kütüphane: yazılı arama + hızlı aramalar + **Kas grubu** ve **Ekipman** seçimleri + sıfırlama + favoriler.
+- Hareket değiştirme: aynı iki filtre, Türkçe/İngilizce arama, sonuç sayısı, yerel poster önizlemesi ve daha fazla göster.
+- Filtreler, kaynak veri kümesinin gerçek group ve equipment alanlarından üretilir. Zorluk seviyeleri kaynakta olmadığı için varsayılmaz.
+- Haftalık program: Pzt/Çrş/Cum ağırlık, Salı/Pazar kardiyo, Perşembe/Cumartesi dinlenme. Yerel set kayıtları ve program özelleştirmeleri korunur.
+- Android sürüm 3.2.2, versionCode 21. Paket kimliği: com.fitkocum.plus.
+- Testler: tests/exercise-search.cjs, tests/exercise-filters.cjs ve tests/free-exercise-videos.cjs. CI ile APK doğrulanmalı, sonra telefonda test edilmelidir.
+
+> Alttaki sürüm notları tarihî kayıttır. Güncel sürümde videolar çevrimdışıdır. Video hakları bağımsız doğrulanmadı; APK kişisel test içindir.
+
+
+
 Türkçe, çevrimdışı çalışan Android spor salonu asistanı. Android uygulaması hâlen WebView tabanlıdır; ayrı gerçekçi Unity karakter/animasyon prototipi henüz tamamlanmış bir APK değildir.
 
 ## v3.1 geliştirme dalı — antrenman planı
