@@ -4,7 +4,9 @@
 */
 (function(){
 'use strict';
-const BUILD='3.2.2';
+const BUILD='4.0.0-watch-alpha';
+const watchClips=window.FitWatchClips||{};
+let watchCurrent=null;
 const clips={
  movekit_pull_ups:MOVEKIT_CLIPS.movekit_pull_ups,
  movekit_dumbbell_chest_fly:MOVEKIT_CLIPS.movekit_dumbbell_chest_fly,
@@ -30,6 +32,29 @@ controls.id='fitkocumVideoControls';
 controls.style.cssText='display:none;gap:8px;margin:12px 0 15px';
 controls.innerHTML='<button type="button" data-video-rate="0.5" class="viewbtn">0,5× Yavaş</button><button type="button" data-video-rate="1" class="viewbtn active">1× Normal</button><button type="button" data-video-rate="1.5" class="viewbtn">1,5× Hızlı</button>';
 sceneBox.after(controls);
+const watchBox=document.createElement('div');
+watchBox.id='fitkocumWatchExport';
+watchBox.style.cssText='display:none;margin:10px 0 16px;padding:14px;background:#173126;border:1px solid #4e8767;border-radius:14px;';
+watchBox.innerHTML='<button id="fitkocumWatchExportBtn" type="button" style="width:100%;padding:14px;background:#bdef8e;border:0;border-radius:10px;color:#14261d;font-size:14px;font-weight:900">⌚ SAAT İÇİN VİDEOYU KAYDET</button>'
+ +'<p style="font-size:12px;color:#d5e6d7;line-height:1.5;margin:10px 0 0">Watch Fit 5 Pro için kısa, sessiz MP4. Önce telefona kaydedilir. Huawei Sağlık → Cihazlar → Kadranlarım → Video yolundan saate yükle.</p>'
+ +'<p id="fitkocumWatchExportStatus" role="status" style="margin:8px 0 0;font-size:12px;color:#bdef8e"></p>';
+controls.after(watchBox);
+const watchButton=watchBox.querySelector('#fitkocumWatchExportBtn');
+const watchStatus=watchBox.querySelector('#fitkocumWatchExportStatus');
+watchButton.addEventListener('click',()=>{
+ if(!watchCurrent)return;
+ if(!window.FitAndroid || typeof window.FitAndroid.exportWatchClip!=='function'){
+   watchStatus.textContent='Saat videosunu dışa aktarmak için FitKoçum Android APK sürümünü kullan.';
+   return;
+ }
+ watchButton.disabled=true;
+ watchStatus.textContent='Saat videosu telefon galerisine kaydediliyor…';
+ window.FitAndroid.exportWatchClip(watchCurrent);
+});
+window.FitWatchVideoExport={onResult:(ok,message)=>{
+ watchButton.disabled=false;
+ watchStatus.textContent=(ok?'✓ ':'⚠ ')+String(message||'');
+}};
 controls.querySelectorAll('[data-video-rate]').forEach(button=>button.onclick=()=>{
  viewer.playbackRate=Number(button.dataset.videoRate);
  controls.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
@@ -63,6 +88,7 @@ function stopVideo(){
  viewer.style.display='none';
  indicator.style.display='none';
  controls.style.display='none';
+ watchBox.style.display='none';watchCurrent=null;watchButton.disabled=false;watchStatus.textContent='';
 }
 $('close').addEventListener('click',stopVideo);
 overlay.addEventListener('click',e=>{if(e.target===overlay)stopVideo()});
@@ -106,6 +132,10 @@ openMove=function(id){
    overlay.classList.add('fitkocum-text-only');
    return;
  }
+ const match=String(clip.video||'').match(/^offline-videos\/([a-z0-9-]+)\.mp4$/);
+ watchCurrent=match && Object.prototype.hasOwnProperty.call(watchClips,match[1])?match[1]:null;
+ watchBox.style.display=watchCurrent?'block':'none';
+ watchStatus.textContent='';
  viewer.src=clip.video;
  if(clip.poster)viewer.poster=clip.poster;
  viewer.playbackRate=1;
