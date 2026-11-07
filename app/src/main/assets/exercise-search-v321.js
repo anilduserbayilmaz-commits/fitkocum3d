@@ -12,8 +12,8 @@ function normalize(value){
   .replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim();
 }
 const aliases=[
- ['gogus',['chest','pectoral','pecs','pec','bench','fly']],
- ['ust gogus',['incline','upper chest']],
+ ['gogus',['chest','pectoral','pecs','pec','bench press']],
+ ['ust gogus',['upper chest']],
  ['alt gogus',['decline','lower chest']],
  ['sirt',['back','lat','lats','rowing','row','pulldown','pull up']],
  ['kanat',['lat','lats','pulldown','pull up']],
@@ -58,6 +58,9 @@ function searchable(m){
  ].filter(Boolean).join(' '));
  const tags=aliases.filter(([,matches])=>matches.some(word=>contains(base,normalize(word))))
     .map(([key])=>key);
+ if(contains(base,'incline') && (contains(base,'gogus')||contains(base,'chest')||
+    contains(base,'pectoral')||contains(base,'press')||contains(base,'fly')||
+    contains(base,'push up'))) tags.push('ust gogus');
  return {name,text:normalize(base+' '+tags.join(' ')+' '+(exerciseAliases[m.id]||''))};
 }
 function score(m,query){
