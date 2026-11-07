@@ -4,7 +4,7 @@
 */
 (function(){
 'use strict';
-const BUILD='3.2.1';
+const BUILD='3.2.2';
 const clips={
  movekit_pull_ups:MOVEKIT_CLIPS.movekit_pull_ups,
  movekit_dumbbell_chest_fly:MOVEKIT_CLIPS.movekit_dumbbell_chest_fly,
