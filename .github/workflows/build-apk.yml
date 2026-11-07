@@ -1,7 +1,7 @@
 name: FitKoçum 3D APK
 on:
   push:
-    branches: [main]
+    branches: [main, feature/watch-v4-2-lite-app]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -92,16 +92,22 @@ jobs:
           node --check tools/build-watch-videos.cjs
           node tools/build-watch-videos.cjs
           node tests/watch-videos.cjs
-      - name: Deneysel Lite Wearable uygulamasına gerçek MP4 dosyalarını ekle
+      - name: FitKoçum Watch v4.2 Lite Wearable uygulamasına gerçek video ve posterleri ekle
         run: |
           set -euo pipefail
           mkdir -p watch-lite/entry/src/main/js/MainAbility/common/videos
+          mkdir -p watch-lite/entry/src/main/js/MainAbility/common/posters
           cp app/src/main/assets/watch-videos/*.mp4 watch-lite/entry/src/main/js/MainAbility/common/videos/
+          for file in watch-lite/entry/src/main/js/MainAbility/common/videos/*.mp4; do
+            id=$(basename "$file" .mp4)
+            ffmpeg -hide_banner -loglevel error -y -ss 0.8 -i "$file" -frames:v 1 -update 1               "watch-lite/entry/src/main/js/MainAbility/common/posters/${id}.png"
+          done
+          node tests/watch-state.cjs
           node tests/watch-lite-prototype.cjs
       - name: Watch Lite deneysel DevEco projesini sakla (HAP değildir)
         uses: actions/upload-artifact@v4
         with:
-          name: FitKocum-Watch-v4.1-DevEco-SOURCE-NOT-INSTALLABLE
+          name: FitKocum-Watch-v4.2-DevEco-SOURCE-NOT-INSTALLABLE
           path: watch-lite/
           if-no-files-found: error
           retention-days: 30
