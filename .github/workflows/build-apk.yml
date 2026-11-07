@@ -2,9 +2,14 @@ name: FitKoçum 3D APK
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: fitkocum-android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -48,17 +53,83 @@ jobs:
           curl -fsSL --retry 3 --max-time 30 'https://raw.githubusercontent.com/shlomorsh/desk-break/main/LICENSE' -o app/src/main/assets/DESK_BREAK_LICENSE.txt
           test -s app/src/main/assets/models/mobility.glb
           du -h app/src/main/assets/models/mobility.glb
+      - name: MoveKit ücretsiz lisanslı örnek videolarını APK'ya ekle
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/assets/movekit/posters
+          curl -fSL --retry 3 --retry-delay 3 --max-time 150 'https://movekit.com/downloads/movekit-free-sample.zip' -o /tmp/movekit-free-sample.zip
+          unzip -tq /tmp/movekit-free-sample.zip >/dev/null
+          unzip -p /tmp/movekit-free-sample.zip pull-ups.mp4 > app/src/main/assets/movekit/pull-ups.mp4
+          unzip -p /tmp/movekit-free-sample.zip dumbbell-chest-fly.mp4 > app/src/main/assets/movekit/dumbbell-chest-fly.mp4
+          unzip -p /tmp/movekit-free-sample.zip posters/pull-ups.png > app/src/main/assets/movekit/posters/pull-ups.png
+          unzip -p /tmp/movekit-free-sample.zip posters/dumbbell-chest-fly.png > app/src/main/assets/movekit/posters/dumbbell-chest-fly.png
+          unzip -p /tmp/movekit-free-sample.zip LICENSE.txt > app/src/main/assets/movekit/LICENSE.txt
+          for file in app/src/main/assets/movekit/*.mp4 app/src/main/assets/movekit/posters/*.png app/src/main/assets/movekit/LICENSE.txt; do
+            test -s "$file"
+          done
+          printf 'MoveKit free sample packaged for in-app playback: '
+          du -sh app/src/main/assets/movekit
       - name: Three.js 3D motorunu paketle
         run: |
           npm install --no-save --no-package-lock --ignore-scripts three@0.180.0 esbuild@0.25.12
           ./node_modules/.bin/esbuild web-src/realistic-viewer.js --bundle --minify --format=iife --target=es2020 --outfile=app/src/main/assets/realistic-viewer.js
           test -s app/src/main/assets/realistic-viewer.js
+      - name: Çevrimdışı video arşivini indir ve sıkıştır
+        timeout-minutes: 75
+        env:
+          FIT_VIDEO_LIMIT: '317'
+          FIT_VIDEO_WORKERS: '7'
+        run: |
+          set -euo pipefail
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
+          node --check tools/build-offline-videos.cjs
+          node tools/build-offline-videos.cjs
+          node --check app/src/main/assets/offline-video-index.js
+          du -sh app/src/main/assets/offline-videos
+      - name: Huawei Watch Fit 5 Pro gerçek MP4 kliplerini hazırla
+        run: |
+          set -euo pipefail
+          node --check tools/build-watch-videos.cjs
+          node tools/build-watch-videos.cjs
+          node tests/watch-videos.cjs
+      - name: Deneysel Lite Wearable uygulamasına gerçek MP4 dosyalarını ekle
+        run: |
+          set -euo pipefail
+          mkdir -p watch-lite/entry/src/main/js/MainAbility/common/videos
+          cp app/src/main/assets/watch-videos/*.mp4 watch-lite/entry/src/main/js/MainAbility/common/videos/
+          node tests/watch-lite-prototype.cjs
+      - name: Watch Lite deneysel DevEco projesini sakla (HAP değildir)
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitKocum-Watch-v4.1-DevEco-SOURCE-NOT-INSTALLABLE
+          path: watch-lite/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Saate aktarılabilir MP4 dosyalarını yayınla
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitKocum-WatchFit5Pro-v4.1-5-MP4
+          path: |
+            app/src/main/assets/watch-videos/*.mp4
+            app/src/main/assets/watch-videos/README.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: JavaScript ve çevrimdışı video dosyalarını doğrula
+        run: |
+          node --check app/src/main/assets/weekly-v31.js
+          node --check app/src/main/assets/video-v31.js
+          node --check app/src/main/assets/free-exercise-data.js
+          node --check app/src/main/assets/exercise-search-v321.js
+          node tests/exercise-search.cjs
+          node --check app/src/main/assets/exercise-filters-v322.js
+          node tests/exercise-filters.cjs
+          node tests/free-exercise-videos.cjs
       - name: APK oluştur
         run: gradle --no-daemon --stacktrace assembleDebug
       - name: APK dosyasını sakla
         uses: actions/upload-artifact@v4
         with:
-          name: FitKocum-3D-APK
+          name: FitKocum-v4.1-WATCH-LAB-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30

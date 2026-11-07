@@ -1,0 +1,15 @@
+<div class="container">
+  <text class="brand">FITKOÇUM WATCH</text>
+  <text class="heading">{{title}}</text>
+  <video class="exercise" ref="exerciseVideo" id="exerciseVideo"
+    src="{{videoSrc}}" autoplay="true" muted="true" controls="false"
+    @finish="loopVideo" @error="videoError"></video>
+  <text class="set-text">SET {{setCount}} / {{targetSets}}</text>
+  <text class="rest">Dinlenme: {{restText}}</text>
+  <div class="actions">
+    <input type="button" class="moveButton" value="◀" @click="previous"/>
+    <input type="button" class="saveButton" value="SET +" @click="completeSet"/>
+    <input type="button" class="moveButton" value="▶" @click="next"/>
+  </div>
+  <text class="status">{{status}}</text>
+</div>

@@ -3,6 +3,9 @@ package com.fitkocum.app;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.ContentValues;
+import android.os.Build;
+import android.os.Environment;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -49,6 +52,8 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(12, 17, 24));
         webView.getSettings().setJavaScriptEnabled(true);
+        // Allow locally bundled muted exercise MP4s to autoplay in WebView.
+        webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
         webView.getSettings().setDomStorageEnabled(true);
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setAllowContentAccess(true);
@@ -141,6 +146,59 @@ public class MainActivity extends Activity {
             });
         }
 
+        /**
+         * Exports one of the five WATCH FIT 5 Pro pilot videos to Movies/FitKocumWatch.
+         * Videos are physically packaged in the APK, not downloaded at runtime.
+         * This does NOT install a watch app or send media to the watch directly:
+         * the user selects the exported MP4 in Huawei Health > My faces > Video.
+         */
+        @JavascriptInterface public void exportWatchClip(String clipId) {
+            final String displayName;
+            if (clipId == null) { watchResult(false, "Hareket kimliği eksik."); return; }
+            switch (clipId) {
+                case "0025": displayName = "FitKocum-Bench-Press.mp4"; break;
+                case "drv-cable-bar-lateral-pulldown-wide-shoulder-grip":
+                    displayName = "FitKocum-Lat-Pulldown.mp4"; break;
+                case "1435": displayName = "FitKocum-Squat.mp4"; break;
+                case "0314": displayName = "FitKocum-Incline-Press.mp4"; break;
+                case "0294": displayName = "FitKocum-Biceps-Curl.mp4"; break;
+                default: watchResult(false, "Bu hareket için saat videosu henüz hazırlanmamış."); return;
+            }
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                watchResult(false, "Bu aktarım Android 10 veya üzerini gerektiriyor.");
+                return;
+            }
+            background.execute(() -> {
+                Uri outUri = null;
+                try {
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.Video.Media.DISPLAY_NAME, displayName);
+                    values.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+                    values.put(MediaStore.Video.Media.RELATIVE_PATH,
+                        Environment.DIRECTORY_MOVIES + "/FitKocumWatch");
+                    values.put(MediaStore.Video.Media.IS_PENDING, 1);
+                    outUri = getContentResolver().insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+                    if (outUri == null) throw new IllegalStateException("Medya kaydı oluşturulamadı");
+                    try (InputStream in = getAssets().open("watch-videos/" + clipId + ".mp4");
+                         OutputStream out = getContentResolver().openOutputStream(outUri)) {
+                        if (out == null) throw new IllegalStateException("Video dosyası açılamadı");
+                        byte[] bytes = new byte[32768];
+                        int len;
+                        while ((len = in.read(bytes)) != -1) out.write(bytes, 0, len);
+                    }
+                    ContentValues ready = new ContentValues();
+                    ready.put(MediaStore.Video.Media.IS_PENDING, 0);
+                    getContentResolver().update(outUri, ready, null, null);
+                    watchResult(true, displayName + " telefona kaydedildi. Huawei Sağlık'tan Video kadranına yükleyebilirsin.");
+                } catch (Exception error) {
+                    if (outUri != null) {
+                        try {getContentResolver().delete(outUri, null, null);} catch (Exception ignored) {}
+                    }
+                    watchResult(false, "Video kaydedilemedi: " + error.getClass().getSimpleName());
+                }
+            });
+        }
+
         @JavascriptInterface public void analyzeMeal(String imageDataUrl, String apiKey, String notes) {
             if (imageDataUrl == null || !imageDataUrl.startsWith("data:image/jpeg;base64,")
                     || imageDataUrl.length() > 8_000_000) {
@@ -154,6 +212,12 @@ public class MainActivity extends Activity {
             final String portion = notes == null ? "" : notes.substring(0,Math.min(notes.length(),140));
             background.execute(() -> estimateWithGemini(base64,key,portion));
         }
+    }
+
+    private void watchResult(boolean success, String message) {
+        final String script = "window.FitWatchVideoExport && window.FitWatchVideoExport.onResult("
+            + (success ? "true" : "false") + "," + JSONObject.quote(message) + ");";
+        runOnUiThread(() -> {if (webView != null) webView.evaluateJavascript(script, null);});
     }
 
     private void estimateWithGemini(String base64, String key, String notes) {
