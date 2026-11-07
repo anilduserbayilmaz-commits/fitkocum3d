@@ -104,9 +104,9 @@
 </style></head><body>
 <div class="shell">
 <header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D+ v3.1</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
-<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Haftanın 5 gününü planla, hareketleri değiştir, set ve kardiyo süreni kaydet.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>390</strong><span>3D hareket</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 5 antrenman · 2 dinlenme</span></div><div class="days" id="dayTabs"></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
+<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Haftanın 5 gününü planla, hareketleri değiştir, set ve kardiyo süreni kaydet.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>2</strong><span>MoveKit video</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 5 antrenman · 2 dinlenme</span></div><div class="days" id="dayTabs"></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
 <div style="font-size:12px;font-weight:850;color:#c8f6a6;margin-bottom:9px">ANTRENMAN GÖSTERİMİ</div>
-<div class="viewcontrols" style="margin:0"><button class="viewbtn active" id="choose3d" style="grid-column:span 2">◈ 3D ANİMASYONLU PROGRAM</button><button class="viewbtn" id="chooseClassic">Önceki plan</button><button class="viewbtn" id="chooseCustom" style="grid-column:span 3">✎ KENDİ PROGRAMIM</button></div>
+<div class="viewcontrols" style="margin:0"><button class="viewbtn active" id="choose3d" style="grid-column:span 2">◈ HAFTALIK PROGRAM</button><button class="viewbtn" id="chooseClassic">Önceki plan</button><button class="viewbtn" id="chooseCustom" style="grid-column:span 3">✎ KENDİ PROGRAMIM</button></div>
 <p id="modeInfo" style="font-size:11px;line-height:1.55;color:#aebfc5;margin:10px 0 0"></p>
 </div>
 <section id="customEditor" class="panel" hidden style="margin:0 0 16px">
@@ -126,7 +126,7 @@
 </section>
 <div id="moveList"></div>
 <details id="exerciseLibrary" class="panel" style="margin-top:22px">
-<summary style="cursor:pointer;font-size:15px;font-weight:850;color:#c8f6a6">◈ 390 animasyonlu hareket · 3D ATLAS</summary>
+<summary style="cursor:pointer;font-size:15px;font-weight:850;color:#c8f6a6">◈ Hareket kütüphanesi · 2 MoveKit video</summary>
 <p style="margin:12px 0">24 anatomik kuvvet animasyonu, 5 ekipmanlı 3D teknik sahnesi ve 361 farklı mobilite, yoga, denge, hafif kardiyo ve sandalye hareketi. Ek 325 hareketin özgün yönergeleri doğruluk için İngilizcedir. Tüm animasyonlar APK'da, internet gerektirmez.</p>
 <label class="foodField" for="moveSearch">Hareket ara</label>
 <input id="moveSearch" class="foodText" placeholder="390 harekette ara: squat, yoga, neck, denge...">
@@ -412,6 +412,14 @@ Object.assign(MOVES,{
 
 
 
+/* MoveKit free sample: only these two offline clips are bundled. 
+   Additional paid clips must be licensed and imported before they can appear. */
+const MOVEKIT_CLIPS={
+ movekit_pull_ups:{name:'Pull-ups · Barfiks',group:'Sırt · Biceps',sets:'3 × 6–10',type:'video',kind:'video',icon:'▶',poster:'movekit/posters/pull-ups.png',video:'movekit/pull-ups.mp4',steps:['Barı omuz genişliğinde veya biraz daha geniş tut.','Kürek kemiklerini aşağı çekip dirseklerini gövdene doğru indir.','Kendini kontrollü yükselt ve yavaşça aşağı in.']},
+ movekit_dumbbell_chest_fly:{name:'Dumbbell Chest Fly',group:'Göğüs',sets:'3 × 10–12',type:'video',kind:'video',icon:'▶',poster:'movekit/posters/dumbbell-chest-fly.png',video:'movekit/dumbbell-chest-fly.mp4',steps:['Dambılları kontrollü biçimde göğüs üzerinde tut.','Dirsekleri hafif bükülü tutarak kolları iki yana aç.','Omuzları zorlamadan başlangıç pozisyonuna dön.']}
+};
+Object.assign(MOVES,MOVEKIT_CLIPS);
+
 const FORMGUIDES={
 squat:['Ayakları yaklaşık omuz genişliğine yerleştir; ağırlık tüm tabana dağılsın.','Yandan bak: omurga nötr, dizler ayakların baktığı yönde; derinlik kalça ve ayak bileği hareketliliğine göre değişir.','Bar orta ayağın üstünde mümkün olduğunca dikey ilerler; yükselirken gövde ve kalça birlikte kalkar.','Topukları kaldırmak veya dizleri içeri düşürmek.'],
 bench:['Ayaklar yere sağlam basar, kürek kemikleri kontrollü biçimde geride ve aşağıdadır.','Önkol alt noktada yere yaklaşık dik; dirsekleri aşırı dışarı açma.','Bar göğsün alt-orta bölgesine doğru kontrollü iner ve omuz üstüne doğru yükselir.','Barı göğse çarptırmak, kalçayı sehpada kaldırmak.'],
@@ -485,7 +493,7 @@ function update(){
  if(programMode==='custom')renderCustomEditor();const dates=new Set(records.map(r=>localDay(r.date)));$('sessions').textContent=dates.size;$('sets').textContent=records.length;$('hSets').textContent=records.length;$('hDays').textContent=dates.size;$('hVolume').textContent=Math.round(records.reduce((sum,r)=>sum+(+r.weight)*(+r.reps),0)).toLocaleString('tr-TR');$('dayCaption').textContent=currentDays()[day].title+' · '+currentDays()[day].ids.length+' hareket';document.querySelectorAll('[data-day]').forEach(el=>el.classList.toggle('active',el.dataset.day===day));$('moveList').innerHTML=currentDays()[day].ids.map(id=>{const m=MOVES[id],n=records.filter(r=>r.id===id&&localDay(r.date)===localDay(new Date())).length;return `<article class="move"><div class="move-art" aria-hidden="true">${id.startsWith("lib_")?`<img src="thumbs/${id.slice(4)}.png" style="width:76px;height:76px;object-fit:cover;border-radius:13px" alt="">`:`<span>${m.icon}</span>`}</div><div class="move-content"><h3>${m.name}</h3><p>${m.group} · ${moveGoal(id)}</p><div class="move-actions"><button class="watch" data-id="${id}">${id.startsWith("lib_")?"◈ ANATOMİK 3D":m.type.startsWith("technique:")?"◈ EKİPMANLI 3D":"▶ ŞEMATİK 3D"}</button>${n?`<span class="logged">✓ Bugün ${n} set</span>`:''}<span class="coach-mini">${(()=>{const prev=exerciseSummary(id).last;return prev?'Son: '+fmtKg(prev.weight)+' × '+prev.reps:''})()}</span></div></div></article>`}).join('');document.querySelectorAll('.watch').forEach(b=>b.onclick=()=>openMove(b.dataset.id));$('logs').innerHTML=records.length?[...records].reverse().slice(0,100).map(r=>`<div class="history-item"><strong>${MOVES[r.id].name}</strong><small>${(+r.weight).toLocaleString('tr-TR')} kg × ${r.reps} tekrar${Number.isInteger(r.rir)?' · RIR '+r.rir:''} · ${new Date(r.date).toLocaleString('tr-TR')}</small></div>`).join(''):'<div class="empty">Henüz kayıt yok. Bir hareketin 3D gösterimini açıp ilk setini kaydet.</div>'}
 
 function scheduleCustomUpdate(){requestAnimationFrame(()=>update())}
-const editorList=()=>Object.entries(MOVES).filter(([id,m])=>id.startsWith('lib_')||id.startsWith('mobility_')||['bench','pulldown','row','legpress','triceps'].includes(id));
+const editorList=()=>Object.entries(MOVES).filter(([id,m])=>id.startsWith('movekit_')||id.startsWith('lib_')||id.startsWith('mobility_')||['bench','pulldown','row','legpress','triceps'].includes(id));
 function renderCustomEditor(){
  const v=customDays[day];if(!v)return;
  const field=$('customDayTitle');if(document.activeElement!==field)field.value=v.title;
@@ -901,7 +909,7 @@ $('importWorkoutBtn').onclick=()=>{
 
 let moveFilter='all',moveQuery='',visibleLimit=24;
 const libraryStrength=LIBRARY3D.map(m=>({...m,category:'strength',kind:'anatomical'}));
-const fullLibrary=[...libraryStrength,...TECHNIQUE3D,...ALL_MOBILITY3D];
+const fullLibrary=[...Object.entries(MOVEKIT_CLIPS).map(([id,m])=>({...m,id,category:'strength',kind:'video'})),...libraryStrength,...TECHNIQUE3D,...ALL_MOBILITY3D];
 const categoryLabels=[
  ['all','Tümü'],['favorites','★ Favoriler'],
  ['strength','Anatomik Kuvvet'],['technique','Makineler'],
@@ -911,7 +919,7 @@ const categoryLabels=[
  ['floor-seated','Yerde Oturarak'],['floor-lying','Yerde Uzanarak'],['yoga','Yoga']
 ];
 const libraryCounts=Object.fromEntries(categoryLabels.map(([id])=>[id,id==='all'?fullLibrary.length:fullLibrary.filter(m=>m.category===id).length]));
-const libraryKey=m=>m.kind==='anatomical'?'lib_'+m.id:m.kind==='technique'?m.id:'mobility_'+m.id;
+const libraryKey=m=>m.kind==='video'?m.id:m.kind==='anatomical'?'lib_'+m.id:m.kind==='technique'?m.id:'mobility_'+m.id;
 let favoriteMoves=new Set();
 try{
  const storedFavorites=JSON.parse(localStorage.getItem('fitkocum_favorite_moves')||'[]');
@@ -935,16 +943,16 @@ function renderLibrary(){
    return categoryOK && (!q||clean(m.name+' '+m.group+' '+m.id+' '+m.category).includes(q));
  });
  const shown=matches.slice(0,visibleLimit);
- $('moveCount').textContent=matches.length+' / '+TOTAL_3D_MOVES+' animasyon · '+Math.min(visibleLimit,matches.length)+' gösteriliyor';
+ $('moveCount').textContent=matches.length+' / '+fullLibrary.length+' hareket · '+Math.min(visibleLimit,matches.length)+' gösteriliyor';
  $('realMoveList').innerHTML=shown.length?shown.map(m=>{
    const isAnatomical=m.kind==='anatomical',isTechnique=m.kind==='technique';
    const id=libraryKey(m);
    const art=isAnatomical?'<img loading="lazy" src="thumbs/'+m.id+'.png" style="height:76px;width:76px;object-fit:cover;border-radius:12px" alt="">'
      :'<span class="library-emoji">'+(isTechnique?'🏋️':m.icon||'◈')+'</span>';
-   const label=isAnatomical?'Anatomik 3D':isTechnique?'Ekipmanlı 3D':'3D Atlet · '+m.group;
+   const label=m.kind==='video'?'MoveKit · Profesyonel MP4':isAnatomical?'Anatomik hareket kaydı yok':isTechnique?'Ekipmanlı hareket kaydı yok':'Hareket açıklaması · '+m.group;
    return '<article class="move catalog-move"><div class="move-art" aria-hidden="true">'+art+'</div>'
      +'<div class="move-content"><h3>'+escapeText(m.name)+'</h3><p>'+escapeText(label)+'</p>'
-     +'<div class="library-actions"><button class="watch" data-id="'+escapeText(id)+'">◈ 3D AÇ</button>'
+     +'<div class="library-actions"><button class="watch" data-id="'+escapeText(id)+'">'+(m.kind==='video'?'▶ VİDEO İZLE':'📖 ADIMLARI GÖR')+'</button>'
      +'<button class="favorite-move'+(favoriteMoves.has(id)?' selected':'')+'" data-favorite="'+escapeText(id)+'" aria-label="Favorilere '+(favoriteMoves.has(id)?'eklenmiş':'ekle')+'">'+(favoriteMoves.has(id)?'★':'☆')+'</button></div></div></article>';
  }).join(''):'<div class="empty">Aradığın hareket bulunamadı. Başka bir isim veya kategori dene.</div>';
  $('loadMoreMoves').hidden=matches.length<=visibleLimit;
@@ -962,4 +970,4 @@ $('loadMoreMoves').onclick=()=>{visibleLimit+=24;renderLibrary()};
 $('moveSearch').addEventListener('input',e=>{moveQuery=e.target.value.trim();visibleLimit=24;renderLibrary();});
 renderLibrary();
 update();clock();
-</script><script src="weekly-v31.js"></script></body></html>
+</script><script src="weekly-v31.js"></script><script src="video-v31.js"></script></body></html>
