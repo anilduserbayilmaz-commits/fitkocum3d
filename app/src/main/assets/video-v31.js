@@ -10,6 +10,7 @@ const videoClips={
   movekit_pull_ups:MOVEKIT_CLIPS.movekit_pull_ups,
   movekit_dumbbell_chest_fly:MOVEKIT_CLIPS.movekit_dumbbell_chest_fly
 };
+Object.assign(videoClips, window.FitFreeVideoClips || {});
 const overlay=$('overlay');
 const sceneBox=$('modelCanvas').closest('.scene');
 const dialog=overlay.querySelector('.dialog');
@@ -86,7 +87,7 @@ viewer.addEventListener('error',()=>{
   controls.style.display='none';
   placeholder.style.display='flex';
   placeholder.querySelector('strong').textContent='Video açılamadı';
-  placeholder.querySelector('span').textContent='Video bu APK paketinde bulunamadı veya oynatılamadı. Uygulamayı güncelleyip tekrar deneyebilirsin.';
+  placeholder.querySelector('span').textContent='Video oynatılamadı. İnternet bağlantısını kontrol et veya başka bir hareket seç.';
 });
 viewer.addEventListener('playing',()=>{indicator.style.display='none'});
 viewer.addEventListener('waiting',()=>{indicator.textContent='Video yükleniyor…';indicator.style.display='block'});
@@ -99,11 +100,11 @@ openMove=function(id){
   const clip=videoClips[id];
   $('title').textContent=m.name;
   $('sub').textContent=m.group+' · '+moveGoal(id);
-  overlay.querySelector('.eyebrow').textContent=clip?'MOVEKIT · EGZERSİZ VİDEOSU':'HAREKET REHBERİ';
+  overlay.querySelector('.eyebrow').textContent=clip?(clip.source?'ÜCRETSİZ VİDEO · ONLINE':'MOVEKIT · EGZERSİZ VİDEOSU'):'HAREKET REHBERİ';
   $('steps').innerHTML=(m.steps||[]).map(s=>'<li>'+escapeText(s)+'</li>').join('');
   $('caution').textContent=clip?
-    'MoveKit tarafından hazırlanan lisanslı örnek video. Teknik, kişisel hareket açıklığı ve yük seçimin için bir uzman görüşü gerekebilir.':
-    'Bu hareket için henüz onaylanmış MoveKit videosu yok. Teknik adımlar metin olarak sunulur; hatalı eski 3D model gösterilmez.';
+    (clip.source?'Ücretsiz çevrimiçi egzersiz videosu. Oynatmak için internet gereklidir. Teknik doğruluğu bağımsız olarak onaylanmamıştır.':'MoveKit tarafından hazırlanan lisanslı örnek video. Teknik, kişisel hareket açıklığı ve yük seçimin için bir uzman görüşü gerekebilir.'):
+    'Bu hareket için uygun ücretsiz video henüz eşleştirilmedi. Teknik adımlar metin olarak sunulur; hatalı eski 3D model gösterilmez.';
   $('techniqueCompare').hidden=true;
   $('athleteStudioPanel').hidden=true;
   $('musclePanel').hidden=true;
@@ -141,14 +142,14 @@ update=function(){
   // Weekly v3.1 still owns calendar, replacement and cardio buttons.
   document.querySelectorAll('#moveList .watch[data-id]').forEach(button=>{
     const m=MOVES[button.dataset.id];if(!m || m.kind==='cardio')return;
-    button.textContent=m.kind==='video'?'▶ MOVEKIT VİDEO':'📖 HAREKET ADIMLARI';
+    button.textContent=videoClips[button.dataset.id]?'▶ VİDEO İZLE':'📖 HAREKET ADIMLARI';
   });
 };
 const priorRenderLibrary=renderLibrary;
 renderLibrary=function(){
   priorRenderLibrary();
   document.querySelectorAll('#realMoveList .watch[data-id]').forEach(button=>{
-    button.textContent=videoClips[button.dataset.id]?'▶ MOVEKIT VİDEO':'📖 HAREKET ADIMLARI';
+    button.textContent=videoClips[button.dataset.id]?'▶ VİDEO İZLE':'📖 HAREKET ADIMLARI';
   });
 };
 renderLibrary();
