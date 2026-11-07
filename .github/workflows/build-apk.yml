@@ -2,6 +2,8 @@ name: FitKoçum 3D APK
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -53,6 +55,8 @@ jobs:
           npm install --no-save --no-package-lock --ignore-scripts three@0.180.0 esbuild@0.25.12
           ./node_modules/.bin/esbuild web-src/realistic-viewer.js --bundle --minify --format=iife --target=es2020 --outfile=app/src/main/assets/realistic-viewer.js
           test -s app/src/main/assets/realistic-viewer.js
+      - name: v3.1 JavaScript sözdizimi kontrolü
+        run: node --check app/src/main/assets/weekly-v31.js
       - name: APK oluştur
         run: gradle --no-daemon --stacktrace assembleDebug
       - name: APK dosyasını sakla
