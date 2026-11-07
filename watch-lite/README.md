@@ -35,3 +35,40 @@ Huawei'nin genel JavaScript `video` bileşen dokümanı bulunur. Ancak bunun **W
 - https://developer.huawei.com/consumer/en/doc/best-practices/bpta-smartwatch/
 
 Kullanılan egzersiz videolarının hakları bağımsız doğrulanmadı. Kaynak geliştiricinin açıklamaları referans alınan kişisel test paketidir; halka açık dağıtım öncesi lisans doğrulaması gerekir.
+
+
+## v4.2 — Saat uygulaması test prototipi (HAP henüz yok)
+
+**Bu kaynak, video kadranından farklı bir uygulama prototipidir.** Watch Fit 5 Pro'nun video kadranında MP4 oynatması doğrulandı; Lite Wearable uygulaması içindeki HML \`<video>\` bileşeninin gerçek cihazda çalışması hâlâ doğrulanmadı.
+
+Kod ve işleyiş:
+- \`pages/index/index.hml\` video ekranı, önceki/sonraki hareket, set tamamlama ve dinlenme görünümü.
+- \`utils/watch-state.js\` beş gerçek egzersiz, hareket başına set sayısı, 90 sn dinlenme, kayıt geri yükleme ve sıkı mesaj doğrulama. Set sayacı Lite Wearable \`@system.storage\` üzerinde az yer tutan bir biçimde saklanır.
+- MP4 oynatımı hata verirse yalnızca hata açıklaması ve yerel poster görüntülenir. **Bunu video çalıştı diye raporlamıyoruz.**
+- \`utils/wear-link.js\`: Huawei P2pClient/Builder/Message yöntemlerine uygun, test edilen ve uygulamada henüz başlatılmamış iletişim adaptörü.
+- \`set.completed\` mesajları gerçekleştiğinde şu an yalnızca saat tarafında saklanır; **telefon kayıtlarına yazılmaz**. Tekrar mesaj kontrolü ve ACK tasarımı eklendi.
+
+### Gerekli dış araçlar ve izinler
+
+1. Huawei geliştirici hesabı ve **DevEco Studio** kurulu bilgisayar.
+2. Yeni **[Lite] Empty Ability** projesi: HarmonyOS JS/HML, cihaz türü **Lite Wearable**.
+3. \`watch-lite/entry/src/main\` dosyalarını DevEco projesine taşı. Android APK'nın saate yüklenemeyeceğini unutma.
+4. CI tarafından hazırlanan **v4.2 Lite SOURCE ZIP** içindeki \`common/videos\` ve \`common/posters\` klasörlerinde gerçek beş MP4/poster yer alır.
+5. Önce **Huawei Lite Wearable Simulator** ile yerel video ve set düğmelerini test et.
+6. Saat için gerçek HAP üretmek adına modelin **Lite API sürümü** ile uyumlu compile/target SDK seç ve uygulamayı **Huawei geliştirici sertifikası/profil ile imzala**.
+7. Lite Wearable cihazına kurmak için Huawei'nin **App Debugging Assistant** yöntemini dene. Watch Fit 5 Pro için bu yöntemin destek durumu ayrıca cihaz üzerinde doğrulanmalı.
+8. Huawei'nin resmî Lite Wearable Wear Engine SDK'sını sağlayıp \`P2pClient\` adaptörüne geçir; telefon paket ismi \`com.fitkocum.plus\` ve **gerçek imza parmak izi** gereklidir. Repo kaynak koduna kişisel sertifika, token veya fingerprint yükleme.
+
+**Önemli uyumluluk riski:** Huawei'nin Wear Engine dökümanı üçüncü taraf telefonlar için Android 6–14 listesini veriyor; Pixel 9'un daha yeni Android sürümündeki davranışı test edilmeden otomatik senkronizasyon garantisi veremeyiz.
+
+### Komutlar
+
+DevEco kurulmadan önce CI üzerinde şu kaynak/varlık kontrollerini yapıyoruz:
+
+\`\`\`sh
+node tests/watch-state.cjs
+node tests/watch-lite-prototype.cjs
+node tests/watch-videos.cjs
+\`\`\`
+
+Gerçek saat üzerinde birinci kabul testi: uygulamanın açılması, ardından MP4'ün hareket ederek oynatılması, sonraki harekete geçmesi ve "SET +" sayacının doğru çalışması. İkinci kabul testi: telefon–saat mesajlarının Bluetooth ile gidip geri gelmesi. Bunlar **henüz geçilmedi**.
