@@ -5,11 +5,11 @@
   const OVERRIDES_KEY = 'fitkocum_v31_weekly_overrides';
   const CUSTOM_V31_KEY = 'fitkocum_custom_program_v31';
   const WEEK = [
-    {key:'pzt',name:'Pazartesi',short:'Pzt',type:'strength',title:'Göğüs · Omuz · Triceps',ids:['bench','incline','lib_dumbbell_shoulder_press','lib_lateral_raise','triceps','lib_overhead_tricep_extension','movekit_dumbbell_chest_fly']},
+    {key:'pzt',name:'Pazartesi',short:'Pzt',type:'strength',title:'Göğüs · Omuz · Triceps',ids:['bench','incline','lib_dumbbell_shoulder_press','lib_lateral_raise','triceps','free_2188','movekit_dumbbell_chest_fly']},
     {key:'sal',name:'Salı',short:'Sal',type:'cardio',title:'Kardiyo · Dayanıklılık',ids:['cardio_treadmill','cardio_bike']},
-    {key:'car',name:'Çarşamba',short:'Çar',type:'strength',title:'Sırt · Biceps',ids:['pulldown','row','lib_bent_over_row','lib_bicep_curl','lib_hammer_curl','lib_plank','movekit_pull_ups']},
+    {key:'car',name:'Çarşamba',short:'Çar',type:'strength',title:'Sırt · Biceps',ids:['pulldown','row','free_0027','lib_bicep_curl','free_0298','lib_plank','movekit_pull_ups']},
     {key:'per',name:'Perşembe',short:'Per',type:'rest',title:'Dinlenme',ids:[]},
-    {key:'cum',name:'Cuma',short:'Cum',type:'strength',title:'Bacak · Kalça · Karın',ids:['lib_squat','legpress','lib_romanian_deadlift','legcurl','lib_calf_raise','lib_crunch']},
+    {key:'cum',name:'Cuma',short:'Cum',type:'strength',title:'Bacak · Kalça · Karın',ids:['lib_squat','legpress','free_0116','legcurl','free_0417','lib_crunch']},
     {key:'cmt',name:'Cumartesi',short:'Cmt',type:'rest',title:'Dinlenme',ids:[]},
     {key:'paz',name:'Pazar',short:'Paz',type:'cardio',title:'Kardiyo · Aktif Gün',ids:['cardio_elliptical','cardio_walk']}
   ];
@@ -128,6 +128,7 @@
        (weekMap[day].type!=='cardio' ? m.kind!=='cardio' :
          (m.kind==='cardio'||id.startsWith('mobility_')&&window.FitMotionMeta?.[id.slice(9)]?.category==='cardio')) &&
        (m.name+' '+m.group).toLocaleLowerCase('tr-TR').includes(query) &&
+       (weekMap[day].type==='cardio' || id.startsWith('movekit_') || id.startsWith('free_') || Object.prototype.hasOwnProperty.call(window.FitLegacyVideoMatches||{},id)) &&
        (swapIndex>=0 ? (id===ids[swapIndex]||!ids.includes(id)) : !ids.includes(id))
     );
     $('v31PickerCount').textContent=all.length+' seçenek · ilk 45 gösteriliyor';
