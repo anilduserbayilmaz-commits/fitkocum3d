@@ -103,8 +103,8 @@
 .athlete-grid button.active{background:#32665c!important;border-color:#81dbbd!important;color:#e5fff4!important}
 </style></head><body>
 <div class="shell">
-<header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
-<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Anatomik 3D modellerle hareketi gör, setini tamamla, ilerlemeni takip et.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>390</strong><span>3D hareket</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 3 gün</span></div><div class="days" id="dayTabs"></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
+<header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D+ v3.1</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
+<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Haftanın 5 gününü planla, hareketleri değiştir, set ve kardiyo süreni kaydet.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>390</strong><span>3D hareket</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 5 antrenman · 2 dinlenme</span></div><div class="days" id="dayTabs"></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
 <div style="font-size:12px;font-weight:850;color:#c8f6a6;margin-bottom:9px">ANTRENMAN GÖSTERİMİ</div>
 <div class="viewcontrols" style="margin:0"><button class="viewbtn active" id="choose3d" style="grid-column:span 2">◈ 3D ANİMASYONLU PROGRAM</button><button class="viewbtn" id="chooseClassic">Önceki plan</button><button class="viewbtn" id="chooseCustom" style="grid-column:span 3">✎ KENDİ PROGRAMIM</button></div>
 <p id="modeInfo" style="font-size:11px;line-height:1.55;color:#aebfc5;margin:10px 0 0"></p>
@@ -400,6 +400,16 @@ for(const m of EXTRA_MOBILITY3D)if(!Object.prototype.hasOwnProperty.call(MOVES,'
 const ALL_MOBILITY3D=[...MOBILITY3D,...EXTRA_MOBILITY3D];
 window.FitMotionMeta=Object.fromEntries(ALL_MOBILITY3D.map(m=>[m.id,{category:m.category,view:m.view||'full',name:m.name}]));
 const TOTAL_3D_MOVES=LIBRARY3D.length+TECHNIQUE3D.length+ALL_MOBILITY3D.length;
+
+/* Cardio activities are duration-based (not claimed as 3D animations).
+   Register before record hydration so previously saved cardio minutes survive restarts. */
+Object.assign(MOVES,{
+ cardio_treadmill:{name:'Yürüyüş Bandı · Tempolu',group:'Kardiyo · Orta tempo',sets:'1 × 30 dk',type:'cardio',kind:'cardio',icon:'🏃',steps:['İlk 5 dakika hafif tempoda ısın.','20 dakika konuşabildiğin ama nefesinin hızlandığı tempoda yürü.','Son 5 dakika tempoyu düşürerek bitir.']},
+ cardio_bike:{name:'Sabit Bisiklet',group:'Kardiyo · Orta tempo',sets:'1 × 20 dk',type:'cardio',kind:'cardio',icon:'🚴',steps:['Sele yüksekliğini dizini çok bükmeyecek şekilde ayarla.','Konforlu dirençte 15 dakika pedal çevir.','Son 5 dakika tempoyu azalt.']},
+ cardio_elliptical:{name:'Eliptik Bisiklet',group:'Kardiyo · Orta tempo',sets:'1 × 25 dk',type:'cardio',kind:'cardio',icon:'🚶',steps:['5 dakika düşük dirençte başla.','15 dakika ritmik ve kontrollü sürdür.','5 dakika soğuma yap.']},
+ cardio_walk:{name:'Eğimli Yürüyüş',group:'Kardiyo · Tempolu yürüyüş',sets:'1 × 15 dk',type:'cardio',kind:'cardio',icon:'🥾',steps:['Eğim ve hızı rahat yapabileceğin düzeyde seç.','Tırabzana asılmadan, adımların kontrollü şekilde yürü.','Son birkaç dakika düz zemine dönerek bitir.']}
+});
+
 
 
 const FORMGUIDES={
@@ -952,4 +962,4 @@ $('loadMoreMoves').onclick=()=>{visibleLimit+=24;renderLibrary()};
 $('moveSearch').addEventListener('input',e=>{moveQuery=e.target.value.trim();visibleLimit=24;renderLibrary();});
 renderLibrary();
 update();clock();
-</script></body></html>
+</script><script src="weekly-v31.js"></script></body></html>
