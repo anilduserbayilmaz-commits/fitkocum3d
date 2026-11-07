@@ -87,7 +87,7 @@
   picker.className='v31-modal';picker.id='v31Picker';picker.hidden=true;
   picker.innerHTML='<section class="v31-dialog" role="dialog" aria-modal="true" aria-labelledby="v31PickerTitle">'
     +'<h3 id="v31PickerTitle">Hareket değiştir</h3><p id="v31PickerHint"></p>'
-    +'<div style="display:flex;gap:8px"><input id="v31PickerSearch" type="search" placeholder="Göğüs, incline, sırt, leg press…" autocomplete="off" aria-label="Hareket ara"><button type="button" class="v31-mini-btn" id="v31PickerClear">Sil</button></div>'
+    +'<div style="display:flex;gap:8px"><input id="v31PickerSearch" type="search" style="flex:1;min-width:0;width:0" placeholder="Göğüs, incline, sırt, leg press…" autocomplete="off" aria-label="Hareket ara"><button type="button" class="v31-mini-btn" id="v31PickerClear">Sil</button></div>'
     +'<div id="v31PickerQuick" style="display:flex;gap:7px;overflow:auto;margin-top:10px">'
     +'<button type="button" class="v31-mini-btn" data-quick="Göğüs">Göğüs</button>'
     +'<button type="button" class="v31-mini-btn" data-quick="Sırt">Sırt</button>'
