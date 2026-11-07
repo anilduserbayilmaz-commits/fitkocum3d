@@ -13,6 +13,8 @@ const videoClips={
 Object.assign(videoClips, window.FitFreeVideoClips || {});
 Object.assign(videoClips, window.FitLegacyVideoMatches || {});
 const overlay=$('overlay');
+// v3.1.3: a visible build marker makes stale APKs obvious.
+const FIT_BUILD='3.1.3';
 const sceneBox=$('modelCanvas').closest('.scene');
 const dialog=overlay.querySelector('.dialog');
 const viewer=document.createElement('video');
@@ -42,6 +44,12 @@ controls.id='fitkocumVideoControls';
 controls.style.cssText='display:none;gap:8px;margin:12px 0 15px;';
 controls.innerHTML='<button type="button" data-video-rate="0.5" class="viewbtn">0,5× Yavaş</button><button type="button" data-video-rate="1" class="viewbtn active">1× Normal</button><button type="button" data-video-rate="1.5" class="viewbtn">1,5× Hızlı</button>';
 sceneBox.after(controls);
+const external=document.createElement('a');
+external.id='fitkocumOpenVideoInBrowser';
+external.textContent='↗ Videoyu tarayıcıda aç';
+external.setAttribute('rel','noopener noreferrer');
+external.style.cssText='display:none;text-decoration:none;text-align:center;padding:12px;border:1px solid #5a7681;color:#c2f3a7;background:#192a30;border-radius:12px;margin-top:8px;font-size:13px;font-weight:800;';
+controls.after(external);
 controls.querySelectorAll('[data-video-rate]').forEach(button=>button.onclick=()=>{
   viewer.playbackRate=Number(button.dataset.videoRate);
   controls.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
@@ -73,6 +81,8 @@ function stopVideo(){
   viewer.load();
   indicator.style.display='none';
   viewer.style.display='none';
+  external.style.display='none';
+  external.removeAttribute('href');
 }
 $('close').addEventListener('click',stopVideo);
 overlay.addEventListener('click',e=>{if(e.target===overlay)stopVideo();});
@@ -80,6 +90,7 @@ function resetPlayer(){
   stopVideo();
   placeholder.style.display='none';
   controls.style.display='none';
+  external.style.display='none';
   overlay.classList.add('fitkocum-video-mode');
   if(scene?.setPlaying)scene.setPlaying(false);
 }
@@ -87,7 +98,7 @@ viewer.addEventListener('error',()=>{
   viewer.style.display='none';
   controls.style.display='none';
   placeholder.style.display='flex';
-  placeholder.querySelector('strong').textContent='Video açılamadı';
+  placeholder.querySelector('strong').textContent='Uygulama içinde video açılamadı';
   placeholder.querySelector('span').textContent='Video oynatılamadı. İnternet bağlantısını kontrol et veya başka bir hareket seç.';
 });
 viewer.addEventListener('playing',()=>{indicator.style.display='none'});
@@ -101,11 +112,11 @@ openMove=function(id){
   const clip=videoClips[id];
   $('title').textContent=m.name;
   $('sub').textContent=m.group+' · '+moveGoal(id);
-  overlay.querySelector('.eyebrow').textContent=clip?(clip.source?'ÜCRETSİZ VİDEO · ONLINE':'MOVEKIT · EGZERSİZ VİDEOSU'):'HAREKET REHBERİ';
+  overlay.querySelector('.eyebrow').textContent='v'+FIT_BUILD+' · '+(clip?(clip.source?'ÜCRETSİZ VİDEO · ONLINE':'MOVEKIT · VİDEO'):'HAREKET REHBERİ');
   $('steps').innerHTML=(m.steps||[]).map(s=>'<li>'+escapeText(s)+'</li>').join('');
   $('caution').textContent=clip?
     (clip.source?'Free Exercise DB kaynaklı çevrimiçi egzersiz videosu. İnternet gereklidir. Kaynağın hareket demosudur; kişisel teknik değerlendirmesi değildir.':'MoveKit ücretsiz örnek videosu. Teknik ve hareket açıklığını kişisel olarak kontrol et.'):
-    'Bu hareket için uygun ücretsiz video henüz eşleştirilmedi. Teknik adımlar metin olarak sunulur; hatalı eski 3D model gösterilmez.';
+    'Bu harekete uygun doğrulanmış video bağlantısı yok. Teknik adımlar metin olarak gösterilir.';
   $('techniqueCompare').hidden=true;
   $('athleteStudioPanel').hidden=true;
   $('musclePanel').hidden=true;
@@ -122,6 +133,10 @@ openMove=function(id){
     viewer.style.display='block';
     viewer.poster=clip.poster;
     viewer.src=clip.video;
+    if(clip.source && /^https:\/\//.test(clip.video)){
+      external.href=clip.video;
+      external.style.display='block';
+    }
     viewer.playbackRate=1;
     controls.style.display='flex';
     controls.querySelectorAll('button').forEach(button=>button.classList.toggle('active',button.dataset.videoRate==='1'));
@@ -132,7 +147,7 @@ openMove=function(id){
     if(promise && typeof promise.catch==='function')
       promise.catch(()=>{indicator.textContent='Başlatmak için videonun oynat tuşuna dokun.';});
   } else {
-    placeholder.querySelector('strong').textContent=defaultPlaceholderTitle;
+    placeholder.querySelector('strong').textContent=(!clip && (id==='bench'||id==='pulldown'))?'Bu video bulunamadı — eski sürüm veya yükleme hatası':defaultPlaceholderTitle;
     placeholder.querySelector('span').textContent=defaultPlaceholderText;
     placeholder.style.display='flex';
   }
