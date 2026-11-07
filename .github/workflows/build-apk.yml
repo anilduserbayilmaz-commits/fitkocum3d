@@ -75,8 +75,15 @@ jobs:
         run: |
           node --check app/src/main/assets/weekly-v31.js
           node --check app/src/main/assets/video-v31.js
-          node --check app/src/main/assets/free-videos-v31.js
-          grep -q 'freevideo_0025' app/src/main/assets/free-videos-v31.js
+          node --check app/src/main/assets/free-exercise-data.js
+          node tests/free-exercise-videos.cjs
+      - name: Ucretsiz video CDN on kontrolu
+        run: |
+          set -euo pipefail
+          curl -fsSIL --retry 2 --max-time 25 'https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/barbell-bench-press.mp4' -o /tmp/bench-headers
+          curl -fsSIL --retry 2 --max-time 25 'https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/cable-bar-lateral-pulldown-wide-shoulder-grip.mp4' -o /tmp/pulldown-headers
+          grep -qi 'content-type: video/mp4' /tmp/bench-headers
+          grep -qi 'content-type: video/mp4' /tmp/pulldown-headers
       - name: APK oluştur
         run: gradle --no-daemon --stacktrace assembleDebug
       - name: APK dosyasını sakla
