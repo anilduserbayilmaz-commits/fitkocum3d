@@ -1,0 +1,39 @@
+{
+  "app": {
+    "bundleName": "com.fitkocum.watchlite",
+    "vendor": "FitKocum",
+    "version": {
+      "code": 4100000,
+      "name": "4.1.0"
+    }
+  },
+  "deviceConfig": {},
+  "module": {
+    "deviceType": [
+      "liteWearable"
+    ],
+    "distro": {
+      "deliveryWithInstall": true,
+      "moduleName": "entry",
+      "moduleType": "entry"
+    },
+    "abilities": [
+      {
+        "name": ".MainAbility",
+        "srcLanguage": "js",
+        "srcPath": "MainAbility",
+        "label": "FitKocum Watch",
+        "type": "page",
+        "visible": true
+      }
+    ],
+    "js": [
+      {
+        "pages": [
+          "pages/index/index"
+        ],
+        "name": ".MainAbility"
+      }
+    ]
+  }
+}
