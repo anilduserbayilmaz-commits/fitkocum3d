@@ -27,8 +27,8 @@ if(!(html.indexOf(dataTag)>=0 && html.indexOf(dataTag)<html.indexOf(searchTag)
   && html.indexOf(weeklyTag)<html.indexOf(playerTag))) throw Error('Video scripts are out of order');
 if(!html.includes('Object.assign(MOVES,FREE_VIDEO_EXERCISES)'))throw Error('317 exercises not imported into program');
 if(!player.includes('window.FitLegacyVideoMatches'))throw Error('Bench Press/Lat Pulldown mapping missing from player');
-if(!player.includes("const BUILD='3.2.2'"))throw Error('Offline video player version mismatch');
-if(!html.includes('v3.2.2 · OFFLINE'))throw Error('App version badge missing');
+if(!player.includes("const BUILD='4.0.0-watch-alpha'"))throw Error('Offline video player version mismatch');
+if(!html.includes('v4.0 · WATCH LAB'))throw Error('App version badge missing');
 if(html.includes('Bu hareket için henüz onaylanmış MoveKit videosu yok')||
   player.includes('Bu hareket için henüz onaylanmış MoveKit videosu yok'))throw Error('Stale version UI warning');
 const offline=fs.readFileSync('app/src/main/assets/offline-video-index.js','utf8');
@@ -38,4 +38,4 @@ for(const id of ['0025','drv-cable-bar-lateral-pulldown-wide-shoulder-grip']){
  if(!localFiles.includes(id+'.mp4')||!offline.includes('offline-videos/'+id+'.mp4'))throw Error('Missing core offline video '+id);
 }
 if(player.includes('Bu hareket için video henüz eklenmedi'))throw Error('Legacy placeholder is still shown');
-console.log('PASS: '+localFiles.length+' offline MP4 assets, main exercises mapped, v3.2.2');
+console.log('PASS: '+localFiles.length+' offline MP4 assets, main exercises mapped, v4.0 watch alpha');
