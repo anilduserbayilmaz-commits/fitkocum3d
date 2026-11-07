@@ -1,11 +1,18 @@
-/* Experimental layout for Watch Fit 5 Pro. */
-.container { width: 100%; height: 100%; background-color: #101d2d; flex-direction: column; align-items: center; justify-content: space-around; padding: 7px; }
-.brand { font-size: 16px; color: #bde893; text-align: center; }
-.heading { font-size: 24px; font-weight: bold; color: #f0fff5; text-align: center; }
-.exercise { width: 94%; height: 52%; object-fit: contain; }
-.set-text { color: #f5faf3; font-weight: bold; font-size: 21px; text-align: center; }
-.rest { color: #bde893; font-size: 18px; text-align: center; }
-.actions { width: 100%; flex-direction: row; justify-content: space-around; }
-.moveButton { width: 21%; height: 47px; border-radius: 14px; background-color: #263a45; color: #ffffff; }
-.saveButton { width: 42%; height: 47px; border-radius: 14px; background-color: #bde893; color: #13271b; }
-.status { font-size: 12px; color: #b5c9d5; text-align: center; }
+/* FitKoçum Watch v4.2 - Lite Wearable 408x480 target.
+ * Only JS/HML/CSS features supported by the target API may be used.
+ */
+.container {
+  width: 100%;height:100%;background-color:#101d2d;
+  flex-direction:column;align-items:center;justify-content:space-around;
+  padding:8px;
+}
+.brand {font-size:13px;color:#bde893;text-align:center;}
+.heading {font-size:22px;font-weight:bold;color:#f0fff5;text-align:center;}
+.exercise {width:95%;height:48%;object-fit:contain;}
+.set-text {font-size:21px;font-weight:bold;color:#ffffff;text-align:center;}
+.rest {font-size:18px;color:#bde893;text-align:center;}
+.actions {width:100%;flex-direction:row;justify-content:space-around;}
+.moveButton {width:22%;height:44px;border-radius:10px;background-color:#263a45;color:#ffffff;}
+.saveButton {width:43%;height:44px;border-radius:10px;background-color:#bde893;color:#13271b;}
+.status {font-size:11px;color:#c1d0d4;text-align:center;}
+.connection {font-size:10px;color:#95aeb5;text-align:center;}
