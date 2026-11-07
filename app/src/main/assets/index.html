@@ -104,7 +104,7 @@
 </style></head><body>
 <div class="shell">
 <header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#93af9d;font-size:11px">3D+ v3.1</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline">● Çevrimdışı</div></header>
-<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Haftanın 5 gününü planla, hareketleri değiştir, set ve kardiyo süreni kaydet.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>2</strong><span>MoveKit video</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 5 antrenman · 2 dinlenme</span></div><div class="days" id="dayTabs"></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
+<section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Haftanın 5 gününü planla, hareketleri değiştir, set ve kardiyo süreni kaydet.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong>317</strong><span>Ücretsiz video · Online</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 5 antrenman · 2 dinlenme</span></div><div class="days" id="dayTabs"></div><p class="subtitle" id="dayCaption"></p><div class="panel" style="margin:8px 0 14px;padding:13px 16px">
 <div style="font-size:12px;font-weight:850;color:#c8f6a6;margin-bottom:9px">ANTRENMAN GÖSTERİMİ</div>
 <div class="viewcontrols" style="margin:0"><button class="viewbtn active" id="choose3d" style="grid-column:span 2">◈ HAFTALIK PROGRAM</button><button class="viewbtn" id="chooseClassic">Önceki plan</button><button class="viewbtn" id="chooseCustom" style="grid-column:span 3">✎ KENDİ PROGRAMIM</button></div>
 <p id="modeInfo" style="font-size:11px;line-height:1.55;color:#aebfc5;margin:10px 0 0"></p>
@@ -919,7 +919,7 @@ const categoryLabels=[
  ['floor-seated','Yerde Oturarak'],['floor-lying','Yerde Uzanarak'],['yoga','Yoga']
 ];
 const libraryCounts=Object.fromEntries(categoryLabels.map(([id])=>[id,id==='all'?fullLibrary.length:fullLibrary.filter(m=>m.category===id).length]));
-const libraryKey=m=>m.kind==='video'?m.id:m.kind==='anatomical'?'lib_'+m.id:m.kind==='technique'?m.id:'mobility_'+m.id;
+const libraryKey=m=>m.kind==='freevideo'||m.kind==='video'?m.id:m.kind==='anatomical'?'lib_'+m.id:m.kind==='technique'?m.id:'mobility_'+m.id;
 let favoriteMoves=new Set();
 try{
  const storedFavorites=JSON.parse(localStorage.getItem('fitkocum_favorite_moves')||'[]');
@@ -947,9 +947,9 @@ function renderLibrary(){
  $('realMoveList').innerHTML=shown.length?shown.map(m=>{
    const isAnatomical=m.kind==='anatomical',isTechnique=m.kind==='technique';
    const id=libraryKey(m);
-   const art=isAnatomical?'<img loading="lazy" src="thumbs/'+m.id+'.png" style="height:76px;width:76px;object-fit:cover;border-radius:12px" alt="">'
+   const art=m.kind==='freevideo'?'<img loading="lazy" src="'+escapeText(m.poster)+'" style="height:76px;width:76px;object-fit:cover;border-radius:12px" alt="">':isAnatomical?'<img loading="lazy" src="thumbs/'+m.id+'.png" style="height:76px;width:76px;object-fit:cover;border-radius:12px" alt="">'
      :'<span class="library-emoji">'+(isTechnique?'🏋️':m.icon||'◈')+'</span>';
-   const label=m.kind==='video'?'MoveKit · Profesyonel MP4':isAnatomical?'Anatomik hareket kaydı yok':isTechnique?'Ekipmanlı hareket kaydı yok':'Hareket açıklaması · '+m.group;
+   const label=m.kind==='freevideo'?'Ücretsiz MP4 · İnternet gerekli':m.kind==='video'?'MoveKit · Profesyonel MP4':isAnatomical?'Anatomik hareket kaydı yok':isTechnique?'Ekipmanlı hareket kaydı yok':'Hareket açıklaması · '+m.group;
    return '<article class="move catalog-move"><div class="move-art" aria-hidden="true">'+art+'</div>'
      +'<div class="move-content"><h3>'+escapeText(m.name)+'</h3><p>'+escapeText(label)+'</p>'
      +'<div class="library-actions"><button class="watch" data-id="'+escapeText(id)+'">'+(m.kind==='video'?'▶ VİDEO İZLE':'📖 ADIMLARI GÖR')+'</button>'
@@ -970,4 +970,4 @@ $('loadMoreMoves').onclick=()=>{visibleLimit+=24;renderLibrary()};
 $('moveSearch').addEventListener('input',e=>{moveQuery=e.target.value.trim();visibleLimit=24;renderLibrary();});
 renderLibrary();
 update();clock();
-</script><script src="weekly-v31.js"></script><script src="video-v31.js"></script></body></html>
+</script><script src="weekly-v31.js"></script><script src="free-videos-v31.js"></script><script src="video-v31.js"></script></body></html>
