@@ -11,6 +11,7 @@ const videoClips={
   movekit_dumbbell_chest_fly:MOVEKIT_CLIPS.movekit_dumbbell_chest_fly
 };
 Object.assign(videoClips, window.FitFreeVideoClips || {});
+Object.assign(videoClips, window.FitLegacyVideoMatches || {});
 const overlay=$('overlay');
 const sceneBox=$('modelCanvas').closest('.scene');
 const dialog=overlay.querySelector('.dialog');
@@ -103,7 +104,7 @@ openMove=function(id){
   overlay.querySelector('.eyebrow').textContent=clip?(clip.source?'ÜCRETSİZ VİDEO · ONLINE':'MOVEKIT · EGZERSİZ VİDEOSU'):'HAREKET REHBERİ';
   $('steps').innerHTML=(m.steps||[]).map(s=>'<li>'+escapeText(s)+'</li>').join('');
   $('caution').textContent=clip?
-    (clip.source?'Ücretsiz çevrimiçi egzersiz videosu. Oynatmak için internet gereklidir. Teknik doğruluğu bağımsız olarak onaylanmamıştır.':'MoveKit tarafından hazırlanan lisanslı örnek video. Teknik, kişisel hareket açıklığı ve yük seçimin için bir uzman görüşü gerekebilir.'):
+    (clip.source?'Free Exercise DB kaynaklı çevrimiçi egzersiz videosu. İnternet gereklidir. Kaynağın hareket demosudur; kişisel teknik değerlendirmesi değildir.':'MoveKit ücretsiz örnek videosu. Teknik ve hareket açıklığını kişisel olarak kontrol et.'):
     'Bu hareket için uygun ücretsiz video henüz eşleştirilmedi. Teknik adımlar metin olarak sunulur; hatalı eski 3D model gösterilmez.';
   $('techniqueCompare').hidden=true;
   $('athleteStudioPanel').hidden=true;
@@ -125,7 +126,7 @@ openMove=function(id){
     controls.style.display='flex';
     controls.querySelectorAll('button').forEach(button=>button.classList.toggle('active',button.dataset.videoRate==='1'));
     indicator.style.display='block';
-    indicator.textContent='MoveKit video açılıyor…';
+    indicator.textContent=clip.source?'Ücretsiz video yükleniyor…':'MoveKit video açılıyor…';
     viewer.load();
     const promise=viewer.play();
     if(promise && typeof promise.catch==='function')
