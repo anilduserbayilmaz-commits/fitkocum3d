@@ -71,25 +71,30 @@ jobs:
           npm install --no-save --no-package-lock --ignore-scripts three@0.180.0 esbuild@0.25.12
           ./node_modules/.bin/esbuild web-src/realistic-viewer.js --bundle --minify --format=iife --target=es2020 --outfile=app/src/main/assets/realistic-viewer.js
           test -s app/src/main/assets/realistic-viewer.js
-      - name: v3.1 JavaScript sözdizimi kontrolü
+      - name: Çevrimdışı video arşivini indir ve sıkıştır
+        timeout-minutes: 75
+        env:
+          FIT_VIDEO_LIMIT: '317'
+          FIT_VIDEO_WORKERS: '7'
+        run: |
+          set -euo pipefail
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
+          node --check tools/build-offline-videos.cjs
+          node tools/build-offline-videos.cjs
+          node --check app/src/main/assets/offline-video-index.js
+          du -sh app/src/main/assets/offline-videos
+      - name: JavaScript ve çevrimdışı video dosyalarını doğrula
         run: |
           node --check app/src/main/assets/weekly-v31.js
           node --check app/src/main/assets/video-v31.js
           node --check app/src/main/assets/free-exercise-data.js
           node tests/free-exercise-videos.cjs
-      - name: Ucretsiz video CDN on kontrolu
-        run: |
-          set -euo pipefail
-          curl -fsSIL --retry 2 --max-time 25 'https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/barbell-bench-press.mp4' -o /tmp/bench-headers
-          curl -fsSIL --retry 2 --max-time 25 'https://pub-585d42eb1aa64a67aedf483ec328d3fe.r2.dev/exercise-videos/male/cable-bar-lateral-pulldown-wide-shoulder-grip.mp4' -o /tmp/pulldown-headers
-          grep -qi 'content-type: video/mp4' /tmp/bench-headers
-          grep -qi 'content-type: video/mp4' /tmp/pulldown-headers
       - name: APK oluştur
         run: gradle --no-daemon --stacktrace assembleDebug
       - name: APK dosyasını sakla
         uses: actions/upload-artifact@v4
         with:
-          name: FitKocum-v3.1.3-VIDEO-APK
+          name: FitKocum-v3.2.0-OFFLINE-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
