@@ -103,7 +103,7 @@
 .athlete-grid button.active{background:#32665c!important;border-color:#81dbbd!important;color:#e5fff4!important}
 </style></head><body>
 <div class="shell">
-<header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#bdf18a;font-size:11px">3D+ v3.2.1 · OFFLINE</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline" style="font-size:10px">● Kayıtlar ve videolar · Çevrimdışı</div></header>
+<header class="brand"><div class="brand-left"><div class="brand-icon">F</div><div><div class="brand-name">FIT<b>KOÇUM</b> <span style="color:#bdf18a;font-size:11px">3D+ v3.2.2 · OFFLINE</span></div><div class="brand-desc">SPOR SALONU ASİSTANI</div></div></div><div class="offline" style="font-size:10px">● Kayıtlar ve videolar · Çevrimdışı</div></header>
 <section id="home" class="screen"><div class="hero"><div class="eyebrow">HAFTALIK GÜÇ PLANI</div><h1>Her tekrarda<br>daha güçlü.</h1><p>Haftanın 5 gününü planla, hareketleri değiştir, set ve kardiyo süreni kaydet.</p><button class="cta" id="heroGo">ANTRENMANA BAŞLA &nbsp;→</button><div class="hero-tag">🏋</div></div><div class="metrics"><div class="metric"><strong id="sessions">0</strong><span>Antrenman günü</span></div><div class="metric"><strong id="sets">0</strong><span>Toplam set</span></div><div class="metric"><strong id="offlineVideoTotal">0</strong><span>APK içindeki video</span></div></div><div class="section-head"><h2>Bugünkü programın</h2><span>Haftada 5 antrenman · 2 dinlenme</span></div><div class="days" id="dayTabs"></div>
 <div style="display:flex;justify-content:flex-end;margin:7px 0 12px">
 <button type="button" class="chip" id="jumpToLibrary">⌕ Hareket ara / videolar</button>
@@ -142,6 +142,14 @@
 <button type="button" class="chip" data-quick-search="Omuz">Omuz</button>
 <button type="button" class="chip" data-quick-search="Bacak">Bacak</button>
 <button type="button" class="chip" data-quick-search="Arka kol">Arka kol</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin:12px 0">
+<label style="font-size:12px;color:#b6c7cd">Kas grubu<select id="libraryMuscleFilter" class="foodText" style="width:100%;margin-top:5px" aria-label="Kas grubu filtresi"></select></label>
+<label style="font-size:12px;color:#b6c7cd">Ekipman<select id="libraryEquipmentFilter" class="foodText" style="width:100%;margin-top:5px" aria-label="Ekipman filtresi"></select></label>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0">
+<span id="libraryFilterSummary" style="font-size:11px;color:#a8bdc4">Tüm hareketler</span>
+<button type="button" class="chip" id="libraryResetFilters">↺ Tüm filtreleri sıfırla</button>
 </div>
 <div class="move-filter-row" id="moveFilters" style="display:flex;gap:7px;overflow-x:auto;margin:13px 0 17px;padding:2px 0"></div>
 <p class="subtitle" id="moveCount" role="status" aria-live="polite">317 çevrimdışı video</p>
@@ -186,7 +194,7 @@
 </div></section>
 </div>
 <nav class="bottom" aria-label="Alt menü"><button class="nav active" data-tab="home"><span>⌂</span>PROGRAM</button><button class="nav" data-tab="history"><span>▥</span>İLERLEME</button><button class="nav" data-tab="rest"><span>◷</span>DİNLENME</button><button class="nav" data-tab="meal"><span>🍽</span>YEMEK</button></nav>
-<div class="overlay" id="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="title"><div class="dialog-header"><div><div class="eyebrow">FitKoçum v3.2.1 · ÇEVRİMDIŞI</div><h2 id="title"></h2><div class="dialog-sub" id="sub"></div></div><button id="close" aria-label="Kapat" class="close">×</button></div><div class="scene" style="height:360px"><canvas id="modelCanvas" aria-label="Döndürülebilir, animasyonlu 3D sporcu modeli"></canvas><div class="scene-label">● UYGULAMA İÇİ 3D MODEL</div><div class="scene-help">↻ Parmağınla çevir</div><button id="pause" class="pause">⏸ Duraklat</button></div><div class="viewcontrols" aria-label="Kamera açısı">
+<div class="overlay" id="overlay" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="title"><div class="dialog-header"><div><div class="eyebrow">FitKoçum v3.2.2 · ÇEVRİMDIŞI</div><h2 id="title"></h2><div class="dialog-sub" id="sub"></div></div><button id="close" aria-label="Kapat" class="close">×</button></div><div class="scene" style="height:360px"><canvas id="modelCanvas" aria-label="Döndürülebilir, animasyonlu 3D sporcu modeli"></canvas><div class="scene-label">● UYGULAMA İÇİ 3D MODEL</div><div class="scene-help">↻ Parmağınla çevir</div><button id="pause" class="pause">⏸ Duraklat</button></div><div class="viewcontrols" aria-label="Kamera açısı">
 <button class="viewbtn" data-camera="front">◉ Önden</button>
 <button class="viewbtn" data-camera="side">◧ Yandan</button>
 <button class="viewbtn active" data-camera="angle">◈ 45°</button>
@@ -369,7 +377,7 @@ class Scene3D{
 }
 window.FitScene3D=Scene3D;
 })();
-</script><script src="realistic-viewer.js"></script><script src="exercises-extra.js"></script><script src="free-exercise-data.js"></script><script src="offline-video-index.js"></script><script src="exercise-search-v321.js"></script><script>
+</script><script src="realistic-viewer.js"></script><script src="exercises-extra.js"></script><script src="free-exercise-data.js"></script><script src="offline-video-index.js"></script><script src="exercise-search-v321.js"></script><script src="exercise-filters-v322.js"></script><script>
 'use strict';const $=id=>document.getElementById(id);
 const MOVES={
  squat:{name:'Barbell Squat',group:'Bacak · Kalça',sets:'3 × 8–10',type:'squat',icon:'🏋️',steps:['Ayaklarını omuz genişliğine yakın aç, gövdeni sabit tut.','Kalçanı geriye ve aşağıya indir; topukların yerde kalsın.','Dizlerini ayak yönünde takip ettirerek kontrollü yüksel.']},
@@ -922,7 +930,7 @@ $('importWorkoutBtn').onclick=()=>{
  records=merged;update();$('importWorkoutStatus').textContent='✓ '+(merged.length-before)+' yeni set aktarıldı.';
 };
 
-let moveFilter='all',moveQuery='',visibleLimit=24;
+let moveFilter='all',moveQuery='',visibleLimit=24,libraryMuscle='all',libraryEquipment='all';
 const libraryStrength=LIBRARY3D.map(m=>({...m,category:'strength',kind:'anatomical'}));
 const fullLibrary=[...Object.values(FREE_VIDEO_EXERCISES),...Object.entries(MOVEKIT_CLIPS).map(([id,m])=>({...m,id,category:'strength',kind:'video'}))];
 $('offlineVideoTotal').textContent=String(window.FitOfflineVideoCount||0);
@@ -948,7 +956,11 @@ function renderLibrary(){
    const id=libraryKey(m);
    return moveFilter==='all'||moveFilter==='favorites'&&favoriteMoves.has(id)||m.category===moveFilter;
  });
- const matches=FitExerciseSearch.filter(categoryEntries,moveQuery);
+ const matches=FitExerciseFilters.filter(categoryEntries,moveQuery,{muscle:libraryMuscle,equipment:libraryEquipment});
+ const muscleLabel=FitExerciseFilters.muscles.find(x=>x.value===libraryMuscle)?.label||'Tüm kas grupları';
+ const equipLabel=FitExerciseFilters.equipment.find(x=>x.value===libraryEquipment)?.label||'Tüm ekipmanlar';
+ $('libraryFilterSummary').textContent=(libraryMuscle==='all'&&libraryEquipment==='all')?'Tüm hareketler':(muscleLabel+' · '+equipLabel);
+
  const shown=matches.slice(0,visibleLimit);
  $('moveCount').textContent=matches.length+' / '+fullLibrary.length+' hareket · '+Math.min(visibleLimit,matches.length)+' gösteriliyor';
  $('realMoveList').innerHTML=shown.length?shown.map(m=>{
@@ -956,12 +968,12 @@ function renderLibrary(){
    const id=libraryKey(m);
    const art=m.kind==='freevideo'?'<img loading="lazy" src="'+escapeText(m.poster)+'" style="height:76px;width:76px;object-fit:cover;border-radius:12px" alt="">':isAnatomical?'<img loading="lazy" src="thumbs/'+m.id+'.png" style="height:76px;width:76px;object-fit:cover;border-radius:12px" alt="">'
      :'<span class="library-emoji">'+(isTechnique?'🏋️':m.icon||'◈')+'</span>';
-   const label=m.kind==='freevideo'?'Çevrimdışı MP4 · APK içinde':m.kind==='video'?'MoveKit · Profesyonel MP4':isAnatomical?'Anatomik hareket kaydı yok':isTechnique?'Ekipmanlı hareket kaydı yok':'Hareket açıklaması · '+m.group;
+   const label=m.kind==='freevideo'?'Çevrimdışı MP4 · '+FitExerciseFilters.labelMuscle(m)+' · '+FitExerciseFilters.labelEquipment(m):m.kind==='video'?'MoveKit · Çevrimdışı MP4':isAnatomical?'Anatomik hareket kaydı yok':isTechnique?'Ekipmanlı hareket kaydı yok':'Hareket açıklaması · '+m.group;
    return '<article class="move catalog-move"><div class="move-art" aria-hidden="true">'+art+'</div>'
      +'<div class="move-content"><h3>'+escapeText(m.name)+'</h3><p>'+escapeText(label)+'</p>'
      +'<div class="library-actions"><button class="watch" data-id="'+escapeText(id)+'">'+((m.kind==='video'||m.kind==='freevideo')?'▶ VİDEO İZLE':'📖 ADIMLARI GÖR')+'</button>'
      +'<button class="favorite-move'+(favoriteMoves.has(id)?' selected':'')+'" data-favorite="'+escapeText(id)+'" aria-label="Favorilere '+(favoriteMoves.has(id)?'eklenmiş':'ekle')+'">'+(favoriteMoves.has(id)?'★':'☆')+'</button></div></div></article>';
- }).join(''):'<div class="empty">Hareket bulunamadı. Türkçe/İngilizce başka bir ad veya kas grubu dene. Örnek: göğüs, biceps, incline.</div>';
+ }).join(''):'<div class="empty">Hareket bulunamadı. Aramayı değiştirebilir veya kas grubu/ekipman filtrelerini sıfırlayabilirsin.</div>';
  $('loadMoreMoves').hidden=matches.length<=visibleLimit;
  $('loadMoreMoves').style.display=matches.length<=visibleLimit?'none':'block';
  $('loadMoreMoves').textContent='＋ '+Math.min(24,matches.length-visibleLimit)+' hareket daha göster';
@@ -973,6 +985,22 @@ function renderLibrary(){
  });
  renderFilterButtons();
 }
+function populateLibraryFilters(){
+ const setup=(id,options)=>{
+   const select=$(id);
+   select.innerHTML=options.map(x=>'<option value="'+escapeText(x.value)+'">'+escapeText(x.label)+'</option>').join('');
+ };
+ setup('libraryMuscleFilter',FitExerciseFilters.muscles);
+ setup('libraryEquipmentFilter',FitExerciseFilters.equipment);
+ $('libraryMuscleFilter').onchange=e=>{libraryMuscle=e.target.value;visibleLimit=24;renderLibrary()};
+ $('libraryEquipmentFilter').onchange=e=>{libraryEquipment=e.target.value;visibleLimit=24;renderLibrary()};
+ $('libraryResetFilters').onclick=()=>{
+   libraryMuscle='all';libraryEquipment='all';moveFilter='all';moveQuery='';visibleLimit=24;
+   $('libraryMuscleFilter').value='all';$('libraryEquipmentFilter').value='all';$('moveSearch').value='';
+   renderLibrary();
+ };
+}
+populateLibraryFilters();
 $('loadMoreMoves').onclick=()=>{visibleLimit+=24;renderLibrary()};
 function setLibrarySearch(value){
  moveQuery=String(value||'').trim();
