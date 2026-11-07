@@ -1,58 +1,38 @@
-/* FitKoçum 3D+ v3.1: video-first exercise viewer.
- * MoveKit's free sample grants use within apps; assets are packaged by CI
- * directly from the publisher. No raw clips are checked into this repository.
- * Only the two included sample videos are playable. All other exercises show
- * written coaching, without fake or biomechanically incorrect 3D animation.
- */
+/* FitKoçum 3D+ v3.2 — videos are physical MP4 files inside the APK.
+   Only clips listed in the build-generated offline manifest may be shown.
+   There are no online fallbacks and no large "video not added" placeholder.
+*/
 (function(){
 'use strict';
-const videoClips={
-  movekit_pull_ups:MOVEKIT_CLIPS.movekit_pull_ups,
-  movekit_dumbbell_chest_fly:MOVEKIT_CLIPS.movekit_dumbbell_chest_fly
+const BUILD='3.2.0';
+const clips={
+ movekit_pull_ups:MOVEKIT_CLIPS.movekit_pull_ups,
+ movekit_dumbbell_chest_fly:MOVEKIT_CLIPS.movekit_dumbbell_chest_fly,
+ ...window.FitFreeVideoClips,
+ ...window.FitLegacyVideoMatches
 };
-Object.assign(videoClips, window.FitFreeVideoClips || {});
-Object.assign(videoClips, window.FitLegacyVideoMatches || {});
-const overlay=$('overlay');
-// v3.1.3: a visible build marker makes stale APKs obvious.
-const FIT_BUILD='3.1.3';
-const sceneBox=$('modelCanvas').closest('.scene');
-const dialog=overlay.querySelector('.dialog');
+const overlay=$('overlay'),sceneBox=$('modelCanvas').closest('.scene');
 const viewer=document.createElement('video');
 viewer.id='fitkocumVideo';
 viewer.setAttribute('playsinline','');
 viewer.setAttribute('webkit-playsinline','');
 viewer.setAttribute('preload','metadata');
-viewer.setAttribute('aria-label','Egzersiz gösterim videosu');
-viewer.muted=true;
-viewer.loop=true;
-viewer.controls=true;
-viewer.playsInline=true;
-viewer.style.cssText='display:none;width:100%;height:100%;object-fit:contain;background:#090d12;border-radius:16px;';
+viewer.setAttribute('aria-label','Çevrimdışı egzersiz videosu');
+viewer.controls=true;viewer.muted=true;viewer.loop=true;viewer.playsInline=true;
+viewer.style.cssText='display:none;width:100%;height:100%;object-fit:contain;background:#090d12;border-radius:16px';
 sceneBox.appendChild(viewer);
-const placeholder=document.createElement('div');
-placeholder.id='fitkocumVideoPlaceholder';
-placeholder.style.cssText='display:none;width:100%;height:100%;padding:32px 23px;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;color:#d4e1e6;background:radial-gradient(circle at 50% 45%,#223642,#0b141c);';
-placeholder.innerHTML='<div style="font-size:38px;line-height:1">📖</div><strong style="font-size:18px">Bu hareket için video henüz eklenmedi</strong><span style="font-size:13px;line-height:1.6;color:#aec4cd">Önceki 3D canlandırmayı kaldırdık çünkü bazı hareketler gerçeği yansıtmıyordu. Aşağıdaki teknik adımlarını kullanabilirsin.</span>';
-sceneBox.appendChild(placeholder);
 const indicator=document.createElement('div');
-indicator.id='fitkocumVideoStatus';
 indicator.setAttribute('role','status');
-indicator.style.cssText='display:none;position:absolute;bottom:12px;left:12px;right:12px;padding:9px 12px;background:#0b141ce8;border-radius:12px;font-size:12px;color:#e5f4f0;';
+indicator.style.cssText='display:none;position:absolute;bottom:9px;left:9px;right:9px;padding:8px 12px;background:#09141ce0;border-radius:10px;font-size:12px;color:#e5f4f0;pointer-events:none';
 sceneBox.appendChild(indicator);
 const controls=document.createElement('div');
 controls.id='fitkocumVideoControls';
-controls.style.cssText='display:none;gap:8px;margin:12px 0 15px;';
+controls.style.cssText='display:none;gap:8px;margin:12px 0 15px';
 controls.innerHTML='<button type="button" data-video-rate="0.5" class="viewbtn">0,5× Yavaş</button><button type="button" data-video-rate="1" class="viewbtn active">1× Normal</button><button type="button" data-video-rate="1.5" class="viewbtn">1,5× Hızlı</button>';
 sceneBox.after(controls);
-const external=document.createElement('a');
-external.id='fitkocumOpenVideoInBrowser';
-external.textContent='↗ Videoyu tarayıcıda aç';
-external.setAttribute('rel','noopener noreferrer');
-external.style.cssText='display:none;text-decoration:none;text-align:center;padding:12px;border:1px solid #5a7681;color:#c2f3a7;background:#192a30;border-radius:12px;margin-top:8px;font-size:13px;font-weight:800;';
-controls.after(external);
 controls.querySelectorAll('[data-video-rate]').forEach(button=>button.onclick=()=>{
-  viewer.playbackRate=Number(button.dataset.videoRate);
-  controls.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
+ viewer.playbackRate=Number(button.dataset.videoRate);
+ controls.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===button));
 });
 const style=document.createElement('style');
 style.textContent=[
@@ -70,104 +50,88 @@ style.textContent=[
  '#overlay.fitkocum-video-mode #pause,',
  '#overlay.fitkocum-video-mode #modelCanvas{display:none!important}',
  '#overlay.fitkocum-video-mode .scene{height:320px!important;display:flex;align-items:center;justify-content:center}',
- '#fitkocumVideoControls .viewbtn{flex:1;padding:12px 5px;font-size:12px}',
- '#overlay.fitkocum-video-mode .instructions{margin-top:17px}'
+ '#overlay.fitkocum-video-mode.fitkocum-text-only .scene{display:none!important}',
+ '#overlay.fitkocum-video-mode .instructions{margin-top:17px}',
+ '#fitkocumVideoControls .viewbtn{flex:1;padding:12px 5px;font-size:12px}'
 ].join('\n');
 document.head.appendChild(style);
 function stopVideo(){
-  viewer.pause();
-  viewer.removeAttribute('src');
-  viewer.removeAttribute('poster');
-  viewer.load();
-  indicator.style.display='none';
-  viewer.style.display='none';
-  external.style.display='none';
-  external.removeAttribute('href');
+ viewer.pause();
+ viewer.removeAttribute('src');
+ viewer.removeAttribute('poster');
+ viewer.load();
+ viewer.style.display='none';
+ indicator.style.display='none';
+ controls.style.display='none';
 }
 $('close').addEventListener('click',stopVideo);
-overlay.addEventListener('click',e=>{if(e.target===overlay)stopVideo();});
-function resetPlayer(){
-  stopVideo();
-  placeholder.style.display='none';
-  controls.style.display='none';
-  external.style.display='none';
-  overlay.classList.add('fitkocum-video-mode');
-  if(scene?.setPlaying)scene.setPlaying(false);
+overlay.addEventListener('click',e=>{if(e.target===overlay)stopVideo()});
+function reset(){
+ stopVideo();
+ overlay.classList.add('fitkocum-video-mode');
+ overlay.classList.remove('fitkocum-text-only');
+ if(scene?.setPlaying)scene.setPlaying(false);
 }
 viewer.addEventListener('error',()=>{
-  viewer.style.display='none';
-  controls.style.display='none';
-  placeholder.style.display='flex';
-  placeholder.querySelector('strong').textContent='Uygulama içinde video açılamadı';
-  placeholder.querySelector('span').textContent='Video oynatılamadı. İnternet bağlantısını kontrol et veya başka bir hareket seç.';
+ overlay.classList.add('fitkocum-text-only');
+ controls.style.display='none';
+ indicator.style.display='none';
+ $('caution').textContent='Bu APK içindeki video oynatılamadı. Video dosyasını ve cihaz uyumluluğunu kontrol etmek gerekiyor; aşağıdaki hareket adımları kullanılabilir.';
 });
 viewer.addEventListener('playing',()=>{indicator.style.display='none'});
-viewer.addEventListener('waiting',()=>{indicator.textContent='Video yükleniyor…';indicator.style.display='block'});
-const defaultPlaceholderTitle='Bu hareket için video henüz eklenmedi';
-const defaultPlaceholderText='Önceki 3D canlandırmayı kaldırdık çünkü bazı hareketler gerçeği yansıtmıyordu. Aşağıdaki teknik adımlarını kullanabilirsin.';
+viewer.addEventListener('waiting',()=>{
+ indicator.textContent='APK içindeki video açılıyor…';
+ indicator.style.display='block';
+});
 openMove=function(id){
-  const m=MOVES[id];if(!m)return;
-  resetPlayer();
-  selected=id;
-  const clip=videoClips[id];
-  $('title').textContent=m.name;
-  $('sub').textContent=m.group+' · '+moveGoal(id);
-  overlay.querySelector('.eyebrow').textContent='v'+FIT_BUILD+' · '+(clip?(clip.source?'ÜCRETSİZ VİDEO · ONLINE':'MOVEKIT · VİDEO'):'HAREKET REHBERİ');
-  $('steps').innerHTML=(m.steps||[]).map(s=>'<li>'+escapeText(s)+'</li>').join('');
-  $('caution').textContent=clip?
-    (clip.source?'Free Exercise DB kaynaklı çevrimiçi egzersiz videosu. İnternet gereklidir. Kaynağın hareket demosudur; kişisel teknik değerlendirmesi değildir.':'MoveKit ücretsiz örnek videosu. Teknik ve hareket açıklığını kişisel olarak kontrol et.'):
-    'Bu harekete uygun doğrulanmış video bağlantısı yok. Teknik adımlar metin olarak gösterilir.';
-  $('techniqueCompare').hidden=true;
-  $('athleteStudioPanel').hidden=true;
-  $('musclePanel').hidden=true;
-  const summary=refreshCoach(id);
-  $('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';
-  $('reps').value=summary.last?.reps??'';
-  $('rir').value='';
-  $('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';
-  $('feedback').textContent='';
-  overlay.hidden=false;
-  document.body.style.overflow='hidden';
-  if(clip){
-    placeholder.style.display='none';
-    viewer.style.display='block';
-    viewer.poster=clip.poster;
-    viewer.src=clip.video;
-    if(clip.source && /^https:\/\//.test(clip.video)){
-      external.href=clip.video;
-      external.style.display='block';
-    }
-    viewer.playbackRate=1;
-    controls.style.display='flex';
-    controls.querySelectorAll('button').forEach(button=>button.classList.toggle('active',button.dataset.videoRate==='1'));
-    indicator.style.display='block';
-    indicator.textContent=clip.source?'Ücretsiz video yükleniyor…':'MoveKit video açılıyor…';
-    viewer.load();
-    const promise=viewer.play();
-    if(promise && typeof promise.catch==='function')
-      promise.catch(()=>{indicator.textContent='Başlatmak için videonun oynat tuşuna dokun.';});
-  } else {
-    placeholder.querySelector('strong').textContent=(!clip && (id==='bench'||id==='pulldown'))?'Bu video bulunamadı — eski sürüm veya yükleme hatası':defaultPlaceholderTitle;
-    placeholder.querySelector('span').textContent=defaultPlaceholderText;
-    placeholder.style.display='flex';
-  }
+ const m=MOVES[id];if(!m)return;
+ reset();
+ selected=id;
+ const clip=clips[id];
+ $('title').textContent=m.name;
+ $('sub').textContent=m.group+' · '+moveGoal(id);
+ overlay.querySelector('.eyebrow').textContent=clip?'FitKoçum v'+BUILD+' · ÇEVRİMDIŞI VİDEO':'FitKoçum v'+BUILD+' · HAREKET ADIMLARI';
+ $('steps').innerHTML=(m.steps||[]).map(s=>'<li>'+escapeText(s)+'</li>').join('');
+ $('caution').textContent=clip?'Egzersiz videosu uygulamanın içinde kayıtlıdır. İnternet gerekmez. Video kişisel hareket tekniğini ölçmez.':'Bu hareketin teknik adımları aşağıdadır. Çevrimdışı video arşivindeki alternatifleri Hareket Değiştir bölümünden seçebilirsin.';
+ $('techniqueCompare').hidden=true;$('athleteStudioPanel').hidden=true;$('musclePanel').hidden=true;
+ const summary=refreshCoach(id);
+ $('weight').value=summary.suggested.weight!==null?summary.suggested.weight:'';
+ $('reps').value=summary.last?.reps??'';
+ $('rir').value='';
+ $('reps').closest('label').firstChild.nodeValue=id==='lib_plank'?'Süre (saniye)':'Tekrar';
+ $('feedback').textContent='';
+ overlay.hidden=false;
+ document.body.style.overflow='hidden';
+ if(!clip){
+   overlay.classList.add('fitkocum-text-only');
+   return;
+ }
+ viewer.src=clip.video;
+ if(clip.poster)viewer.poster=clip.poster;
+ viewer.playbackRate=1;
+ viewer.style.display='block';
+ controls.style.display='flex';
+ controls.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.videoRate==='1'));
+ indicator.style.display='block';indicator.textContent='Çevrimdışı video açılıyor…';
+ viewer.load();
+ const result=viewer.play();
+ if(result&&typeof result.catch==='function')
+  result.catch(()=>{indicator.textContent='Videoyu başlatmak için oynat tuşuna dokun.';});
 };
-const priorUpdate=update;
+const previousUpdate=update;
 update=function(){
-  priorUpdate();
-  // Weekly v3.1 still owns calendar, replacement and cardio buttons.
-  document.querySelectorAll('#moveList .watch[data-id]').forEach(button=>{
-    const m=MOVES[button.dataset.id];if(!m || m.kind==='cardio')return;
-    button.textContent=videoClips[button.dataset.id]?'▶ VİDEO İZLE':'📖 HAREKET ADIMLARI';
-  });
+ previousUpdate();
+ document.querySelectorAll('#moveList .watch[data-id]').forEach(button=>{
+  const m=MOVES[button.dataset.id];if(!m||m.kind==='cardio')return;
+  button.textContent=clips[button.dataset.id]?'▶ VİDEO İZLE':'📖 ADIMLARI GÖR';
+ });
 };
-const priorRenderLibrary=renderLibrary;
+const previousRender=renderLibrary;
 renderLibrary=function(){
-  priorRenderLibrary();
-  document.querySelectorAll('#realMoveList .watch[data-id]').forEach(button=>{
-    button.textContent=videoClips[button.dataset.id]?'▶ VİDEO İZLE':'📖 HAREKET ADIMLARI';
-  });
+ previousRender();
+ document.querySelectorAll('#realMoveList .watch[data-id]').forEach(button=>{
+  button.textContent=clips[button.dataset.id]?'▶ VİDEO İZLE':'📖 ADIMLARI GÖR';
+ });
 };
-renderLibrary();
-update();
+renderLibrary();update();
 })();
