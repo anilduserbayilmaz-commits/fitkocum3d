@@ -6,8 +6,8 @@ android {
         applicationId 'com.fitkocum.plus'
         minSdk 26
         targetSdk 35
-        versionCode 23
-        versionName '4.1.0-watch-lab'
+        versionCode 24
+        versionName '4.2.0-watch-sync'
     }
     androidResources { noCompress 'mp4' }
     compileOptions {
@@ -16,4 +16,4 @@ android {
     }
     buildTypes { release { minifyEnabled false } }
 }
-dependencies { implementation 'androidx.core:core:1.15.0' }
+dependencies { implementation 'androidx.core:core:1.15.0'; implementation 'com.huawei.hms:wearengine:5.0.2.306' }

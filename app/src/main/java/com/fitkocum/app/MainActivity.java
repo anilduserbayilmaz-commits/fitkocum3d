@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
     private static final int PHOTO_PICKER_REQUEST = 4105;
     private final ExecutorService background = Executors.newSingleThreadExecutor();
     private WebView webView;
+    private WatchSync watchSync;
     private ValueCallback<Uri[]> filePicker;
     private Uri cameraUri;
     private File cameraFile;
@@ -98,6 +99,7 @@ public class MainActivity extends Activity {
                 }
             }
         });
+        watchSync = new WatchSync(this, webView);
         webView.addJavascriptInterface(new AppBridge(), "FitAndroid");
         setContentView(webView);
         webView.loadUrl("file:///android_asset/index.html");
@@ -121,6 +123,10 @@ public class MainActivity extends Activity {
     }
 
     private final class AppBridge {
+        @JavascriptInterface public void connectWatch() {
+            runOnUiThread(watchSync::connect);
+        }
+
         @JavascriptInterface public String loadModelBase64(String modelId) {
             if (modelId == null || !modelId.matches("[a-z0-9_]{2,50}")) return "";
             try (InputStream input = getAssets().open("models/" + modelId + ".glb");
@@ -297,6 +303,7 @@ public class MainActivity extends Activity {
         });
     }
     @Override protected void onDestroy() {
+        watchSync.close();
         background.shutdownNow();
         if (webView!=null){webView.destroy();webView=null;}
         super.onDestroy();
