@@ -31,6 +31,12 @@ jobs:
           path: ~/.android/debug.keystore
           key: fitkocum-v2-debug-signing-key
           fail-on-cache-miss: true
+      - name: Confirm restored debug certificate before building
+        run: |
+          set -euo pipefail
+          export LC_ALL=C
+          keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey | grep -F '98:BF:A4:CA:59:AE:F6:C0:78:08:68:24:E7:AE:24:48:2D:2D:21:1A:FE:3D:EE:4F:98:1E:6A:9C:87:03:C0:55'
+          echo "ANDROID_USER_HOME=$HOME/.android" >> "$GITHUB_ENV"
       - name: Gerçekçi anatomik GLB egzersiz modellerini ekle
         run: |
           set -euo pipefail
